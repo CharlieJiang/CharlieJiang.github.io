@@ -101,7 +101,7 @@
 …
 第n-1轮：将a[0]~a[1]之间的数字两两相邻的依次进行比较，当后面的数字大于前面的数字时，两个数字互换，此轮结束，a[1]则为第n-1小的数字。
 
-1234567891011121314151617181920212223242526272829&#x2F;** * 冒泡排序：以降序排序为例。 * 先找最小数，相邻两个数字依次进行比较 * @param a * @return *&#x2F;public int[] bubbleSort_02(int[] a)&#123;    if(null &#x3D;&#x3D; a || a.length &lt;&#x3D; 0)&#123;        return null;    &#125;    &#x2F;&#x2F; 计算数字个数    int n &#x3D; a.length;    &#x2F;&#x2F; 临时变量：两个数字交换值时使用    int temp;    &#x2F;&#x2F; 共n-1轮排序的for循环    for(int i &#x3D; 0; i &lt; n; i++)&#123;        &#x2F;&#x2F;第i轮排序的for循环        for(int j &#x3D; 1; j &lt; n-i; j++)&#123;            &#x2F;&#x2F;前值小于后值时，两者互换            if(a[j-1] &lt; a[j])&#123;                temp &#x3D; a[j-1];                a[j-1] &#x3D; a[j];                a[j] &#x3D; temp;            &#125;        &#125;    &#125;    return a;&#125;
+1234567891011121314151617181920212223242526272829/** * 冒泡排序：以降序排序为例。 * 先找最小数，相邻两个数字依次进行比较 * @param a * @return */public int[] bubbleSort_02(int[] a)&#123;    if(null == a || a.length &lt;= 0)&#123;        return null;    &#125;    // 计算数字个数    int n = a.length;    // 临时变量：两个数字交换值时使用    int temp;    // 共n-1轮排序的for循环    for(int i = 0; i &lt; n; i++)&#123;        //第i轮排序的for循环        for(int j = 1; j &lt; n-i; j++)&#123;            //前值小于后值时，两者互换            if(a[j-1] &lt; a[j])&#123;                temp = a[j-1];                a[j-1] = a[j];                a[j] = temp;            &#125;        &#125;    &#125;    return a;&#125;
 
 算法的时间复杂度
 O(N²)
