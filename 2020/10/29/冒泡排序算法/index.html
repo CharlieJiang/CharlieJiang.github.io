@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport">
+<meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+
+
+
+
+    <meta name="keywords" content="Android，Java"/>
+
+
+
+    <meta name="description" content="算法基础——冒泡排序算法（Bubble Sort）原理、Java实现核心思想
+对于一组需要排序的数字，依次将每个位置上的数字与后面位置上的数字进行比较，如果两个数字的顺序错误，则调换两个位置上的数字。
+
+算法原理
+以降序排序为例
+
+
+假设有n个数字的数组a，需要进行n-1轮的排序，每轮确定一个..."/>
+
+
+<meta name="Robots" content="all">
+
+
+    <title>Cocoas | 冒泡排序算法</title>
+
+
+<link rel="icon" href="/images/favicon.ico">
+
+<link rel="stylesheet" href="/css/font-awesome.min.css">
+
+
+<link rel="stylesheet" href="/css/atom-one-dark.css">
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+<script src="/js/highlight.min.js"></script>
+
+<meta name="generator" content="Hexo 5.2.0"></head>
+<body>
+    <div class="main-container">
+        <header class="header">
+    <div class="global-width">
+        <nav class="nav-box">
+            
+                <a class="nav-item" href="/"
+                
+                >首页</a>
+            
+                <a class="nav-item" href="/resume"
+                
+                >简历</a>
+            
+                <a class="nav-item" href="/mood"
+                
+                   target="_blank"
+                
+                >心情</a>
+            
+                <a class="nav-item" href="/amusement/tetris"
+                
+                   target="_blank"
+                
+                >娱乐</a>
+            
+                <a class="nav-item" href="/about"
+                
+                >不榖</a>
+            
+        </nav>
+    </div>
+</header>
+
+        <section class="content global-width">
+            <div class="main">
+                <article class="box post">
+    <div class="post-title align-center detail-title">冒泡排序算法</div>
+    <div class="post-meta align-center">
+        
+        <i class="fa fa-calendar"></i> <time>2020-10-29</time>
+        <span class="dotted">|</span>
+        <i class="fa fa-user"></i> 
+        
+    </div>
+
+    <div class="post-content">
+        <h2 id="算法基础——冒泡排序算法（Bubble-Sort）原理、Java实现"><a href="#算法基础——冒泡排序算法（Bubble-Sort）原理、Java实现" class="headerlink" title="算法基础——冒泡排序算法（Bubble Sort）原理、Java实现"></a>算法基础——冒泡排序算法（Bubble Sort）原理、Java实现</h2><h3 id="核心思想"><a href="#核心思想" class="headerlink" title="核心思想"></a><strong>核心思想</strong></h3><blockquote>
+<p>对于一组需要排序的数字，依次将每个位置上的数字与后面位置上的数字进行比较，如果两个数字的顺序错误，则调换两个位置上的数字。</p>
+</blockquote>
+<h3 id="算法原理"><a href="#算法原理" class="headerlink" title="算法原理"></a><strong>算法原理</strong></h3><blockquote>
+<p>以降序排序为例</p>
+</blockquote>
+<blockquote>
+<p>假设有n个数字的数组a，需要进行n-1轮的排序，每轮确定一个数字的具体位置</p>
+</blockquote>
+<ul>
+<li>第一轮：将a[0]~a[n-1]之间的数字两两相邻的依次进行比较，当后面的数字大于前面的数字时，两个数字互换，此轮结束，a[n-1]则为最小的数字。</li>
+<li>第二轮：将a[0]~a[n-2]之间的数字两两相邻的依次进行比较，当后面的数字大于前面的数字时，两个数字互换，此轮结束，a[n-2]则为第2小的数字。</li>
+<li>…</li>
+<li>第n-1轮：将a[0]~a[1]之间的数字两两相邻的依次进行比较，当后面的数字大于前面的数字时，两个数字互换，此轮结束，a[1]则为第n-1小的数字。</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;**</span><br><span class="line"> * 冒泡排序：以降序排序为例。</span><br><span class="line"> * 先找最小数，相邻两个数字依次进行比较</span><br><span class="line"> * @param a</span><br><span class="line"> * @return</span><br><span class="line"> *&#x2F;</span><br><span class="line">public int[] bubbleSort_02(int[] a)&#123;</span><br><span class="line">    if(null &#x3D;&#x3D; a || a.length &lt;&#x3D; 0)&#123;</span><br><span class="line">        return null;</span><br><span class="line">    &#125;</span><br><span class="line">    &#x2F;&#x2F; 计算数字个数</span><br><span class="line">    int n &#x3D; a.length;</span><br><span class="line">    &#x2F;&#x2F; 临时变量：两个数字交换值时使用</span><br><span class="line">    int temp;</span><br><span class="line">    &#x2F;&#x2F; 共n-1轮排序的for循环</span><br><span class="line">    for(int i &#x3D; 0; i &lt; n; i++)&#123;</span><br><span class="line">        &#x2F;&#x2F;第i轮排序的for循环</span><br><span class="line">        for(int j &#x3D; 1; j &lt; n-i; j++)&#123;</span><br><span class="line">            &#x2F;&#x2F;前值小于后值时，两者互换</span><br><span class="line">            if(a[j-1] &lt; a[j])&#123;</span><br><span class="line">                temp &#x3D; a[j-1];</span><br><span class="line">                a[j-1] &#x3D; a[j];</span><br><span class="line">                a[j] &#x3D; temp;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    return a;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h3 id="算法的时间复杂度"><a href="#算法的时间复杂度" class="headerlink" title="算法的时间复杂度"></a><strong>算法的时间复杂度</strong></h3><blockquote>
+<p>O(N²)</p>
+</blockquote>
+<h3 id="算法特点"><a href="#算法特点" class="headerlink" title="算法特点"></a><strong>算法特点</strong></h3><blockquote>
+<p>冒泡排序是一种稳定的排序算法。排序过程中，遇到相同的元素并不会交换，从而保证了相同元素的前后位置关系不变。</p>
+</blockquote>
+
+    </div>
+</article>
+            </div>
+            <div class="aside">
+    
+        <div class="box widget">
+    <div class="introduction">
+        <p><img src="/images/avatar.jpg" alt="head-sculpture" /></p>
+        <p class="name">
+            博落回
+        </p>
+        <p class="slogan">流连矣 忘景幻云催 峦栈醺醺说旧梦 重山迟迟映霞辉 向晚共邀归 —— 忆江南</p>
+    </div>
+</div>
+    
+        
+<div class="box widget">
+    <div class="title">最新</div>
+    <ul class="item-box">
+        
+            
+                <li><a href="/2020/10/29/%E5%86%92%E6%B3%A1%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95/">冒泡排序算法</a></li>
+            
+        
+            
+                <li><a href="/2020/10/28/Cocoas%E7%9A%84%E6%96%B0%E5%8D%9A%E5%AE%A2/">Cocoas的新博客</a></li>
+            
+        
+            
+                <li><a href="/2020/10/28/hello-world/">Hello World</a></li>
+            
+        
+    </ul>
+</div>
+
+    
+        
+    
+        
+  <div class="box widget">
+    <div class="title">归档</div>
+    <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/10/">2020-10</a><span class="archive-list-count">3</span></li></ul>
+  </div>
+
+    
+        
+    
+</div>
+        </section>
+        <footer class="footer">
+    <div class="global-width footer-box">
+        <div class="copyright">
+            <span>Copyright &copy; 2019</span>
+            <span class="dotted">|</span>
+            <span>Powered by <a target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a></span>
+            <span class="dotted">|</span>
+            <span>Theme by <a href="javascript:">Loren</a></span>
+            <span class="dotted">|</span>
+            <span><a target="_blank" rel="noopener" href="http://www.beian.miit.gov.cn">浙ICP备18016660号-1</a></span>
+        </div>
+    </div>
+</footer>
+    </div>
+
+<script>
+    hljs.initHighlightingOnLoad();
+</script>
+</body>
+</html>
