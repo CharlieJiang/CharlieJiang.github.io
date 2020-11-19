@@ -24,32 +24,38 @@
     var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"8.0.1","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}};
   </script>
 
-  <meta name="description" content="Android,Java,Android SDK,Kotlin,">
-<meta property="og:type" content="website">
-<meta property="og:title" content="Cocoas">
-<meta property="og:url" content="http://example.com/index.html">
+  <meta name="description" content="简介 VerifyCodeInputView是一个自定义验证码输入框控件，支持自定义验证码输入框的宽高、间距、数量、输入框边框的宽度、颜色，支持输入框宽度自适应。项目Github地址：VerifyCodeInputView   使用效果未输入数字效果   输入数字后效果   引用方式 添加JitPack仓库在项目根目录的build.gradle中配置JitPack仓库：123456allproje">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Android自定义验证码输入框控件VerifyCodeInputView">
+<meta property="og:url" content="http://example.com/2020/11/19/Android%E8%87%AA%E5%AE%9A%E4%B9%89%E9%AA%8C%E8%AF%81%E7%A0%81%E8%BE%93%E5%85%A5%E6%A1%86/index.html">
 <meta property="og:site_name" content="Cocoas">
-<meta property="og:description" content="Android,Java,Android SDK,Kotlin,">
+<meta property="og:description" content="简介 VerifyCodeInputView是一个自定义验证码输入框控件，支持自定义验证码输入框的宽高、间距、数量、输入框边框的宽度、颜色，支持输入框宽度自适应。项目Github地址：VerifyCodeInputView   使用效果未输入数字效果   输入数字后效果   引用方式 添加JitPack仓库在项目根目录的build.gradle中配置JitPack仓库：123456allproje">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/pictures/自定义验证码输入框/自定义验证码输入框_未输入.png">
+<meta property="og:image" content="http://example.com/pictures/自定义验证码输入框/自定义验证码输入框_已输入.png">
+<meta property="article:published_time" content="2020-11-19T10:53:48.000Z">
+<meta property="article:modified_time" content="2020-11-19T12:44:34.853Z">
 <meta property="article:author" content="Cocoas">
-<meta property="article:tag" content="Android，Java">
+<meta property="article:tag" content="验证码输入框">
+<meta property="article:tag" content="自定义输入框">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/pictures/自定义验证码输入框/自定义验证码输入框_未输入.png">
 
 
-<link rel="canonical" href="http://example.com/">
+<link rel="canonical" href="http://example.com/2020/11/19/Android%E8%87%AA%E5%AE%9A%E4%B9%89%E9%AA%8C%E8%AF%81%E7%A0%81%E8%BE%93%E5%85%A5%E6%A1%86/">
 
 
 <script class="page-configurations">
   // https://hexo.io/docs/variables.html
   CONFIG.page = {
     sidebar: "",
-    isHome : true,
-    isPost : false,
+    isHome : false,
+    isPost : true,
     lang   : 'zh-CN'
   };
 </script>
 
-  <title>Cocoas</title>
+  <title>Android自定义验证码输入框控件VerifyCodeInputView | Cocoas</title>
   
 
 
@@ -165,7 +171,7 @@
 
   <aside class="sidebar">
 
-    <div class="sidebar-inner sidebar-overview-active">
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
       <ul class="sidebar-nav">
         <li class="sidebar-nav-toc">
           文章目录
@@ -178,6 +184,7 @@
       <div class="sidebar-panel-container">
         <!--noindex-->
         <section class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%AE%80%E4%BB%8B"><span class="nav-number">1.</span> <span class="nav-text">简介</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8%E6%95%88%E6%9E%9C"><span class="nav-number">2.</span> <span class="nav-text">使用效果</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%BC%95%E7%94%A8%E6%96%B9%E5%BC%8F"><span class="nav-number">3.</span> <span class="nav-text">引用方式</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%B1%9E%E6%80%A7%E8%AF%B4%E6%98%8E"><span class="nav-number">4.</span> <span class="nav-text">属性说明</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%BA%90%E4%BB%A3%E7%A0%81"><span class="nav-number">5.</span> <span class="nav-text">源代码</span></a></li></ol></div>
         </section>
         <!--/noindex-->
 
@@ -240,11 +247,12 @@
 </noscript>
 
 
-    <div class="main-inner index posts-expand">
+    <div class="main-inner post posts-expand">
       
 
       
-    
+
+  
 
 
 <div class="post-block">
@@ -264,10 +272,9 @@
       <meta itemprop="name" content="Cocoas">
     </span>
       <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2020/11/19/Android%E8%87%AA%E5%AE%9A%E4%B9%89%E9%AA%8C%E8%AF%81%E7%A0%81%E8%BE%93%E5%85%A5%E6%A1%86/" class="post-title-link" itemprop="url">Android自定义验证码输入框控件VerifyCodeInputView</a>
-        </h2>
+        <h1 class="post-title" itemprop="name headline">
+          Android自定义验证码输入框控件VerifyCodeInputView
+        </h1>
 
         <div class="post-meta-container">
           <div class="post-meta">
@@ -291,6 +298,13 @@
     </span>
 
   
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
 </div>
 
         </div>
@@ -300,7 +314,7 @@
     
     
     <div class="post-body" itemprop="articleBody">
-          <h1 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h1><blockquote>
+        <h1 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h1><blockquote>
 <p>VerifyCodeInputView是一个自定义验证码输入框控件，支持自定义验证码输入框的宽高、间距、数量、输入框边框的宽度、颜色，支持输入框宽度自适应。<br/><br>项目Github地址：<a target="_blank" rel="noopener" href="https://github.com/CharlieJiang/VerifyCodeInputView">VerifyCodeInputView</a> </p>
 </blockquote>
 <h1 id="使用效果"><a href="#使用效果" class="headerlink" title="使用效果"></a>使用效果</h1><p>未输入数字效果</p>
@@ -360,7 +374,6 @@
 <figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">resources</span>&gt;</span></span><br><span class="line">    <span class="comment">&lt;!--  自定义验证码输入框相关属性  --&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">declare-styleable</span> <span class="attr">name</span>=<span class="string">&quot;VerifyCodeInputViewStyle&quot;</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">attr</span> <span class="attr">name</span>=<span class="string">&quot;boxWidth&quot;</span> <span class="attr">format</span>=<span class="string">&quot;dimension&quot;</span>/&gt;</span>  //  单个数字输入框的宽度</span><br><span class="line">        <span class="tag">&lt;<span class="name">attr</span> <span class="attr">name</span>=<span class="string">&quot;boxHeight&quot;</span> <span class="attr">format</span>=<span class="string">&quot;dimension&quot;</span>/&gt;</span> //  单个数字输入框的高度</span><br><span class="line">        <span class="tag">&lt;<span class="name">attr</span> <span class="attr">name</span>=<span class="string">&quot;boxSpacing&quot;</span> <span class="attr">format</span>=<span class="string">&quot;dimension&quot;</span>/&gt;</span>    //  单个数字输入框间的间距</span><br><span class="line">        <span class="tag">&lt;<span class="name">attr</span> <span class="attr">name</span>=<span class="string">&quot;boxBorderHeight&quot;</span> <span class="attr">format</span>=<span class="string">&quot;dimension&quot;</span>/&gt;</span>   //  单个数字输入框的边框高度</span><br><span class="line">        <span class="tag">&lt;<span class="name">attr</span> <span class="attr">name</span>=<span class="string">&quot;boxCount&quot;</span> <span class="attr">format</span>=<span class="string">&quot;integer&quot;</span>/&gt;</span>    //  数字个数</span><br><span class="line">        <span class="tag">&lt;<span class="name">attr</span> <span class="attr">name</span>=<span class="string">&quot;boxBorderColorNormal&quot;</span> <span class="attr">format</span>=<span class="string">&quot;color&quot;</span>/&gt;</span>  //  单个数字输入框边框的默认颜色</span><br><span class="line">        <span class="tag">&lt;<span class="name">attr</span> <span class="attr">name</span>=<span class="string">&quot;boxBorderColorFocused&quot;</span> <span class="attr">format</span>=<span class="string">&quot;color&quot;</span>/&gt;</span> //  单个数字输入框边框的高亮颜色</span><br><span class="line">        <span class="tag">&lt;<span class="name">attr</span> <span class="attr">name</span>=<span class="string">&quot;autoFit&quot;</span> <span class="attr">format</span>=<span class="string">&quot;boolean&quot;</span>/&gt;</span> //  输入框宽度是否自动适应父布局宽度</span><br><span class="line">    <span class="tag">&lt;/<span class="name">declare-styleable</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">resources</span>&gt;</span></span><br></pre></td></tr></table></figure></li>
 </ul>
 
-      
     </div>
 
     
@@ -368,608 +381,45 @@
     
 
     <footer class="post-footer">
-        <div class="post-eof"></div>
-      
+          <div class="followme">
+  <span>欢迎关注我的其它发布渠道</span>
+
+  <div class="social-list">
+
+      <div class="social-item">
+        <a target="_blank" class="social-link" href="https://github.com/CharlieJiang">
+          <span class="icon">
+            <i class="fab fa-github"></i>
+          </span>
+
+          <span class="label">GitHub</span>
+        </a>
+      </div>
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/%E9%AA%8C%E8%AF%81%E7%A0%81%E8%BE%93%E5%85%A5%E6%A1%86/" rel="tag"># 验证码输入框</a>
+              <a href="/tags/%E8%87%AA%E5%AE%9A%E4%B9%89%E8%BE%93%E5%85%A5%E6%A1%86/" rel="tag"># 自定义输入框</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2020/11/06/%E5%8D%97%E4%BA%AC%E5%9E%83%E5%9C%BE%E5%BC%BA%E5%88%B6%E5%88%86%E7%B1%BB%E6%97%B6%E4%BB%A3%E6%9D%A5%E4%B8%B4/" rel="prev" title="南京垃圾强制分类已正式实施，快来学习垃圾分类知识">
+                  <i class="fa fa-chevron-left"></i> 南京垃圾强制分类已正式实施，快来学习垃圾分类知识
+                </a>
+            </div>
+            <div class="post-nav-item">
+            </div>
+          </div>
     </footer>
   </article>
 </div>
 
 
 
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2020/11/06/%E5%8D%97%E4%BA%AC%E5%9E%83%E5%9C%BE%E5%BC%BA%E5%88%B6%E5%88%86%E7%B1%BB%E6%97%B6%E4%BB%A3%E6%9D%A5%E4%B8%B4/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="Cocoas">
-      <meta itemprop="description" content="Android,Java,Android SDK,Kotlin,">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Cocoas">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2020/11/06/%E5%8D%97%E4%BA%AC%E5%9E%83%E5%9C%BE%E5%BC%BA%E5%88%B6%E5%88%86%E7%B1%BB%E6%97%B6%E4%BB%A3%E6%9D%A5%E4%B8%B4/" class="post-title-link" itemprop="url">南京垃圾强制分类已正式实施，快来学习垃圾分类知识</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-      
-
-      <time title="创建时间：2020-11-06 19:34:02 / 修改时间：22:29:54" itemprop="dateCreated datePublished" datetime="2020-11-06T19:34:02+08:00">2020-11-06</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-folder"></i>
-      </span>
-      <span class="post-meta-item-text">分类于</span>
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/%E7%94%9F%E6%B4%BB/" itemprop="url" rel="index"><span itemprop="name">生活</span></a>
-        </span>
-    </span>
-
-  
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <h2 id="实施时间"><a href="#实施时间" class="headerlink" title="实施时间"></a><strong>实施时间</strong></h2><p>2020年11月1日</p>
-<h2 id="垃圾分类种类"><a href="#垃圾分类种类" class="headerlink" title="垃圾分类种类"></a><strong>垃圾分类种类</strong></h2><p><a href="#可回收物"><kbd>可回收物</kbd></a> 、<a href="#有害垃圾"><kbd>有害垃圾</kbd></a> 、<a href="#厨余垃圾"><kbd>厨余垃圾</kbd></a> 和 <a href="#其他垃圾"><kbd>其他垃圾</kbd></a></p>
-<h2 id="分类标准"><a href="#分类标准" class="headerlink" title="分类标准"></a><strong>分类标准</strong></h2><p><img src="/pictures/%E5%8D%97%E4%BA%AC%E5%9E%83%E5%9C%BE%E5%BC%BA%E5%88%B6%E5%88%86%E7%B1%BB/%E5%9E%83%E5%9C%BE%E5%88%86%E7%B1%BB%E6%B1%87%E6%80%BB.jpg" alt="垃圾分类汇总"></p>
-<ol>
-<li><h3 id="可回收物"><a href="#可回收物" class="headerlink" title="可回收物"></a><strong>可回收物</strong></h3></li>
-</ol>
-<blockquote>
-<p>可回收物，是指适宜回收和可循环再利用的生活废弃物，主要包括废纸类、塑料类、玻璃类、金属类、织物类等。</p>
-</blockquote>
-<p><img src="/pictures/%E5%8D%97%E4%BA%AC%E5%9E%83%E5%9C%BE%E5%BC%BA%E5%88%B6%E5%88%86%E7%B1%BB/%E5%8F%AF%E5%9B%9E%E6%94%B6%E5%9E%83%E5%9C%BE_01.jpg" alt="可回收垃圾_01"><br><img src="/pictures/%E5%8D%97%E4%BA%AC%E5%9E%83%E5%9C%BE%E5%BC%BA%E5%88%B6%E5%88%86%E7%B1%BB/%E5%8F%AF%E5%9B%9E%E6%94%B6%E5%9E%83%E5%9C%BE_02.png" alt="可回收垃圾_02"></p>
-<ol start="2">
-<li><h3 id="有害垃圾"><a href="#有害垃圾" class="headerlink" title="有害垃圾"></a><strong>有害垃圾</strong></h3></li>
-</ol>
-<blockquote>
-<p>有害垃圾是指对人体健康、自然环境造成直接或者潜在危害的生活废弃物，主要包括充电电池、扣式电池、灯管、弃置药品、杀虫剂（容器）、水银产品等。</p>
-</blockquote>
-<p><img src="/pictures/%E5%8D%97%E4%BA%AC%E5%9E%83%E5%9C%BE%E5%BC%BA%E5%88%B6%E5%88%86%E7%B1%BB/%E6%9C%89%E5%AE%B3%E5%9E%83%E5%9C%BE_01.jpg" alt="有害垃圾_01"><br><img src="/pictures/%E5%8D%97%E4%BA%AC%E5%9E%83%E5%9C%BE%E5%BC%BA%E5%88%B6%E5%88%86%E7%B1%BB/%E6%9C%89%E5%AE%B3%E5%9E%83%E5%9C%BE_02.jpg" alt="有害垃圾_02"></p>
-<ol start="3">
-<li><h3 id="厨余垃圾"><a href="#厨余垃圾" class="headerlink" title="厨余垃圾"></a><strong>厨余垃圾</strong></h3></li>
-</ol>
-<blockquote>
-<p>厨余垃圾，又称湿垃圾，是指易腐的生活废弃物，主要包括家庭中产生的菜帮菜叶、瓜果皮核、剩菜剩饭、废弃食物等；餐饮经营者和单位集体食堂在食品加工、饮食服务、单位供餐等活动中产生的食物残渣、食品加工废料和废弃食用油脂等；农贸市场、农产品批发市场产生的蔬菜瓜果垃圾、腐肉，以及废弃的肉碎骨、水产品、畜禽内脏等。</p>
-</blockquote>
-<p><img src="/pictures/%E5%8D%97%E4%BA%AC%E5%9E%83%E5%9C%BE%E5%BC%BA%E5%88%B6%E5%88%86%E7%B1%BB/%E5%8E%A8%E4%BD%99%E5%9E%83%E5%9C%BE_01.jpg" alt="厨余垃圾_01"><br><img src="/pictures/%E5%8D%97%E4%BA%AC%E5%9E%83%E5%9C%BE%E5%BC%BA%E5%88%B6%E5%88%86%E7%B1%BB/%E5%8E%A8%E4%BD%99%E5%9E%83%E5%9C%BE_02.jpg" alt="厨余垃圾_02"></p>
-<ol start="4">
-<li><h3 id="其他垃圾"><a href="#其他垃圾" class="headerlink" title="其他垃圾"></a><strong>其他垃圾</strong></h3></li>
-</ol>
-<blockquote>
-<p>其他垃圾，又称干垃圾，是指除可回收物、有害垃圾、厨余垃圾之外的其他生活废弃物，比如厕所的卫生纸、用脏的餐巾纸等。</p>
-</blockquote>
-<p><img src="/pictures/%E5%8D%97%E4%BA%AC%E5%9E%83%E5%9C%BE%E5%BC%BA%E5%88%B6%E5%88%86%E7%B1%BB/%E5%85%B6%E4%BB%96%E5%9E%83%E5%9C%BE_01.jpg" alt="其他垃圾_01"><br><img src="/pictures/%E5%8D%97%E4%BA%AC%E5%9E%83%E5%9C%BE%E5%BC%BA%E5%88%B6%E5%88%86%E7%B1%BB/%E5%85%B6%E4%BB%96%E5%9E%83%E5%9C%BE_02.jpg" alt="其他垃圾_02"></p>
-<h2 id="处罚措施"><a href="#处罚措施" class="headerlink" title="处罚措施"></a><strong>处罚措施</strong></h2><blockquote>
-<p>《南京市生活垃圾管理条例》草案修改稿对未在指定地点分类投放生活垃圾，且情节严重的，对<strong>单位处以5万元以上50万元以下罚款</strong>；对<strong>个人处以200元以下罚款</strong>。单位或个人不履行垃圾分类义务的，还将被纳入失信平台并采取惩戒措施。</p>
-</blockquote>
-<h2 id="垃圾分类中的误区"><a href="#垃圾分类中的误区" class="headerlink" title="垃圾分类中的误区"></a><strong>垃圾分类中的误区</strong></h2><ol>
-<li><p><strong>并不是和“餐桌”有关的垃圾都是厨余垃圾</strong></p>
-<blockquote>
-<p>例如玉米粒啃光之后的玉米芯、吃完蚝肉之后的生蚝壳子、炖汤之后的大棒骨……这些垃圾都是从餐桌上产生，但属于“其他垃圾”。因为这些垃圾质地较硬、不容易腐烂，无法和其他厨余垃圾一样处理。</p>
-</blockquote>
-</li>
-<li><p><strong>并不是所有的纸张都能回收</strong></p>
-<blockquote>
-<p>纸张虽然是可回收物，但生活中大部分废纸都是“污染”过的，例如擦过嘴的餐巾纸、用过的厕纸、垫过盒饭的报纸等，这类纸张无法再回收利用，只能作为“其他垃圾”处理。</p>
-</blockquote>
-</li>
-<li><p><strong>并不是所有电池都是有害垃圾</strong></p>
-<blockquote>
-<p>只有含汞的可充电电池是有害垃圾，而其他一次性的干电池或碱性电池，内部不含汞，所以属于其他垃圾。</p>
-</blockquote>
-</li>
-</ol>
-<h2 id="垃圾分类小贴士"><a href="#垃圾分类小贴士" class="headerlink" title="垃圾分类小贴士"></a><strong>垃圾分类小贴士</strong></h2><ol>
-<li><strong>关于饮料瓶</strong><blockquote>
-<p>喝过的饮料瓶应该将其中的饮料残液倒干净后再投放至可回收物桶中。</p>
-</blockquote>
-</li>
-<li><strong>关于外卖</strong><blockquote>
-<p>点的外卖，应该将剩下的饭菜作为厨余垃圾处理，外卖包装作为其他垃圾。</p>
-</blockquote>
-</li>
-</ol>
-<h2 id="南京垃圾分类自助查询地址"><a href="#南京垃圾分类自助查询地址" class="headerlink" title="南京垃圾分类自助查询地址"></a><strong>南京垃圾分类自助查询地址</strong></h2><blockquote>
-<p><a target="_blank" rel="noopener" href="https://lajifenleiapp.com/nanjing">南京垃圾分类查询</a></p>
-</blockquote>
-<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a><strong>参考</strong></h2><ul>
-<li><a target="_blank" rel="noopener" href="http://jiangsu.sina.com.cn/news/2020-10-29/detail-iiznctkc8244113.shtml">本周日起南京生活垃圾强制分类 这些易“搞混淆”</a></li>
-<li><a target="_blank" rel="noopener" href="http://www.js.xinhuanet.com/2020-08/02/c_1126315813.htm">《南京市生活垃圾管理条例》 将于11月1日正式施行</a></li>
-<li><a target="_blank" rel="noopener" href="https://baike.baidu.com/item/%E5%8D%97%E4%BA%AC%E5%B8%82%E7%94%9F%E6%B4%BB%E5%9E%83%E5%9C%BE%E7%AE%A1%E7%90%86%E6%9D%A1%E4%BE%8B">南京市生活垃圾管理条例</a></li>
-</ul>
-
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2020/11/02/Android-Studio-%E6%97%A5%E5%BF%97%E5%81%9C%E6%AD%A2%E6%89%93%E5%8D%B0/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="Cocoas">
-      <meta itemprop="description" content="Android,Java,Android SDK,Kotlin,">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Cocoas">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2020/11/02/Android-Studio-%E6%97%A5%E5%BF%97%E5%81%9C%E6%AD%A2%E6%89%93%E5%8D%B0/" class="post-title-link" itemprop="url">Android Studio 真机调试时Logcat日志停止打印并报错unexpected EOF 问题处理</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-
-      <time title="创建时间：2020-11-02 19:26:33" itemprop="dateCreated datePublished" datetime="2020-11-02T19:26:33+08:00">2020-11-02</time>
-    </span>
-      <span class="post-meta-item">
-        <span class="post-meta-item-icon">
-          <i class="far fa-calendar-check"></i>
-        </span>
-        <span class="post-meta-item-text">更新于</span>
-        <time title="修改时间：2020-11-03 21:30:54" itemprop="dateModified" datetime="2020-11-03T21:30:54+08:00">2020-11-03</time>
-      </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-folder"></i>
-      </span>
-      <span class="post-meta-item-text">分类于</span>
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/Android/" itemprop="url" rel="index"><span itemprop="name">Android</span></a>
-        </span>
-    </span>
-
-  
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <h3 id="原因"><a href="#原因" class="headerlink" title="原因"></a><strong>原因</strong></h3><p>真机上设置的Logcat的日志缓冲区大小过小导致的</p>
-<h3 id="解决方式"><a href="#解决方式" class="headerlink" title="解决方式"></a><strong>解决方式</strong></h3><ol>
-<li>在真机上找到”日志记录器缓冲区大小”选项，路径:设置——开发者选项——调试——日志记录器缓冲区大小</li>
-</ol>
-<p><img src="/pictures/android_logcat_EOF/%E5%BC%80%E5%8F%91%E8%80%85%E9%80%89%E9%A1%B9_%E8%B0%83%E8%AF%95_%E6%97%A5%E5%BF%97%E8%AE%B0%E5%BD%95%E5%99%A8%E7%BC%93%E5%86%B2%E5%8C%BA%E5%A4%A7%E5%B0%8F.png" alt="开发者选项_调试_日志记录器缓冲区大小"></p>
-<ol start="2">
-<li>点击打开日志记录器缓冲区大小设置列表，根据需要选择大小即可。</li>
-</ol>
-<p><img src="/pictures/android_logcat_EOF/LogCacheSetList.png" alt="日志缓冲区大小设置列表"></p>
-
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2020/10/30/IntelliJ-IDEA%E4%B8%AD%E5%85%B3%E9%97%AD%E5%8F%8C%E5%87%BBshift%E5%BC%B9%E5%87%BA%E5%85%A8%E5%B1%80%E6%90%9C%E7%B4%A2%E5%BC%B9%E7%AA%97/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="Cocoas">
-      <meta itemprop="description" content="Android,Java,Android SDK,Kotlin,">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Cocoas">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2020/10/30/IntelliJ-IDEA%E4%B8%AD%E5%85%B3%E9%97%AD%E5%8F%8C%E5%87%BBshift%E5%BC%B9%E5%87%BA%E5%85%A8%E5%B1%80%E6%90%9C%E7%B4%A2%E5%BC%B9%E7%AA%97/" class="post-title-link" itemprop="url">IntelliJ IDEA中如何关闭双击shift弹出全局搜索弹窗功能以及如何修改为其他快捷键</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-      
-
-      <time title="创建时间：2020-10-30 19:27:13 / 修改时间：20:39:32" itemprop="dateCreated datePublished" datetime="2020-10-30T19:27:13+08:00">2020-10-30</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-folder"></i>
-      </span>
-      <span class="post-meta-item-text">分类于</span>
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/IDEA/" itemprop="url" rel="index"><span itemprop="name">IDEA</span></a>
-        </span>
-    </span>
-
-  
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <h3 id="问题"><a href="#问题" class="headerlink" title="问题"></a><strong>问题</strong></h3><p>&emsp;&emsp;使用IDEA时，经常会误触发双击shift的操作，导致弹出全局搜索的弹窗，影响码代码。</p>
-<h3 id="解决办法"><a href="#解决办法" class="headerlink" title="解决办法"></a><strong>解决办法</strong></h3><p>一种方式是直接禁用双击shift，另一种是使用其他的快捷键代替</p>
-<ol>
-<li>直接禁用双击shift弹窗</li>
-</ol>
-<ul>
-<li>IDEA中双击shift，在弹出的搜索框中输入Registry<br><img src="/pictures/idea_doubleClick_shift/%E5%85%A8%E5%B1%80%E6%90%9C%E7%B4%A2%E5%BC%B9%E7%AA%97%E4%B8%AD%E6%9F%A5%E6%89%BERegistry%E9%80%89%E9%A1%B9.png" alt="全局搜索弹窗"></li>
-<li>按回车后会弹出Registry弹窗，在列表中找到ide.suppress.double.click.handler选项，选项默认是未选中，手动选中后即会禁用双击。<br><img src="/pictures/idea_doubleClick_shift/Registry%E5%BC%B9%E7%AA%97.png" alt="Registry弹窗"></li>
-<li>禁用后如果想使用全局搜索功能，只需要在IDEA菜单中找到Navigate—&gt;Search Everywhere即可<br><img src="/pictures/idea_doubleClick_shift/idea%E8%8F%9C%E5%8D%95%E6%A0%8F%E6%89%93%E5%BC%80%E5%85%A8%E5%B1%80%E6%90%9C%E7%B4%A2.png" alt="IDEA菜单打开全局搜索弹窗"></li>
-</ul>
-<ol start="2">
-<li>修改为其它快捷键</li>
-</ol>
-<ul>
-<li>使用快捷键Ctrl + Alt+ S打开IDEA的设置窗口，或从菜单栏File—&gt;Settings打开。选中左侧的Keymap,在右侧的输入框中输入everywhere，找到下面的Search Everywhere选项<br><img src="/pictures/idea_doubleClick_shift/IDEA%E8%AE%BE%E7%BD%AE%E4%B8%AD%E6%9F%A5%E6%89%BE%E5%85%A8%E5%B1%80%E6%90%9C%E7%B4%A2%E5%BF%AB%E6%8D%B7%E9%94%AE%E9%80%89%E9%A1%B9.png" alt="IDEA设置中查找全局搜索快捷键选项"></li>
-<li>双击Search Everywhere选项，会弹出一个编辑快捷键的选项弹窗<br><img src="/pictures/idea_doubleClick_shift/%E7%BC%96%E8%BE%91%E5%BF%AB%E6%8D%B7%E9%94%AE%E4%B8%8B%E6%8B%89%E9%80%89%E6%8B%A9%E5%BC%B9%E7%AA%97.png" alt="编辑快捷键下拉选择弹窗"></li>
-<li>选择第一个Add Keyboard Shortcut，会弹出键盘快捷键设置弹窗，然后直接在键盘输入想要设置的快捷键即可。<br><img src="/pictures/idea_doubleClick_shift/%E9%94%AE%E7%9B%98%E5%BF%AB%E6%8D%B7%E9%94%AE%E8%AE%BE%E7%BD%AE%E5%BC%B9%E7%AA%97.png" alt="键盘快捷键设置弹窗"></li>
-</ul>
-
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2020/10/29/%E5%86%92%E6%B3%A1%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="Cocoas">
-      <meta itemprop="description" content="Android,Java,Android SDK,Kotlin,">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Cocoas">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2020/10/29/%E5%86%92%E6%B3%A1%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95/" class="post-title-link" itemprop="url">冒泡排序算法</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-
-      <time title="创建时间：2020-10-29 19:44:36" itemprop="dateCreated datePublished" datetime="2020-10-29T19:44:36+08:00">2020-10-29</time>
-    </span>
-      <span class="post-meta-item">
-        <span class="post-meta-item-icon">
-          <i class="far fa-calendar-check"></i>
-        </span>
-        <span class="post-meta-item-text">更新于</span>
-        <time title="修改时间：2020-10-30 22:21:19" itemprop="dateModified" datetime="2020-10-30T22:21:19+08:00">2020-10-30</time>
-      </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-folder"></i>
-      </span>
-      <span class="post-meta-item-text">分类于</span>
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/%E7%AE%97%E6%B3%95/" itemprop="url" rel="index"><span itemprop="name">算法</span></a>
-        </span>
-    </span>
-
-  
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <h2 id="算法基础——冒泡排序算法（Bubble-Sort）原理、Java实现"><a href="#算法基础——冒泡排序算法（Bubble-Sort）原理、Java实现" class="headerlink" title="算法基础——冒泡排序算法（Bubble Sort）原理、Java实现"></a>算法基础——冒泡排序算法（Bubble Sort）原理、Java实现</h2><h3 id="核心思想"><a href="#核心思想" class="headerlink" title="核心思想"></a><strong>核心思想</strong></h3><p>对于一组需要排序的数字，依次将每个位置上的数字与后面位置上的数字进行比较，如果两个数字的顺序错误，则调换两个位置上的数字。</p>
-<h3 id="算法原理"><a href="#算法原理" class="headerlink" title="算法原理"></a><strong>算法原理</strong></h3><p>以降序排序为例</p>
-<p>假设有n个数字的数组a，需要进行n-1轮的排序，每轮确定一个数字的具体位置</p>
-<ul>
-<li>第一轮：将a[0]~a[n-1]之间的数字两两相邻的依次进行比较，当后面的数字大于前面的数字时，两个数字互换，此轮结束，a[n-1]则为最小的数字。</li>
-<li>第二轮：将a[0]~a[n-2]之间的数字两两相邻的依次进行比较，当后面的数字大于前面的数字时，两个数字互换，此轮结束，a[n-2]则为第2小的数字。</li>
-<li>…</li>
-<li>第n-1轮：将a[0]~a[1]之间的数字两两相邻的依次进行比较，当后面的数字大于前面的数字时，两个数字互换，此轮结束，a[1]则为第n-1小的数字。</li>
-</ul>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 冒泡排序：以降序排序为例。</span></span><br><span class="line"><span class="comment"> * 先找最小数，相邻两个数字依次进行比较</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> a</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@return</span></span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">int</span>[] bubbleSort_02(<span class="keyword">int</span>[] a)&#123;</span><br><span class="line">    <span class="keyword">if</span>(<span class="keyword">null</span> == a || a.length &lt;= <span class="number">0</span>)&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 计算数字个数</span></span><br><span class="line">    <span class="keyword">int</span> n = a.length;</span><br><span class="line">    <span class="comment">// 临时变量：两个数字交换值时使用</span></span><br><span class="line">    <span class="keyword">int</span> temp;</span><br><span class="line">    <span class="comment">// 共n-1轮排序的for循环</span></span><br><span class="line">    <span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; n; i++)&#123;</span><br><span class="line">        <span class="comment">//第i轮排序的for循环</span></span><br><span class="line">        <span class="keyword">for</span>(<span class="keyword">int</span> j = <span class="number">1</span>; j &lt; n-i; j++)&#123;</span><br><span class="line">            <span class="comment">//前值小于后值时，两者互换</span></span><br><span class="line">            <span class="keyword">if</span>(a[j-<span class="number">1</span>] &lt; a[j])&#123;</span><br><span class="line">                temp = a[j-<span class="number">1</span>];</span><br><span class="line">                a[j-<span class="number">1</span>] = a[j];</span><br><span class="line">                a[j] = temp;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> a;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-<h3 id="算法的时间复杂度"><a href="#算法的时间复杂度" class="headerlink" title="算法的时间复杂度"></a><strong>算法的时间复杂度</strong></h3><p>O(N²)</p>
-<h3 id="算法特点"><a href="#算法特点" class="headerlink" title="算法特点"></a><strong>算法特点</strong></h3><p>冒泡排序是一种稳定的排序算法。排序过程中，遇到相同的元素并不会交换，从而保证了相同元素的前后位置关系不变。</p>
-
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2020/10/28/Cocoas%E7%9A%84%E6%96%B0%E5%8D%9A%E5%AE%A2/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="Cocoas">
-      <meta itemprop="description" content="Android,Java,Android SDK,Kotlin,">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Cocoas">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2020/10/28/Cocoas%E7%9A%84%E6%96%B0%E5%8D%9A%E5%AE%A2/" class="post-title-link" itemprop="url">Cocoas的新博客</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-
-      <time title="创建时间：2020-10-28 19:28:27" itemprop="dateCreated datePublished" datetime="2020-10-28T19:28:27+08:00">2020-10-28</time>
-    </span>
-      <span class="post-meta-item">
-        <span class="post-meta-item-icon">
-          <i class="far fa-calendar-check"></i>
-        </span>
-        <span class="post-meta-item-text">更新于</span>
-        <time title="修改时间：2020-10-31 14:07:37" itemprop="dateModified" datetime="2020-10-31T14:07:37+08:00">2020-10-31</time>
-      </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-folder"></i>
-      </span>
-      <span class="post-meta-item-text">分类于</span>
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/Hexo/" itemprop="url" rel="index"><span itemprop="name">Hexo</span></a>
-        </span>
-    </span>
-
-  
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <h2 id="Hexo功能测试"><a href="#Hexo功能测试" class="headerlink" title="Hexo功能测试"></a>Hexo功能测试</h2><p>1.本地图片测试<br><img src="/pictures/SearchEverywhere_window.png" alt="本地图片"></p>
-
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2020/10/28/hello-world/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="Cocoas">
-      <meta itemprop="description" content="Android,Java,Android SDK,Kotlin,">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Cocoas">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2020/10/28/hello-world/" class="post-title-link" itemprop="url">Hello World</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-
-      <time title="创建时间：2020-10-28 19:22:57" itemprop="dateCreated datePublished" datetime="2020-10-28T19:22:57+08:00">2020-10-28</time>
-    </span>
-      <span class="post-meta-item">
-        <span class="post-meta-item-icon">
-          <i class="far fa-calendar-check"></i>
-        </span>
-        <span class="post-meta-item-text">更新于</span>
-        <time title="修改时间：2020-10-30 22:21:08" itemprop="dateModified" datetime="2020-10-30T22:21:08+08:00">2020-10-30</time>
-      </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-folder"></i>
-      </span>
-      <span class="post-meta-item-text">分类于</span>
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/Hexo/" itemprop="url" rel="index"><span itemprop="name">Hexo</span></a>
-        </span>
-    </span>
-
-  
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <p>Welcome to <a target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a target="_blank" rel="noopener" href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a target="_blank" rel="noopener" href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a target="_blank" rel="noopener" href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p>
-<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo new <span class="string">&quot;My New Post&quot;</span></span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/writing.html">Writing</a></p>
-<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/server.html">Server</a></p>
-<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/generating.html">Generating</a></p>
-<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>
-
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-
-  
 
 
 
