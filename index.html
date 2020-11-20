@@ -173,6 +173,9 @@
         <li class="sidebar-nav-overview">
           站点概览
         </li>
+		<li>
+          第三标题
+        </li>
       </ul>
 
       <div class="sidebar-panel-container">
@@ -191,20 +194,20 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">7</span>
+          <span class="site-state-item-count">8</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">5</span>
+        <span class="site-state-item-count">6</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">15</span>
+        <span class="site-state-item-count">18</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -252,6 +255,90 @@
   
 
   <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2020/11/20/Java%E5%AD%97%E7%AC%A6%E4%B8%B2+%E6%96%B9%E5%BC%8F%E6%8B%BC%E6%8E%A5%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Cocoas">
+      <meta itemprop="description" content="Android,Java,Android SDK,Kotlin,">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Cocoas">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2020/11/20/Java%E5%AD%97%E7%AC%A6%E4%B8%B2+%E6%96%B9%E5%BC%8F%E6%8B%BC%E6%8E%A5%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/" class="post-title-link" itemprop="url">Java字符串+方式拼接的实现原理</a>
+        </h2>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+      
+
+      <time title="创建时间：2020-11-20 21:04:48 / 修改时间：21:28:29" itemprop="dateCreated datePublished" datetime="2020-11-20T21:04:48+08:00">2020-11-20</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/java/" itemprop="url" rel="index"><span itemprop="name">java</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+          <h2 id="举例"><a href="#举例" class="headerlink" title="举例"></a><strong>举例</strong></h2><p>字符串的“+”拼接操作在底层是通过构建StringBuilder来实现的（JDK 1.5之前是StringBuffer）。</p>
+<p>以两个字符串的拼接为例：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">    String s1 = <span class="string">&quot;abc&quot;</span>;</span><br><span class="line">    String s2 = <span class="string">&quot;def&quot;</span>;</span><br><span class="line">    System.out.println(s1 + s2);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2020/11/20/Java%E5%AD%97%E7%AC%A6%E4%B8%B2+%E6%96%B9%E5%BC%8F%E6%8B%BC%E6%8E%A5%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+</div>
+
+
+
+
+    
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="http://example.com/2020/11/19/Android%E8%87%AA%E5%AE%9A%E4%B9%89%E9%AA%8C%E8%AF%81%E7%A0%81%E8%BE%93%E5%85%A5%E6%A1%86/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -278,7 +365,7 @@
       <span class="post-meta-item-text">发表于</span>
       
 
-      <time title="创建时间：2020-11-19 18:53:48 / 修改时间：20:50:31" itemprop="dateCreated datePublished" datetime="2020-11-19T18:53:48+08:00">2020-11-19</time>
+      <time title="创建时间：2020-11-19 18:53:48 / 修改时间：22:18:39" itemprop="dateCreated datePublished" datetime="2020-11-19T18:53:48+08:00">2020-11-19</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -303,67 +390,14 @@
           <h1 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h1><blockquote>
 <p>VerifyCodeInputView是一个自定义验证码输入框控件，支持自定义验证码输入框的宽高、间距、数量、输入框边框的宽度、颜色，支持输入框宽度自适应。<br/><br>项目Github地址：<a target="_blank" rel="noopener" href="https://github.com/CharlieJiang/VerifyCodeInputView">VerifyCodeInputView</a> </p>
 </blockquote>
-<h1 id="使用效果"><a href="#使用效果" class="headerlink" title="使用效果"></a>使用效果</h1><blockquote>
-<p>未输入数字效果</p>
-</blockquote>
-<img src="/pictures/自定义验证码输入框/自定义验证码输入框_未输入.png" alt="使用效果图——未输入" width="720" height="1280" align="middle"/>
-
-<blockquote>
-<p>输入数字后效果</p>
-</blockquote>
-<img src="/pictures/自定义验证码输入框/自定义验证码输入框_已输入.png" alt="使用效果图——已输入" width="720" height="1280" align="middle"/>
-
-<h1 id="引用方式"><a href="#引用方式" class="headerlink" title="引用方式"></a>引用方式</h1><ul>
-<li>添加JitPack仓库<br>在项目根目录的build.gradle中配置JitPack仓库：<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="selector-tag">allprojects</span> &#123;</span><br><span class="line">    repositories &#123;</span><br><span class="line">        ...</span><br><span class="line">        maven &#123; url &#x27;https://jitpack.io&#x27; &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
-<li>添加项目依赖<br>在需要调用的module的build.gradle中添加依赖：<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="selector-tag">implementation</span> (&quot;<span class="selector-tag">com</span><span class="selector-class">.github</span><span class="selector-class">.CharlieJiang</span><span class="selector-pseudo">:VerifyCodeInputView</span><span class="selector-pseudo">:v1.0&quot;)</span></span><br></pre></td></tr></table></figure></li>
-<li>在xml布局中引用<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">com.cocoas.view.VerifyCodeInputView</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:id</span>=<span class="string">&quot;@+id/main_verifyCodeInputView_default&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:layout_width</span>=<span class="string">&quot;wrap_content&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:layout_height</span>=<span class="string">&quot;wrap_content&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:inputType</span>=<span class="string">&quot;number&quot;</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">com.cocoas.view.VerifyCodeInputView</span>&gt;</span></span><br></pre></td></tr></table></figure>
-<h1 id="属性说明"><a href="#属性说明" class="headerlink" title="属性说明"></a>属性说明</h1></li>
-</ul>
-<ol>
-<li><p><strong>boxWidth、boxHeight</strong><br/></p>
-<blockquote>
-<p>单个验证码输入框的宽高（暂时只支持宽高相等的设置）  </p>
-</blockquote>
-</li>
-<li><p><strong>boxSpacing</strong><br/></p>
-<blockquote>
-<p>单个验证码输入框间的间距  </p>
-</blockquote>
-</li>
-<li><p><strong>boxCount</strong><br/></p>
-<blockquote>
-<p>验证码位数</p>
-</blockquote>
-</li>
-<li><p><strong>boxBorderHeight</strong><br/></p>
-<blockquote>
-<p>单个验证码输入框的边框高度</p>
-</blockquote>
-</li>
-<li><p><strong>boxBorderColorNormal</strong><br/></p>
-<blockquote>
-<p>单个验证码输入框边框的默认颜色</p>
-</blockquote>
-</li>
-<li><p><strong>boxBorderColorFocused</strong><br/></p>
-<blockquote>
-<p>单个验证码输入框边框的高亮颜色</p>
-</blockquote>
-</li>
-<li><p><strong>autoFit</strong><br/></p>
-<blockquote>
-<p>设置单个验证码输入框的宽高是否根据父布局宽度自适应</p>
-</blockquote>
-</li>
-</ol>
-<h1 id="源代码"><a href="#源代码" class="headerlink" title="源代码"></a>源代码</h1><ul>
-<li><p>Java代码</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br><span class="line">201</span><br><span class="line">202</span><br><span class="line">203</span><br><span class="line">204</span><br><span class="line">205</span><br><span class="line">206</span><br><span class="line">207</span><br><span class="line">208</span><br><span class="line">209</span><br><span class="line">210</span><br><span class="line">211</span><br><span class="line">212</span><br><span class="line">213</span><br><span class="line">214</span><br><span class="line">215</span><br><span class="line">216</span><br><span class="line">217</span><br><span class="line">218</span><br><span class="line">219</span><br><span class="line">220</span><br><span class="line">221</span><br><span class="line">222</span><br><span class="line">223</span><br><span class="line">224</span><br><span class="line">225</span><br><span class="line">226</span><br><span class="line">227</span><br><span class="line">228</span><br><span class="line">229</span><br><span class="line">230</span><br><span class="line">231</span><br><span class="line">232</span><br><span class="line">233</span><br><span class="line">234</span><br><span class="line">235</span><br><span class="line">236</span><br><span class="line">237</span><br><span class="line">238</span><br><span class="line">239</span><br><span class="line">240</span><br><span class="line">241</span><br><span class="line">242</span><br><span class="line">243</span><br><span class="line">244</span><br><span class="line">245</span><br><span class="line">246</span><br><span class="line">247</span><br><span class="line">248</span><br><span class="line">249</span><br><span class="line">250</span><br><span class="line">251</span><br><span class="line">252</span><br><span class="line">253</span><br><span class="line">254</span><br><span class="line">255</span><br><span class="line">256</span><br><span class="line">257</span><br><span class="line">258</span><br><span class="line">259</span><br><span class="line">260</span><br><span class="line">261</span><br><span class="line">262</span><br><span class="line">263</span><br><span class="line">264</span><br><span class="line">265</span><br><span class="line">266</span><br><span class="line">267</span><br><span class="line">268</span><br><span class="line">269</span><br><span class="line">270</span><br><span class="line">271</span><br><span class="line">272</span><br><span class="line">273</span><br><span class="line">274</span><br><span class="line">275</span><br><span class="line">276</span><br><span class="line">277</span><br><span class="line">278</span><br><span class="line">279</span><br><span class="line">280</span><br><span class="line">281</span><br><span class="line">282</span><br><span class="line">283</span><br><span class="line">284</span><br><span class="line">285</span><br><span class="line">286</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.cocoas.verifycodeinputview;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> android.content.Context;</span><br><span class="line"><span class="keyword">import</span> android.content.res.TypedArray;</span><br><span class="line"><span class="keyword">import</span> android.graphics.Canvas;</span><br><span class="line"><span class="keyword">import</span> android.graphics.Color;</span><br><span class="line"><span class="keyword">import</span> android.graphics.Paint;</span><br><span class="line"><span class="keyword">import</span> android.graphics.Rect;</span><br><span class="line"><span class="keyword">import</span> android.text.InputFilter;</span><br><span class="line"><span class="keyword">import</span> android.text.TextPaint;</span><br><span class="line"><span class="keyword">import</span> android.text.method.BaseMovementMethod;</span><br><span class="line"><span class="keyword">import</span> android.text.method.MovementMethod;</span><br><span class="line"><span class="keyword">import</span> android.util.AttributeSet;</span><br><span class="line"><span class="keyword">import</span> android.util.Log;</span><br><span class="line"><span class="keyword">import</span> android.view.inputmethod.InputMethodManager;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> androidx.appcompat.widget.AppCompatEditText;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 自定义验证码输入框</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span> 蒋庆意</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Date</span> 2020/6/5</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Time</span> 10:19</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * By cocoas</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">VerifyCodeInputView</span> <span class="keyword">extends</span> <span class="title">AppCompatEditText</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//输入框宽度</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> boxWidth = <span class="number">128</span>;</span><br><span class="line">    <span class="comment">//输入框高度</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> boxHeight = <span class="number">128</span>;</span><br><span class="line">    <span class="comment">//输入框边框高度</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> boxBorderHeight = <span class="number">4</span>;</span><br><span class="line">    <span class="comment">//输入框间距</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> boxSpacing = <span class="number">30</span>;</span><br><span class="line">    <span class="comment">//输入框数量：默认6个</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> boxCount = <span class="number">6</span>;</span><br><span class="line">    <span class="comment">//输入框边框默认颜色</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> boxBorderColorNormal = getResources().getColor(android.R.color.darker_gray);</span><br><span class="line">    <span class="comment">//输入框边框高亮颜色</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> boxBorderColorFocused = getResources().getColor(android.R.color.holo_blue_dark);</span><br><span class="line">    <span class="comment">//输入框是否自动适应父布局宽度：如果不自动适应，则以设定的宽高为准</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">boolean</span> autoFit = <span class="keyword">false</span>;</span><br><span class="line">    <span class="comment">//输入框宽度与输入框间间距的比例</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> spacingRate = <span class="number">3</span>;</span><br><span class="line">    <span class="comment">//输入框尺寸</span></span><br><span class="line">    <span class="keyword">private</span> Rect boxRect = <span class="keyword">new</span> Rect();</span><br><span class="line">    <span class="comment">//输入完成监听</span></span><br><span class="line">    <span class="keyword">private</span> OnInputFinishedListener onInputFinishedListener;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">VerifyCodeInputView</span><span class="params">(Context context, AttributeSet attrs)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>(context, attrs);</span><br><span class="line">        TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.VerifyCodeInputViewStyle);</span><br><span class="line">        <span class="comment">//获取自定义属性中有值的属性个数</span></span><br><span class="line">        <span class="keyword">int</span> indexCount = typedArray.getIndexCount();</span><br><span class="line">        <span class="comment">//遍历获取自定义属性的值</span></span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; indexCount; i++) &#123;</span><br><span class="line">            <span class="keyword">int</span> index = typedArray.getIndex(i);</span><br><span class="line">            <span class="keyword">if</span> (index == R.styleable.VerifyCodeInputViewStyle_boxWidth) &#123;</span><br><span class="line">                <span class="keyword">this</span>.boxWidth = (<span class="keyword">int</span>) typedArray.getDimension(index, boxWidth);</span><br><span class="line">            &#125; <span class="keyword">else</span> <span class="keyword">if</span> (index == R.styleable.VerifyCodeInputViewStyle_boxHeight) &#123;</span><br><span class="line">                <span class="keyword">this</span>.boxHeight = (<span class="keyword">int</span>) typedArray.getDimension(index, boxHeight);</span><br><span class="line">            &#125; <span class="keyword">else</span> <span class="keyword">if</span> (index == R.styleable.VerifyCodeInputViewStyle_boxBorderHeight) &#123;</span><br><span class="line">                <span class="keyword">this</span>.boxBorderHeight = (<span class="keyword">int</span>) typedArray.getDimension(index, boxBorderHeight);</span><br><span class="line">            &#125; <span class="keyword">else</span> <span class="keyword">if</span> (index == R.styleable.VerifyCodeInputViewStyle_boxSpacing) &#123;</span><br><span class="line">                <span class="keyword">this</span>.boxSpacing = (<span class="keyword">int</span>) typedArray.getDimension(index, boxSpacing);</span><br><span class="line">            &#125; <span class="keyword">else</span> <span class="keyword">if</span> (index == R.styleable.VerifyCodeInputViewStyle_boxCount) &#123;</span><br><span class="line">                <span class="keyword">this</span>.boxCount = typedArray.getInt(index, boxCount);</span><br><span class="line">            &#125; <span class="keyword">else</span> <span class="keyword">if</span> (index == R.styleable.VerifyCodeInputViewStyle_boxBorderColorNormal) &#123;</span><br><span class="line">                <span class="keyword">this</span>.boxBorderColorNormal = typedArray.getColor(index,</span><br><span class="line">                        getResources().getColor(android.R.color.darker_gray));</span><br><span class="line">            &#125; <span class="keyword">else</span> <span class="keyword">if</span> (index == R.styleable.VerifyCodeInputViewStyle_boxBorderColorFocused) &#123;</span><br><span class="line">                <span class="keyword">this</span>.boxBorderColorFocused = typedArray.getColor(index,</span><br><span class="line">                        getResources().getColor(android.R.color.holo_blue_dark));</span><br><span class="line">            &#125; <span class="keyword">else</span> <span class="keyword">if</span> (index == R.styleable.VerifyCodeInputViewStyle_autoFit) &#123;</span><br><span class="line">                <span class="keyword">this</span>.autoFit = typedArray.getBoolean(index, <span class="keyword">false</span>);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">//使用完TypedArray及时回收，以供其他模块使用</span></span><br><span class="line">        typedArray.recycle();</span><br><span class="line">        <span class="comment">//设置输入框允许输入的最大数字数量</span></span><br><span class="line">        setInputMaxLength(boxCount);</span><br><span class="line">        <span class="comment">//输入框不支持长按</span></span><br><span class="line">        setLongClickable(<span class="keyword">false</span>);</span><br><span class="line">        <span class="comment">//隐藏输入框原背景色</span></span><br><span class="line">        setBackgroundColor(Color.TRANSPARENT);</span><br><span class="line">        <span class="comment">//不显示输入框中的光标</span></span><br><span class="line">        setCursorVisible(<span class="keyword">false</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 自动计算输入框宽高和间距</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">calculateAttrs</span><span class="params">(<span class="keyword">int</span> width)</span> </span>&#123;</span><br><span class="line">        boxSpacing = width / ((spacingRate + <span class="number">1</span>) * boxCount - <span class="number">1</span>);</span><br><span class="line">        boxWidth = boxSpacing * spacingRate;</span><br><span class="line">        boxHeight = boxWidth;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 设置最大输入长度</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> maxLength</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">setInputMaxLength</span><span class="params">(<span class="keyword">int</span> maxLength)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (maxLength &gt; <span class="number">0</span>) &#123;</span><br><span class="line">            setFilters(<span class="keyword">new</span> InputFilter[]&#123;<span class="keyword">new</span> InputFilter.LengthFilter(maxLength)&#125;);</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            setFilters(<span class="keyword">new</span> InputFilter[<span class="number">0</span>]);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> MovementMethod <span class="title">getDefaultMovementMethod</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="comment">//不支持文本选中</span></span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> BaseMovementMethod();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">onMeasure</span><span class="params">(<span class="keyword">int</span> widthMeasureSpec, <span class="keyword">int</span> heightMeasureSpec)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>.onMeasure(widthMeasureSpec, heightMeasureSpec);</span><br><span class="line">        <span class="comment">//输入框当前的尺寸与通过自定义属性设置的尺寸进行比较</span></span><br><span class="line">        <span class="keyword">int</span> width = getMeasuredWidth();</span><br><span class="line">        <span class="keyword">int</span> height = getMeasuredHeight();</span><br><span class="line"><span class="comment">//		Logger.w(&quot;onMeasure+(&quot; + width + &quot;,&quot; + height + &quot;)&quot;);</span></span><br><span class="line">        <span class="keyword">int</span> widthSpecModel = MeasureSpec.getMode(widthMeasureSpec);</span><br><span class="line">        <span class="keyword">int</span> heightSpecModel = MeasureSpec.getMode(heightMeasureSpec);</span><br><span class="line">        <span class="comment">//比较输入框当前的高度是否符合设定的高度boxHeight</span></span><br><span class="line">        <span class="keyword">if</span> (height &lt; boxHeight) &#123;</span><br><span class="line">            height = boxHeight;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">int</span> actualWidth = boxWidth * boxCount + boxSpacing * (boxCount - <span class="number">1</span>);</span><br><span class="line">        <span class="keyword">if</span> (widthSpecModel == MeasureSpec.AT_MOST) &#123;</span><br><span class="line">            width = actualWidth;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">//重新计算输入框的测量尺寸</span></span><br><span class="line">        widthMeasureSpec = MeasureSpec.makeMeasureSpec(width, widthSpecModel);</span><br><span class="line">        heightMeasureSpec = MeasureSpec.makeMeasureSpec(height, heightSpecModel);</span><br><span class="line"></span><br><span class="line">        <span class="comment">//设置新的测量尺寸</span></span><br><span class="line">        setMeasuredDimension(widthMeasureSpec, heightMeasureSpec);</span><br><span class="line"><span class="comment">//		&#125;</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">onLayout</span><span class="params">(<span class="keyword">boolean</span> changed, <span class="keyword">int</span> left, <span class="keyword">int</span> top, <span class="keyword">int</span> right, <span class="keyword">int</span> bottom)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>.onLayout(changed, left, top, right, bottom);</span><br><span class="line">        Log.w(<span class="string">&quot;onLayout&quot;</span>,<span class="string">&quot;(&quot;</span> + getMeasuredWidth() + <span class="string">&quot;,&quot;</span> + getMeasuredHeight() + <span class="string">&quot;)&quot;</span>);</span><br><span class="line">        <span class="comment">//自动计算每个输入框的宽度、输入框间间距</span></span><br><span class="line">        Log.d(<span class="string">&quot;onLayout&quot;</span>,<span class="string">&quot;autoFit=&quot;</span> + autoFit);</span><br><span class="line">        <span class="keyword">if</span> (autoFit) &#123;</span><br><span class="line">            calculateAttrs(getMeasuredWidth());</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">onDraw</span><span class="params">(Canvas canvas)</span> </span>&#123;</span><br><span class="line">        <span class="comment">// 重新绘制输入框</span></span><br><span class="line">        drawBox(canvas);</span><br><span class="line">        drawNumber(canvas);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 绘制单个数字的输入框</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> canvas</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">drawBox</span><span class="params">(Canvas canvas)</span> </span>&#123;</span><br><span class="line">        <span class="comment">//单个数字输入框的坐标</span></span><br><span class="line">        boxRect.left = <span class="number">0</span>;</span><br><span class="line">        boxRect.top = boxHeight - boxBorderHeight;</span><br><span class="line">        boxRect.right = boxWidth;</span><br><span class="line">        boxRect.bottom = boxHeight;</span><br><span class="line">        <span class="comment">//输入框画笔</span></span><br><span class="line">        Paint boxPaint = <span class="keyword">new</span> Paint();</span><br><span class="line">        <span class="comment">//普通输入框颜色</span></span><br><span class="line">        boxPaint.setColor(boxBorderColorNormal);</span><br><span class="line">        <span class="comment">//当前画布保存的状态</span></span><br><span class="line">        <span class="keyword">int</span> canvasSaveCount = canvas.getSaveCount();</span><br><span class="line">        <span class="comment">//保存画布</span></span><br><span class="line">        canvas.save();</span><br><span class="line">        <span class="comment">//遍历绘制所有数字输入框</span></span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; boxCount; i++) &#123;</span><br><span class="line">            canvas.drawRect(boxRect, boxPaint);</span><br><span class="line">            <span class="comment">//计算下一个数字输入框的位置</span></span><br><span class="line">            <span class="keyword">int</span> nextBoxLeft = boxRect.right + boxSpacing;</span><br><span class="line">            <span class="comment">//保存画布</span></span><br><span class="line">            canvas.save();</span><br><span class="line">            <span class="comment">//画布平移到下一个绘制输入框的位置</span></span><br><span class="line">            canvas.translate(nextBoxLeft, <span class="number">0</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">//还原画布状态</span></span><br><span class="line">        canvas.restoreToCount(canvasSaveCount);</span><br><span class="line">        <span class="comment">//画布归位</span></span><br><span class="line">        canvas.translate(<span class="number">0</span>, <span class="number">0</span>);</span><br><span class="line">        <span class="comment">//绘制高亮显示数字输入框</span></span><br><span class="line">        <span class="comment">//获取待输入数字输入框的序号</span></span><br><span class="line">        <span class="keyword">int</span> boxIndex = Math.max(<span class="number">0</span>, getEditableText().length());</span><br><span class="line">        <span class="comment">//输入完所有数字后不再绘制高亮的输入框</span></span><br><span class="line">        <span class="keyword">if</span> (boxIndex &lt; boxCount) &#123;</span><br><span class="line">            <span class="comment">//计算此输入框的绘制位置</span></span><br><span class="line">            boxRect.left = (boxWidth + boxSpacing) * boxIndex;</span><br><span class="line">            boxRect.right = boxRect.left + boxWidth;</span><br><span class="line">            <span class="comment">//高亮显示输入框的颜色</span></span><br><span class="line">            boxPaint.setColor(boxBorderColorFocused);</span><br><span class="line">            <span class="comment">//绘制输入框</span></span><br><span class="line">            canvas.drawRect(boxRect, boxPaint);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 绘制输入的数字</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> canvas</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">drawNumber</span><span class="params">(Canvas canvas)</span> </span>&#123;</span><br><span class="line">        <span class="comment">//获取当前画布保存的状态</span></span><br><span class="line">        <span class="keyword">int</span> saveCount = canvas.getSaveCount();</span><br><span class="line">        <span class="comment">//画布归位</span></span><br><span class="line">        canvas.translate(<span class="number">0</span>, <span class="number">0</span>);</span><br><span class="line">        <span class="comment">//获取需要绘制的数字的个数</span></span><br><span class="line">        <span class="keyword">int</span> numberCount = getEditableText().length();</span><br><span class="line">        <span class="comment">//文本画笔</span></span><br><span class="line">        TextPaint textPaint = getPaint();</span><br><span class="line"><span class="comment">//		textPaint.setTextSize(txtSize);</span></span><br><span class="line">        textPaint.setColor(getCurrentTextColor());</span><br><span class="line">        <span class="comment">//遍历绘制数字</span></span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; numberCount; i++) &#123;</span><br><span class="line">            String numberText = String.valueOf(getEditableText().charAt(i));</span><br><span class="line">            <span class="comment">//获取文本大小(重用输入框的Rect)</span></span><br><span class="line">            textPaint.getTextBounds(numberText, <span class="number">0</span>, <span class="number">1</span>, boxRect);</span><br><span class="line">            <span class="comment">//计算数字的绘制位置</span></span><br><span class="line">            <span class="keyword">int</span> x = boxWidth / <span class="number">2</span> - boxRect.centerX() + (boxWidth + boxSpacing) * i;</span><br><span class="line">            <span class="keyword">int</span> y = canvas.getHeight() / <span class="number">2</span> + boxRect.centerY() / <span class="number">2</span>;</span><br><span class="line">            <span class="comment">//绘制数字</span></span><br><span class="line">            canvas.drawText(numberText, x, y, textPaint);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">//画布还原</span></span><br><span class="line">        canvas.restoreToCount(saveCount);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 设置输入完成监听</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> listener</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setOnInputFinishedListener</span><span class="params">(OnInputFinishedListener listener)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.onInputFinishedListener = listener;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">onTextChanged</span><span class="params">(CharSequence text, <span class="keyword">int</span> start, <span class="keyword">int</span> lengthBefore, <span class="keyword">int</span> lengthAfter)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>.onTextChanged(text, start, lengthBefore, lengthAfter);</span><br><span class="line">        <span class="keyword">int</span> length = text.length();</span><br><span class="line">        <span class="keyword">if</span> (length == boxCount) &#123;</span><br><span class="line">            <span class="comment">// 隐藏软键盘</span></span><br><span class="line"><span class="comment">//			hideSoftKeyboard();</span></span><br><span class="line">            <span class="keyword">if</span> (onInputFinishedListener != <span class="keyword">null</span>) &#123;</span><br><span class="line">                onInputFinishedListener.onFinish(getEditableText().toString());</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 隐藏键盘</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">hideSoftKeyboard</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        InputMethodManager imm = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);</span><br><span class="line">        <span class="keyword">if</span> (<span class="keyword">null</span> != imm) &#123;</span><br><span class="line">            imm.hideSoftInputFromWindow(getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 输入完成监听器</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">OnInputFinishedListener</span> </span>&#123;</span><br><span class="line">        <span class="comment">/**</span></span><br><span class="line"><span class="comment">         * 输入完成</span></span><br><span class="line"><span class="comment">         *</span></span><br><span class="line"><span class="comment">         * <span class="doctag">@param</span> text 用户输入的文本</span></span><br><span class="line"><span class="comment">         */</span></span><br><span class="line">        <span class="function"><span class="keyword">void</span> <span class="title">onFinish</span><span class="params">(String text)</span></span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>自定义属性 </p>
-<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">resources</span>&gt;</span></span><br><span class="line">    <span class="comment">&lt;!--  自定义验证码输入框相关属性  --&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">declare-styleable</span> <span class="attr">name</span>=<span class="string">&quot;VerifyCodeInputViewStyle&quot;</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">attr</span> <span class="attr">name</span>=<span class="string">&quot;boxWidth&quot;</span> <span class="attr">format</span>=<span class="string">&quot;dimension&quot;</span>/&gt;</span>  //  单个数字输入框的宽度</span><br><span class="line">        <span class="tag">&lt;<span class="name">attr</span> <span class="attr">name</span>=<span class="string">&quot;boxHeight&quot;</span> <span class="attr">format</span>=<span class="string">&quot;dimension&quot;</span>/&gt;</span> //  单个数字输入框的高度</span><br><span class="line">        <span class="tag">&lt;<span class="name">attr</span> <span class="attr">name</span>=<span class="string">&quot;boxSpacing&quot;</span> <span class="attr">format</span>=<span class="string">&quot;dimension&quot;</span>/&gt;</span>    //  单个数字输入框间的间距</span><br><span class="line">        <span class="tag">&lt;<span class="name">attr</span> <span class="attr">name</span>=<span class="string">&quot;boxBorderHeight&quot;</span> <span class="attr">format</span>=<span class="string">&quot;dimension&quot;</span>/&gt;</span>   //  单个数字输入框的边框高度</span><br><span class="line">        <span class="tag">&lt;<span class="name">attr</span> <span class="attr">name</span>=<span class="string">&quot;boxCount&quot;</span> <span class="attr">format</span>=<span class="string">&quot;integer&quot;</span>/&gt;</span>    //  数字个数</span><br><span class="line">        <span class="tag">&lt;<span class="name">attr</span> <span class="attr">name</span>=<span class="string">&quot;boxBorderColorNormal&quot;</span> <span class="attr">format</span>=<span class="string">&quot;color&quot;</span>/&gt;</span>  //  单个数字输入框边框的默认颜色</span><br><span class="line">        <span class="tag">&lt;<span class="name">attr</span> <span class="attr">name</span>=<span class="string">&quot;boxBorderColorFocused&quot;</span> <span class="attr">format</span>=<span class="string">&quot;color&quot;</span>/&gt;</span> //  单个数字输入框边框的高亮颜色</span><br><span class="line">        <span class="tag">&lt;<span class="name">attr</span> <span class="attr">name</span>=<span class="string">&quot;autoFit&quot;</span> <span class="attr">format</span>=<span class="string">&quot;boolean&quot;</span>/&gt;</span> //  输入框宽度是否自动适应父布局宽度</span><br><span class="line">    <span class="tag">&lt;/<span class="name">declare-styleable</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">resources</span>&gt;</span></span><br></pre></td></tr></table></figure></li>
-</ul>
-
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2020/11/19/Android%E8%87%AA%E5%AE%9A%E4%B9%89%E9%AA%8C%E8%AF%81%E7%A0%81%E8%BE%93%E5%85%A5%E6%A1%86/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
       
     </div>
 
@@ -421,7 +455,7 @@
           <i class="far fa-calendar-check"></i>
         </span>
         <span class="post-meta-item-text">更新于</span>
-        <time title="修改时间：2020-11-19 21:59:16" itemprop="dateModified" datetime="2020-11-19T21:59:16+08:00">2020-11-19</time>
+        <time title="修改时间：2020-11-19 22:16:22" itemprop="dateModified" datetime="2020-11-19T22:16:22+08:00">2020-11-19</time>
       </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -446,92 +480,14 @@
           <h2 id="导语"><a href="#导语" class="headerlink" title="导语"></a><strong>导语</strong></h2><p>11月1日开始，《南京市生活垃圾管理条例》实施，南京正式进入强制“垃圾分类”时代。</p>
 <h2 id="实施时间"><a href="#实施时间" class="headerlink" title="实施时间"></a><strong>实施时间</strong></h2><p>2020年11月1日</p>
 <h2 id="垃圾分类种类"><a href="#垃圾分类种类" class="headerlink" title="垃圾分类种类"></a><strong>垃圾分类种类</strong></h2><p><a href="#可回收物"><kbd>可回收物</kbd></a> 、<a href="#有害垃圾"><kbd>有害垃圾</kbd></a> 、<a href="#厨余垃圾"><kbd>厨余垃圾</kbd></a> 和 <a href="#其他垃圾"><kbd>其他垃圾</kbd></a></p>
-<h2 id="分类标准"><a href="#分类标准" class="headerlink" title="分类标准"></a><strong>分类标准</strong></h2><img src="/pictures/南京垃圾强制分类/垃圾分类汇总.jpg" alt="垃圾分类汇总" width="720" height="1280" align="middle"/>
-
-<ol>
-<li><h3 id="可回收物"><a href="#可回收物" class="headerlink" title="可回收物"></a><strong>可回收物</strong></h3></li>
-</ol>
-<blockquote>
-<p>可回收物，是指适宜回收和可循环再利用的生活废弃物，主要包括废纸类、塑料类、玻璃类、金属类、织物类等。</p>
-</blockquote>
-<img src="/pictures/南京垃圾强制分类/可回收垃圾_01.jpg" alt="可回收垃圾_01" width="720" height="1280" align="middle"/>
-<img src="/pictures/南京垃圾强制分类/可回收垃圾_02.jpg" alt="可回收垃圾_02" width="720" height="1280" align="middle"/>
-
-<ol start="2">
-<li><h3 id="有害垃圾"><a href="#有害垃圾" class="headerlink" title="有害垃圾"></a><strong>有害垃圾</strong></h3></li>
-</ol>
-<blockquote>
-<p>有害垃圾是指对人体健康、自然环境造成直接或者潜在危害的生活废弃物，主要包括充电电池、扣式电池、灯管、弃置药品、杀虫剂（容器）、水银产品等。</p>
-</blockquote>
-<img src="/pictures/南京垃圾强制分类/有害垃圾_01.jpg" alt="有害垃圾_01" width="720" height="1280" align="middle"/>
-<img src="/pictures/南京垃圾强制分类/有害垃圾_02.jpg" alt="有害垃圾_02" width="720" height="1280" align="middle"/>
-
-<ol start="3">
-<li><h3 id="厨余垃圾"><a href="#厨余垃圾" class="headerlink" title="厨余垃圾"></a><strong>厨余垃圾</strong></h3></li>
-</ol>
-<blockquote>
-<p>厨余垃圾，又称湿垃圾，是指易腐的生活废弃物，主要包括家庭中产生的菜帮菜叶、瓜果皮核、剩菜剩饭、废弃食物等；餐饮经营者和单位集体食堂在食品加工、饮食服务、单位供餐等活动中产生的食物残渣、食品加工废料和废弃食用油脂等；农贸市场、农产品批发市场产生的蔬菜瓜果垃圾、腐肉，以及废弃的肉碎骨、水产品、畜禽内脏等。</p>
-</blockquote>
-<img src="/pictures/南京垃圾强制分类/厨余垃圾_01.jpg" alt="厨余垃圾_01" width="720" height="1280" align="middle"/>
-<img src="/pictures/南京垃圾强制分类/厨余垃圾_02.jpg" alt="厨余垃圾_02" width="720" height="1280" align="middle"/>
-
-<ol start="4">
-<li><h3 id="其他垃圾"><a href="#其他垃圾" class="headerlink" title="其他垃圾"></a><strong>其他垃圾</strong></h3></li>
-</ol>
-<blockquote>
-<p>其他垃圾，又称干垃圾，是指除可回收物、有害垃圾、厨余垃圾之外的其他生活废弃物，比如厕所的卫生纸、用脏的餐巾纸等。</p>
-</blockquote>
-<img src="/pictures/南京垃圾强制分类/其他垃圾_01.jpg" alt="其他垃圾_01" width="720" height="1280" align="middle"/>
-<img src="/pictures/南京垃圾强制分类/其他垃圾_02.jpg" alt="其他垃圾_02" width="720" height="1280" align="middle"/>
-
-<h2 id="垃圾分类口诀"><a href="#垃圾分类口诀" class="headerlink" title="垃圾分类口诀"></a><strong>垃圾分类口诀</strong></h2><blockquote>
-<p>smile: 能卖钱的蓝<font color="blue">桶桶</font><br>易腐烂的绿<font color="green">桶桶</font><br>有毒有害红<font color="red">桶桶</font><br>没人要的黑<font color="black">桶桶</font></p>
-</blockquote>
-<img src="/pictures/南京垃圾强制分类/垃圾分类口诀.jpg" alt="垃圾分类口诀" width="720" height="1280" align="middle"/>
-
-<h2 id="处罚措施"><a href="#处罚措施" class="headerlink" title="处罚措施"></a><strong>处罚措施</strong></h2><blockquote>
-<p>《南京市生活垃圾管理条例》草案修改稿对未在指定地点分类投放生活垃圾，且情节严重的，对<strong>单位处以5万元以上50万元以下罚款</strong>；对<strong>个人处以200元以下罚款</strong>。单位或个人不履行垃圾分类义务的，还将被纳入失信平台并采取惩戒措施。</p>
-</blockquote>
-<h2 id="垃圾分类中的误区"><a href="#垃圾分类中的误区" class="headerlink" title="垃圾分类中的误区"></a><strong>垃圾分类中的误区</strong></h2><ol>
-<li><p><strong>并不是和“餐桌”有关的垃圾都是厨余垃圾</strong></p>
-<blockquote>
-<p>例如玉米粒啃光之后的玉米芯、吃完蚝肉之后的生蚝壳子、炖汤之后的大棒骨……这些垃圾都是从餐桌上产生，但属于“其他垃圾”。因为这些垃圾质地较硬、不容易腐烂，无法和其他厨余垃圾一样处理。</p>
-</blockquote>
-</li>
-<li><p><strong>并不是所有的纸张都能回收</strong></p>
-<blockquote>
-<p>纸张虽然是可回收物，但生活中大部分废纸都是“污染”过的，例如擦过嘴的餐巾纸和湿巾、用过的厕纸、垫过盒饭的报纸、一次性纸杯、厨房抽纸等，这类纸张无法再回收利用，只能作为“其他垃圾”处理。</p>
-</blockquote>
-</li>
-<li><p><strong>并不是所有电池都是有害垃圾</strong></p>
-<blockquote>
-<p>只有含汞的可充电电池是有害垃圾，而其他一次性的干电池或碱性电池，内部不含汞，所以属于其他垃圾。</p>
-</blockquote>
-</li>
-</ol>
-<h2 id="垃圾分类小贴士"><a href="#垃圾分类小贴士" class="headerlink" title="垃圾分类小贴士"></a><strong>垃圾分类小贴士</strong></h2><ol>
-<li><strong>关于饮料瓶</strong><blockquote>
-<p>喝过的饮料瓶应该将其中的饮料残液倒干净后再投放至可回收物桶中。</p>
-</blockquote>
-</li>
-<li><strong>关于外卖</strong><blockquote>
-<p>点的外卖，应该将剩下的饭菜作为厨余垃圾处理，外卖包装作为其他垃圾。</p>
-</blockquote>
-</li>
-<li><strong>关于垃圾的量</strong><blockquote>
-<p>零星的缝衣针、回形针、大头针，可以投放到其他垃圾桶中。</p>
-</blockquote>
-</li>
-</ol>
-<h2 id="南京垃圾分类自助查询地址"><a href="#南京垃圾分类自助查询地址" class="headerlink" title="南京垃圾分类自助查询地址"></a><strong>南京垃圾分类自助查询地址</strong></h2><blockquote>
-<p><a target="_blank" rel="noopener" href="https://lajifenleiapp.com/nanjing">南京垃圾分类查询</a></p>
-</blockquote>
-<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a><strong>参考</strong></h2><ul>
-<li><a target="_blank" rel="noopener" href="http://jiangsu.sina.com.cn/news/2020-10-29/detail-iiznctkc8244113.shtml">本周日起南京生活垃圾强制分类 这些易“搞混淆”</a></li>
-<li><a target="_blank" rel="noopener" href="http://www.js.xinhuanet.com/2020-08/02/c_1126315813.htm">《南京市生活垃圾管理条例》 将于11月1日正式施行</a></li>
-<li><a target="_blank" rel="noopener" href="https://baike.baidu.com/item/%E5%8D%97%E4%BA%AC%E5%B8%82%E7%94%9F%E6%B4%BB%E5%9E%83%E5%9C%BE%E7%AE%A1%E7%90%86%E6%9D%A1%E4%BE%8B">南京市生活垃圾管理条例</a></li>
-</ul>
-
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2020/11/06/%E5%8D%97%E4%BA%AC%E5%9E%83%E5%9C%BE%E5%BC%BA%E5%88%B6%E5%88%86%E7%B1%BB%E6%97%B6%E4%BB%A3%E6%9D%A5%E4%B8%B4/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
       
     </div>
 
@@ -589,7 +545,7 @@
           <i class="far fa-calendar-check"></i>
         </span>
         <span class="post-meta-item-text">更新于</span>
-        <time title="修改时间：2020-11-03 21:30:54" itemprop="dateModified" datetime="2020-11-03T21:30:54+08:00">2020-11-03</time>
+        <time title="修改时间：2020-11-19 22:22:29" itemprop="dateModified" datetime="2020-11-19T22:22:29+08:00">2020-11-19</time>
       </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -615,12 +571,14 @@
 <h3 id="解决方式"><a href="#解决方式" class="headerlink" title="解决方式"></a><strong>解决方式</strong></h3><ol>
 <li>在真机上找到”日志记录器缓冲区大小”选项，路径:设置——开发者选项——调试——日志记录器缓冲区大小</li>
 </ol>
-<p><img src="/pictures/android_logcat_EOF/%E5%BC%80%E5%8F%91%E8%80%85%E9%80%89%E9%A1%B9_%E8%B0%83%E8%AF%95_%E6%97%A5%E5%BF%97%E8%AE%B0%E5%BD%95%E5%99%A8%E7%BC%93%E5%86%B2%E5%8C%BA%E5%A4%A7%E5%B0%8F.png" alt="开发者选项_调试_日志记录器缓冲区大小"></p>
-<ol start="2">
-<li>点击打开日志记录器缓冲区大小设置列表，根据需要选择大小即可。</li>
-</ol>
-<p><img src="/pictures/android_logcat_EOF/LogCacheSetList.png" alt="日志缓冲区大小设置列表"></p>
-
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2020/11/02/Android-Studio-%E6%97%A5%E5%BF%97%E5%81%9C%E6%AD%A2%E6%89%93%E5%8D%B0/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
       
     </div>
 
@@ -696,23 +654,14 @@
     <div class="post-body" itemprop="articleBody">
           <h3 id="问题"><a href="#问题" class="headerlink" title="问题"></a><strong>问题</strong></h3><p>&emsp;&emsp;使用IDEA时，经常会误触发双击shift的操作，导致弹出全局搜索的弹窗，影响码代码。</p>
 <h3 id="解决办法"><a href="#解决办法" class="headerlink" title="解决办法"></a><strong>解决办法</strong></h3><p>一种方式是直接禁用双击shift，另一种是使用其他的快捷键代替</p>
-<ol>
-<li>直接禁用双击shift弹窗</li>
-</ol>
-<ul>
-<li>IDEA中双击shift，在弹出的搜索框中输入Registry<br><img src="/pictures/idea_doubleClick_shift/%E5%85%A8%E5%B1%80%E6%90%9C%E7%B4%A2%E5%BC%B9%E7%AA%97%E4%B8%AD%E6%9F%A5%E6%89%BERegistry%E9%80%89%E9%A1%B9.png" alt="全局搜索弹窗"></li>
-<li>按回车后会弹出Registry弹窗，在列表中找到ide.suppress.double.click.handler选项，选项默认是未选中，手动选中后即会禁用双击。<br><img src="/pictures/idea_doubleClick_shift/Registry%E5%BC%B9%E7%AA%97.png" alt="Registry弹窗"></li>
-<li>禁用后如果想使用全局搜索功能，只需要在IDEA菜单中找到Navigate—&gt;Search Everywhere即可<br><img src="/pictures/idea_doubleClick_shift/idea%E8%8F%9C%E5%8D%95%E6%A0%8F%E6%89%93%E5%BC%80%E5%85%A8%E5%B1%80%E6%90%9C%E7%B4%A2.png" alt="IDEA菜单打开全局搜索弹窗"></li>
-</ul>
-<ol start="2">
-<li>修改为其它快捷键</li>
-</ol>
-<ul>
-<li>使用快捷键Ctrl + Alt+ S打开IDEA的设置窗口，或从菜单栏File—&gt;Settings打开。选中左侧的Keymap,在右侧的输入框中输入everywhere，找到下面的Search Everywhere选项<br><img src="/pictures/idea_doubleClick_shift/IDEA%E8%AE%BE%E7%BD%AE%E4%B8%AD%E6%9F%A5%E6%89%BE%E5%85%A8%E5%B1%80%E6%90%9C%E7%B4%A2%E5%BF%AB%E6%8D%B7%E9%94%AE%E9%80%89%E9%A1%B9.png" alt="IDEA设置中查找全局搜索快捷键选项"></li>
-<li>双击Search Everywhere选项，会弹出一个编辑快捷键的选项弹窗<br><img src="/pictures/idea_doubleClick_shift/%E7%BC%96%E8%BE%91%E5%BF%AB%E6%8D%B7%E9%94%AE%E4%B8%8B%E6%8B%89%E9%80%89%E6%8B%A9%E5%BC%B9%E7%AA%97.png" alt="编辑快捷键下拉选择弹窗"></li>
-<li>选择第一个Add Keyboard Shortcut，会弹出键盘快捷键设置弹窗，然后直接在键盘输入想要设置的快捷键即可。<br><img src="/pictures/idea_doubleClick_shift/%E9%94%AE%E7%9B%98%E5%BF%AB%E6%8D%B7%E9%94%AE%E8%AE%BE%E7%BD%AE%E5%BC%B9%E7%AA%97.png" alt="键盘快捷键设置弹窗"></li>
-</ul>
-
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2020/10/30/IntelliJ-IDEA%E4%B8%AD%E5%85%B3%E9%97%AD%E5%8F%8C%E5%87%BBshift%E5%BC%B9%E5%87%BA%E5%85%A8%E5%B1%80%E6%90%9C%E7%B4%A2%E5%BC%B9%E7%AA%97/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
       
     </div>
 
@@ -770,7 +719,7 @@
           <i class="far fa-calendar-check"></i>
         </span>
         <span class="post-meta-item-text">更新于</span>
-        <time title="修改时间：2020-10-30 22:21:19" itemprop="dateModified" datetime="2020-10-30T22:21:19+08:00">2020-10-30</time>
+        <time title="修改时间：2020-11-19 22:23:50" itemprop="dateModified" datetime="2020-11-19T22:23:50+08:00">2020-11-19</time>
       </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -793,19 +742,14 @@
     
     <div class="post-body" itemprop="articleBody">
           <h2 id="算法基础——冒泡排序算法（Bubble-Sort）原理、Java实现"><a href="#算法基础——冒泡排序算法（Bubble-Sort）原理、Java实现" class="headerlink" title="算法基础——冒泡排序算法（Bubble Sort）原理、Java实现"></a>算法基础——冒泡排序算法（Bubble Sort）原理、Java实现</h2><h3 id="核心思想"><a href="#核心思想" class="headerlink" title="核心思想"></a><strong>核心思想</strong></h3><p>对于一组需要排序的数字，依次将每个位置上的数字与后面位置上的数字进行比较，如果两个数字的顺序错误，则调换两个位置上的数字。</p>
-<h3 id="算法原理"><a href="#算法原理" class="headerlink" title="算法原理"></a><strong>算法原理</strong></h3><p>以降序排序为例</p>
-<p>假设有n个数字的数组a，需要进行n-1轮的排序，每轮确定一个数字的具体位置</p>
-<ul>
-<li>第一轮：将a[0]~a[n-1]之间的数字两两相邻的依次进行比较，当后面的数字大于前面的数字时，两个数字互换，此轮结束，a[n-1]则为最小的数字。</li>
-<li>第二轮：将a[0]~a[n-2]之间的数字两两相邻的依次进行比较，当后面的数字大于前面的数字时，两个数字互换，此轮结束，a[n-2]则为第2小的数字。</li>
-<li>…</li>
-<li>第n-1轮：将a[0]~a[1]之间的数字两两相邻的依次进行比较，当后面的数字大于前面的数字时，两个数字互换，此轮结束，a[1]则为第n-1小的数字。</li>
-</ul>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 冒泡排序：以降序排序为例。</span></span><br><span class="line"><span class="comment"> * 先找最小数，相邻两个数字依次进行比较</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> a</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@return</span></span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">int</span>[] bubbleSort_02(<span class="keyword">int</span>[] a)&#123;</span><br><span class="line">    <span class="keyword">if</span>(<span class="keyword">null</span> == a || a.length &lt;= <span class="number">0</span>)&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 计算数字个数</span></span><br><span class="line">    <span class="keyword">int</span> n = a.length;</span><br><span class="line">    <span class="comment">// 临时变量：两个数字交换值时使用</span></span><br><span class="line">    <span class="keyword">int</span> temp;</span><br><span class="line">    <span class="comment">// 共n-1轮排序的for循环</span></span><br><span class="line">    <span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; n; i++)&#123;</span><br><span class="line">        <span class="comment">//第i轮排序的for循环</span></span><br><span class="line">        <span class="keyword">for</span>(<span class="keyword">int</span> j = <span class="number">1</span>; j &lt; n-i; j++)&#123;</span><br><span class="line">            <span class="comment">//前值小于后值时，两者互换</span></span><br><span class="line">            <span class="keyword">if</span>(a[j-<span class="number">1</span>] &lt; a[j])&#123;</span><br><span class="line">                temp = a[j-<span class="number">1</span>];</span><br><span class="line">                a[j-<span class="number">1</span>] = a[j];</span><br><span class="line">                a[j] = temp;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> a;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-<h3 id="算法的时间复杂度"><a href="#算法的时间复杂度" class="headerlink" title="算法的时间复杂度"></a><strong>算法的时间复杂度</strong></h3><p>O(N²)</p>
-<h3 id="算法特点"><a href="#算法特点" class="headerlink" title="算法特点"></a><strong>算法特点</strong></h3><p>冒泡排序是一种稳定的排序算法。排序过程中，遇到相同的元素并不会交换，从而保证了相同元素的前后位置关系不变。</p>
-
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2020/10/29/%E5%86%92%E6%B3%A1%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
       
     </div>
 
@@ -863,7 +807,7 @@
           <i class="far fa-calendar-check"></i>
         </span>
         <span class="post-meta-item-text">更新于</span>
-        <time title="修改时间：2020-10-31 14:07:37" itemprop="dateModified" datetime="2020-10-31T14:07:37+08:00">2020-10-31</time>
+        <time title="修改时间：2020-11-19 22:22:44" itemprop="dateModified" datetime="2020-11-19T22:22:44+08:00">2020-11-19</time>
       </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -885,8 +829,15 @@
     
     
     <div class="post-body" itemprop="articleBody">
-          <h2 id="Hexo功能测试"><a href="#Hexo功能测试" class="headerlink" title="Hexo功能测试"></a>Hexo功能测试</h2><p>1.本地图片测试<br><img src="/pictures/SearchEverywhere_window.png" alt="本地图片"></p>
-
+          <h2 id="Hexo功能测试"><a href="#Hexo功能测试" class="headerlink" title="Hexo功能测试"></a>Hexo功能测试</h2>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2020/10/28/Cocoas%E7%9A%84%E6%96%B0%E5%8D%9A%E5%AE%A2/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
       
     </div>
 
@@ -944,7 +895,7 @@
           <i class="far fa-calendar-check"></i>
         </span>
         <span class="post-meta-item-text">更新于</span>
-        <time title="修改时间：2020-10-30 22:21:08" itemprop="dateModified" datetime="2020-10-30T22:21:08+08:00">2020-10-30</time>
+        <time title="修改时间：2020-11-19 22:22:52" itemprop="dateModified" datetime="2020-11-19T22:22:52+08:00">2020-11-19</time>
       </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -967,19 +918,14 @@
     
     <div class="post-body" itemprop="articleBody">
           <p>Welcome to <a target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a target="_blank" rel="noopener" href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a target="_blank" rel="noopener" href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a target="_blank" rel="noopener" href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p>
-<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo new <span class="string">&quot;My New Post&quot;</span></span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/writing.html">Writing</a></p>
-<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/server.html">Server</a></p>
-<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/generating.html">Generating</a></p>
-<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>
-
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2020/10/28/hello-world/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
       
     </div>
 
