@@ -23,19 +23,24 @@
     var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"8.0.1","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}};
   </script>
 
-  <meta name="description" content="Android,Java,Android SDK,Kotlin,">
-<meta property="og:type" content="website">
-<meta property="og:title" content="Cocoas">
-<meta property="og:url" content="http://example.com/categories/Hexo/index.html">
+  <meta name="description" content="引入时间JDK 1.5 目的将原始类型值自动地转换成对应的封装类型对象 自动装箱Java自动将原始类型值转换成对应的封装类型对象。 比如将int转换成Integer、long转换成Long，这个过程就叫做装箱。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Java 自动装箱和拆箱原理">
+<meta property="og:url" content="http://example.com/2020/11/23/Java-%E8%87%AA%E5%8A%A8%E8%A3%85%E7%AE%B1%E5%92%8C%E6%8B%86%E7%AE%B1%E5%8E%9F%E7%90%86/index.html">
 <meta property="og:site_name" content="Cocoas">
-<meta property="og:description" content="Android,Java,Android SDK,Kotlin,">
+<meta property="og:description" content="引入时间JDK 1.5 目的将原始类型值自动地转换成对应的封装类型对象 自动装箱Java自动将原始类型值转换成对应的封装类型对象。 比如将int转换成Integer、long转换成Long，这个过程就叫做装箱。">
 <meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-11-23T11:06:33.000Z">
+<meta property="article:modified_time" content="2020-11-23T12:49:52.899Z">
 <meta property="article:author" content="Cocoas">
-<meta property="article:tag" content="Android，Java">
+<meta property="article:tag" content="java拆装箱">
+<meta property="article:tag" content="拆箱和装箱">
+<meta property="article:tag" content="java拆箱">
+<meta property="article:tag" content="Java装箱">
 <meta name="twitter:card" content="summary">
 
 
-<link rel="canonical" href="http://example.com/categories/Hexo/">
+<link rel="canonical" href="http://example.com/2020/11/23/Java-%E8%87%AA%E5%8A%A8%E8%A3%85%E7%AE%B1%E5%92%8C%E6%8B%86%E7%AE%B1%E5%8E%9F%E7%90%86/">
 
 
 <script class="page-configurations">
@@ -43,12 +48,12 @@
   CONFIG.page = {
     sidebar: "",
     isHome : false,
-    isPost : false,
+    isPost : true,
     lang   : 'zh-CN'
   };
 </script>
 
-  <title>分类: Hexo | Cocoas</title>
+  <title>Java 自动装箱和拆箱原理 | Cocoas</title>
   
 
 
@@ -164,7 +169,7 @@
 
   <aside class="sidebar">
 
-    <div class="sidebar-inner sidebar-overview-active">
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
       <ul class="sidebar-nav">
         <li class="sidebar-nav-toc">
           文章目录
@@ -180,6 +185,7 @@
       <div class="sidebar-panel-container">
         <!--noindex-->
         <section class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BC%95%E5%85%A5%E6%97%B6%E9%97%B4"><span class="nav-text">引入时间</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%9B%AE%E7%9A%84"><span class="nav-text">目的</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%87%AA%E5%8A%A8%E8%A3%85%E7%AE%B1"><span class="nav-text">自动装箱</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%87%AA%E5%8A%A8%E6%8B%86%E7%AE%B1"><span class="nav-text">自动拆箱</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8E%9F%E5%A7%8B%E7%B1%BB%E5%9E%8B"><span class="nav-text">原始类型</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B0%81%E8%A3%85%E7%B1%BB%E5%9E%8B"><span class="nav-text">封装类型</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%87%AA%E5%8A%A8%E8%A3%85%E7%AE%B1%E5%92%8C%E6%8B%86%E7%AE%B1%E7%9A%84%E8%BF%87%E7%A8%8B"><span class="nav-text">自动装箱和拆箱的过程</span></a></li></ol></div>
         </section>
         <!--/noindex-->
 
@@ -242,74 +248,138 @@
 </noscript>
 
 
-    <div class="main-inner category posts-collapse">
+    <div class="main-inner post posts-expand">
       
 
       
 
   
-  
-  
-  <div class="post-block">
-    <div class="post-content">
-      <div class="collection-title">
-        <h2 class="collection-header">Hexo
-          <small>分类</small>
-        </h2>
-      </div>
 
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2020/11/23/Java-%E8%87%AA%E5%8A%A8%E8%A3%85%E7%AE%B1%E5%92%8C%E6%8B%86%E7%AE%B1%E5%8E%9F%E7%90%86/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Cocoas">
+      <meta itemprop="description" content="Android,Java,Android SDK,Kotlin,">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Cocoas">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Java 自动装箱和拆箱原理
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
       
-    <div class="collection-year">
-      <span class="collection-header">2020</span>
+
+      <time title="创建时间：2020-11-23 19:06:33 / 修改时间：20:49:52" itemprop="dateCreated datePublished" datetime="2020-11-23T19:06:33+08:00">2020-11-23</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/java/" itemprop="url" rel="index"><span itemprop="name">java</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/java/Java%E5%9F%BA%E7%A1%80/" itemprop="url" rel="index"><span itemprop="name">Java基础</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h2 id="引入时间"><a href="#引入时间" class="headerlink" title="引入时间"></a><strong>引入时间</strong></h2><p>JDK 1.5</p>
+<h2 id="目的"><a href="#目的" class="headerlink" title="目的"></a><strong>目的</strong></h2><p>将原始类型值自动地转换成对应的封装类型对象</p>
+<h2 id="自动装箱"><a href="#自动装箱" class="headerlink" title="自动装箱"></a><strong>自动装箱</strong></h2><p>Java自动将原始类型值转换成对应的封装类型对象。</p>
+<p>比如将int转换成Integer、long转换成Long，这个过程就叫做装箱。</p>
+<a id="more"></a>
+
+<h2 id="自动拆箱"><a href="#自动拆箱" class="headerlink" title="自动拆箱"></a><strong>自动拆箱</strong></h2><p>与自动装箱相反，Java自动将封装类型对象转换成原始类型值</p>
+<p>比如将Integer转换为int、Long转换为long等</p>
+<h2 id="原始类型"><a href="#原始类型" class="headerlink" title="原始类型"></a><strong>原始类型</strong></h2><p>byte、short、char、int、long、float、double、boolean</p>
+<h2 id="封装类型"><a href="#封装类型" class="headerlink" title="封装类型"></a><strong>封装类型</strong></h2><p>Byte、Short、Character、Integer、Long、Float、Double、Boolean</p>
+<h2 id="自动装箱和拆箱的过程"><a href="#自动装箱和拆箱的过程" class="headerlink" title="自动装箱和拆箱的过程"></a><strong>自动装箱和拆箱的过程</strong></h2><p>自动装箱时，编译器会调用封装类型对象的valueOf方法将原始类型转换成对应的封装类型对象；</p>
+<p>自动拆箱时，编译器会调用封装类型对象的intValue、doubleValue等类似方法将封装类型对象转换为原始类型值。</p>
+
     </div>
 
-  <article itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-      <div class="post-meta-container">
-        <time itemprop="dateCreated"
-              datetime="2020-10-28T19:28:27+08:00"
-              content="2020-10-28">
-          10-28
-        </time>
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="followme">
+  <span>欢迎关注我的其它发布渠道</span>
+
+  <div class="social-list">
+
+      <div class="social-item">
+        <a target="_blank" class="social-link" href="https://github.com/CharlieJiang">
+          <span class="icon">
+            <i class="fab fa-github"></i>
+          </span>
+
+          <span class="label">GitHub</span>
+        </a>
       </div>
-
-      <div class="post-title">
-          <a class="post-title-link" href="/2020/10/28/Cocoas%E7%9A%84%E6%96%B0%E5%8D%9A%E5%AE%A2/" itemprop="url">
-            <span itemprop="name">Cocoas的新博客</span>
-          </a>
-      </div>
-
-      
-    </header>
-  </article>
-
-  <article itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-      <div class="post-meta-container">
-        <time itemprop="dateCreated"
-              datetime="2020-10-28T19:22:57+08:00"
-              content="2020-10-28">
-          10-28
-        </time>
-      </div>
-
-      <div class="post-title">
-          <a class="post-title-link" href="/2020/10/28/hello-world/" itemprop="url">
-            <span itemprop="name">Hello World</span>
-          </a>
-      </div>
-
-      
-    </header>
-  </article>
-
-    </div>
   </div>
-  
-  
-  
+</div>
 
-  
+          <div class="post-tags">
+              <a href="/tags/java%E6%8B%86%E8%A3%85%E7%AE%B1/" rel="tag"># java拆装箱</a>
+              <a href="/tags/%E6%8B%86%E7%AE%B1%E5%92%8C%E8%A3%85%E7%AE%B1/" rel="tag"># 拆箱和装箱</a>
+              <a href="/tags/java%E6%8B%86%E7%AE%B1/" rel="tag"># java拆箱</a>
+              <a href="/tags/Java%E8%A3%85%E7%AE%B1/" rel="tag"># Java装箱</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2020/11/20/Java%E5%85%AD%E7%A7%8D%E5%AD%97%E7%AC%A6%E4%B8%B2%E6%8B%BC%E6%8E%A5%E6%96%B9%E5%BC%8F%E7%9A%84%E5%8E%9F%E7%90%86%E4%B8%8E%E6%80%A7%E8%83%BD%E5%88%86%E6%9E%90/" rel="prev" title="Java六种字符串拼接方式的实现原理与性能分析">
+                  <i class="fa fa-chevron-left"></i> Java六种字符串拼接方式的实现原理与性能分析
+                </a>
+            </div>
+            <div class="post-nav-item">
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
 
 
 
