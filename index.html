@@ -280,7 +280,7 @@
       <span class="post-meta-item-text">发表于</span>
       
 
-      <time title="创建时间：2020-11-28 12:21:30 / 修改时间：18:27:22" itemprop="dateCreated datePublished" datetime="2020-11-28T12:21:30+08:00">2020-11-28</time>
+      <time title="创建时间：2020-11-28 12:21:30 / 修改时间：18:29:49" itemprop="dateCreated datePublished" datetime="2020-11-28T12:21:30+08:00">2020-11-28</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -309,31 +309,15 @@
           <h2 id="域的概念"><a href="#域的概念" class="headerlink" title="域的概念"></a><strong>域的概念</strong></h2><blockquote>
 <p>域是英文field的翻译，指的是类中的成员变量（Member Variable），即我们常说的类的字段。  </p>
 </blockquote>
-<h3 id="注意：属性和字段是有区别的。"><a href="#注意：属性和字段是有区别的。" class="headerlink" title="注意：属性和字段是有区别的。"></a><strong>注意：属性和字段是有区别的。</strong></h3><p>&emsp;&emsp;属性是JavaBean规范中提出的概念，针对的是对象，而类本身是没有属性的概念的。<br>&emsp;&emsp;属性定义的规则是：get/set方法名，去掉get/set后，将剩余部分字符串的首字母小写后得到的字符串就是这个类的属性。<br>&emsp;&emsp;字段与属性示例：  </p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">FieldClass</span> </span>&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">int</span> month_of_year; <span class="comment">//字段</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">int</span> day_of_month; <span class="comment">//字段</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setMonth</span><span class="params">(<span class="keyword">int</span> month)</span></span>&#123; <span class="comment">//属性month</span></span><br><span class="line">        month_of_year = month;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">getDay</span><span class="params">()</span></span>&#123; <span class="comment">//属性day</span></span><br><span class="line">        <span class="keyword">return</span> day_of_month;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h2 id="Java中的两种域"><a href="#Java中的两种域" class="headerlink" title="Java中的两种域"></a><strong>Java中的两种域</strong></h2><blockquote>
-<p>Java中的域分为静态域和非静态域两种。其中非静态域也称构造域，因为非静态域是在创建对象时与构造函数一同执行且优先于构造函数执行的。  </p>
-</blockquote>
-<h3 id="静态域"><a href="#静态域" class="headerlink" title="静态域"></a><strong>静态域</strong></h3><p>&emsp;&emsp;静态域是指使用static关键字修饰的域。静态域包含静态变量和静态代码块。<br>&emsp;&emsp;静态域一般是在JVM加载类的时候执行，且仅执行一次。  </p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">FieldClass</span> </span>&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> String TAG = <span class="string">&quot;&quot;</span>; <span class="comment">//静态变量</span></span><br><span class="line">    <span class="keyword">static</span> &#123; <span class="comment">//静态代码块</span></span><br><span class="line">        System.out.println(<span class="string">&quot;初始化类&quot;</span>);</span><br><span class="line">        TAG = <span class="string">&quot;FieldClass&quot;</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h3 id="非静态域"><a href="#非静态域" class="headerlink" title="非静态域"></a><strong>非静态域</strong></h3><p>&emsp;&emsp;非静态域是指未使用static关键字修饰的域。非静态域包含非静态变量和非静态代码块。<br>&emsp;&emsp;非静态域在每次创建类对象时都会执行，且优先于构造函数执行。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">FieldClass</span> </span>&#123;</span><br><span class="line">    <span class="keyword">public</span> String name = <span class="string">&quot;&quot;</span>; <span class="comment">//非静态变量</span></span><br><span class="line">    &#123; <span class="comment">//非静态代码块</span></span><br><span class="line">        System.out.println(<span class="string">&quot;初始化对象&quot;</span>);</span><br><span class="line">        name = <span class="string">&quot;cocoas&quot;</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h2 id="代码块"><a href="#代码块" class="headerlink" title="代码块"></a><strong>代码块</strong></h2><blockquote>
-<p>代码块是指使用{}声明的代码。<br>代码块一般用于类的初始化处理和创建类对象的初始化处理。<br>代码块分为三类：普通代码块、构造代码块和静态代码块。</p>
-</blockquote>
-<ul>
-<li>普通代码块：在方法中定义的代码块</li>
-<li>构造代码块：在类中声明的非静态代码块</li>
-<li>静态代码块：在类中使用static关键字声明的代码块</li>
-</ul>
-<h2 id="初始化顺序"><a href="#初始化顺序" class="headerlink" title="初始化顺序"></a><strong>初始化顺序</strong></h2><ol>
-<li><strong>静态域</strong>：在类加载时执行，静态变量和静态代码块依次顺序执行。</li>
-<li><strong>非静态域</strong>：在创建类对象时执行，且优先于构造函数，非静态变量和非静态代码块（构造代码块）依次顺序执行。</li>
-<li><strong>构造函数</strong>：在创建类对象时，等待非静态域初始化完成后执行。</li>
-</ol>
-
+<h3 id="注意：属性和字段是有区别的。"><a href="#注意：属性和字段是有区别的。" class="headerlink" title="注意：属性和字段是有区别的。"></a><strong>注意：属性和字段是有区别的。</strong></h3><p>&emsp;&emsp;属性是JavaBean规范中提出的概念，针对的是对象，而类本身是没有属性的概念的。<br>&emsp;&emsp;属性定义的规则是：get/set方法名，去掉get/set后，将剩余部分字符串的首字母小写后得到的字符串就是这个类的属性。 </p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2020/11/28/Java%E9%9D%99%E6%80%81%E5%9F%9F%E3%80%81%E9%9D%9E%E9%9D%99%E6%80%81%E5%9F%9F%E5%8F%8A%E6%9E%84%E9%80%A0%E5%87%BD%E6%95%B0%E7%9A%84%E5%88%9D%E5%A7%8B%E5%8C%96%E9%A1%BA%E5%BA%8F/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
       
     </div>
 
