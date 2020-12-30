@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.1/css/all.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"8.0.1","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12},"copycode":true,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}};
+  </script>
+
+  <meta name="description" content="从一个实例开始&amp;emsp;&amp;emsp;一个常见的Stream使用示例如下：   List&lt;String&gt; list &#x3D; Arrays.asList(&quot;one&quot;,&quot;two&quot;,&quot;three&quot;,&quot;one&quot;); list.stream() &#x2F;&#x2F; 创建流         .filter(s -&gt; s.startsWith(&quot;t&quot;)) &#x2F;&#x2F; 过滤流元素         .distinct() &#x2F;&#x2F; 去除">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Java Stream 源码解析">
+<meta property="og:url" content="http://example.com/2020/12/30/Java-Stream-%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/index.html">
+<meta property="og:site_name" content="Cocoas">
+<meta property="og:description" content="从一个实例开始&amp;emsp;&amp;emsp;一个常见的Stream使用示例如下：   List&lt;String&gt; list &#x3D; Arrays.asList(&quot;one&quot;,&quot;two&quot;,&quot;three&quot;,&quot;one&quot;); list.stream() &#x2F;&#x2F; 创建流         .filter(s -&gt; s.startsWith(&quot;t&quot;)) &#x2F;&#x2F; 过滤流元素         .distinct() &#x2F;&#x2F; 去除">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/pictures/java_stream/StreamSupport%E4%BB%A3%E7%A0%81%E7%BB%93%E6%9E%84.png">
+<meta property="article:published_time" content="2020-12-30T12:42:19.000Z">
+<meta property="article:modified_time" content="2020-12-30T13:02:17.865Z">
+<meta property="article:author" content="Cocoas">
+<meta property="article:tag" content="Stream">
+<meta property="article:tag" content="Stream源码解析">
+<meta property="article:tag" content="fiter">
+<meta property="article:tag" content="distinct">
+<meta property="article:tag" content="forEach">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/pictures/java_stream/StreamSupport%E4%BB%A3%E7%A0%81%E7%BB%93%E6%9E%84.png">
+
+
+<link rel="canonical" href="http://example.com/2020/12/30/Java-Stream-%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Java Stream 源码解析 | Cocoas</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">Cocoas</h1>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">欢迎光临</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+		<li>
+          第三标题
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <section class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%8E%E4%B8%80%E4%B8%AA%E5%AE%9E%E4%BE%8B%E5%BC%80%E5%A7%8B"><span class="nav-text">从一个实例开始</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#list-stream-%EF%BC%9A%E5%88%9B%E5%BB%BA%E6%B5%81"><span class="nav-text">list.stream()：创建流</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#filter-%EF%BC%9A%E6%97%A0%E7%8A%B6%E6%80%81%E4%B8%AD%E9%97%B4%E6%93%8D%E4%BD%9C%EF%BC%88stateless-intermediate-operation%EF%BC%89"><span class="nav-text">filter()：无状态中间操作（stateless intermediate operation）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#distinct-%EF%BC%9A%E6%9C%89%E7%8A%B6%E6%80%81%E4%B8%AD%E9%97%B4%E6%93%8D%E4%BD%9C%EF%BC%88stateful-intermediate-operation%EF%BC%89"><span class="nav-text">distinct()：有状态中间操作（stateful intermediate operation）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#forEach-%EF%BC%9A%E7%BB%93%E6%9D%9F%E6%93%8D%E4%BD%9C%EF%BC%88terminal-operation%EF%BC%89"><span class="nav-text">forEach()：结束操作（terminal operation）</span></a></li></ol></div>
+        </section>
+        <!--/noindex-->
+
+        <section class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Cocoas</p>
+  <div class="site-description" itemprop="description">Android,Java,Android SDK,Kotlin,</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">22</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">68</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/CharlieJiang" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;CharlieJiang" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:cocoasjiang@foxmail.com" title="E-Mail → mailto:cocoasjiang@foxmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+        </section>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2020/12/30/Java-Stream-%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Cocoas">
+      <meta itemprop="description" content="Android,Java,Android SDK,Kotlin,">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Cocoas">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Java Stream 源码解析
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+      
+
+      <time title="创建时间：2020-12-30 20:42:19 / 修改时间：21:02:17" itemprop="dateCreated datePublished" datetime="2020-12-30T20:42:19+08:00">2020-12-30</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Java%E5%9F%BA%E7%A1%80/" itemprop="url" rel="index"><span itemprop="name">Java基础</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Java%E5%9F%BA%E7%A1%80/Java-Stream/" itemprop="url" rel="index"><span itemprop="name">Java Stream</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h2 id="从一个实例开始"><a href="#从一个实例开始" class="headerlink" title="从一个实例开始"></a><strong>从一个实例开始</strong></h2><p>&emsp;&emsp;一个常见的Stream使用示例如下：  </p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token class-name">List</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">String</span><span class="token punctuation">></span></span> list <span class="token operator">=</span> <span class="token class-name">Arrays</span><span class="token punctuation">.</span><span class="token function">asList</span><span class="token punctuation">(</span><span class="token string">"one"</span><span class="token punctuation">,</span><span class="token string">"two"</span><span class="token punctuation">,</span><span class="token string">"three"</span><span class="token punctuation">,</span><span class="token string">"one"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+list<span class="token punctuation">.</span><span class="token function">stream</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token comment">// 创建流</span>
+        <span class="token punctuation">.</span><span class="token function">filter</span><span class="token punctuation">(</span>s <span class="token operator">-></span> s<span class="token punctuation">.</span><span class="token function">startsWith</span><span class="token punctuation">(</span><span class="token string">"t"</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token comment">// 过滤流元素</span>
+        <span class="token punctuation">.</span><span class="token function">distinct</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token comment">// 去除重复元素</span>
+        <span class="token punctuation">.</span><span class="token function">forEach</span><span class="token punctuation">(</span><span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token operator">::</span><span class="token function">println</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// 打印流元素</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>&emsp;&emsp;下面我们通过逐步分析Stream操作的实现，来了解Stream实现的基本原理。  </p>
+<a id="more"></a>
+
+<h2 id="list-stream-：创建流"><a href="#list-stream-：创建流" class="headerlink" title="list.stream()：创建流"></a><strong>list.stream()：创建流</strong></h2><p>&emsp;&emsp;List通过<code>stream()</code>方法创建流，我们跟踪此方法，发现其位于Collection接口中，由此可知：List、Set等所有集合类型都可通过调用父类<code>Collection.stream()</code>创建自己的流。下面看下<code>Collection.stream()</code>是如何创建流的，其源码如下：  </p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">default</span> <span class="token class-name">Stream</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">E</span><span class="token punctuation">></span></span> <span class="token function">stream</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+    <span class="token keyword">return</span> <span class="token class-name">StreamSupport</span><span class="token punctuation">.</span><span class="token function">stream</span><span class="token punctuation">(</span><span class="token function">spliterator</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token boolean">false</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
+
+<p>&emsp;&emsp;从<code>Collection.stream()</code>源码中可以看到：<code>stream()</code>是通过调用<code>StreamSupport.stream()</code>方法实现创建流的。我们查看StreamSupport源码可知，StreamSupport就是用来创建和操作流的低级实用方法（Low-level utility methods for creating and manipulating streams），该类主要用于为库编写者提供数据结构的流视图。StreamSupport中除了一个比较通用的创建流的方法<code>stream()</code>外，还额外封装了三种常见基本数据类型的流的创建，包括DoubleStream、IntStream和LongStream。StreamSupport代码结构如如下：<br><img src="/pictures/java_stream/StreamSupport%E4%BB%A3%E7%A0%81%E7%BB%93%E6%9E%84.png" alt="StreamSupport代码结构">  </p>
+<p>&emsp;&emsp;既然Collection可以通过调用StreamSupport创建流，那我们自己也能直接使用它来创建流：  </p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token class-name">StreamSupport</span><span class="token punctuation">.</span><span class="token function">stream</span><span class="token punctuation">(</span>list<span class="token punctuation">.</span><span class="token function">spliterator</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span><span class="token boolean">false</span><span class="token punctuation">)</span>
+        <span class="token punctuation">.</span><span class="token function">filter</span><span class="token punctuation">(</span>s <span class="token operator">-></span> s<span class="token punctuation">.</span><span class="token function">startsWith</span><span class="token punctuation">(</span><span class="token string">"f"</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token comment">// 过滤流元素</span>
+        <span class="token punctuation">.</span><span class="token function">distinct</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token comment">// 去除重复元素</span>
+        <span class="token punctuation">.</span><span class="token function">forEach</span><span class="token punctuation">(</span><span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token operator">::</span><span class="token function">println</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// 打印流元素</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>&emsp;&emsp;不过直接使用StreamSupport来创建流显然比使用<code>Collection.stream()</code>要麻烦了点，通常我们还是使用后者。<br>&emsp;&emsp;下面我们还是继续研究<code>StreamSupport.stream()</code>方法。其源码如下：   </p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">T</span><span class="token punctuation">></span></span> <span class="token class-name">Stream</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">T</span><span class="token punctuation">></span></span> <span class="token function">stream</span><span class="token punctuation">(</span><span class="token class-name">Spliterator</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">T</span><span class="token punctuation">></span></span> spliterator<span class="token punctuation">,</span> <span class="token keyword">boolean</span> parallel<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+    <span class="token class-name">Objects</span><span class="token punctuation">.</span><span class="token function">requireNonNull</span><span class="token punctuation">(</span>spliterator<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">return</span> <span class="token keyword">new</span> <span class="token class-name">ReferencePipeline</span><span class="token punctuation">.</span><span class="token class-name">Head</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token punctuation">></span></span><span class="token punctuation">(</span>spliterator<span class="token punctuation">,</span>
+                                        <span class="token class-name">StreamOpFlag</span><span class="token punctuation">.</span><span class="token function">fromCharacteristics</span><span class="token punctuation">(</span>spliterator<span class="token punctuation">)</span><span class="token punctuation">,</span>
+                                        parallel<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>&emsp;&emsp;<code>StreamSupport.stream()</code>方法有两个参数：<br>&emsp;&emsp;&emsp;&emsp;<code>spliterator</code>：一个Spliterator对象，负责元素迭代和并行处理<br>&emsp;&emsp;&emsp;&emsp;<code>parallel</code>：决定了创建的是正常的流还是并行流<br>&emsp;&emsp;<code>Spliterator</code>是一个可分割迭代器，支持对数据源数据进行迭代和分割，其内部多数功能都是通过迭代器Iterator实现的。Spliterator是一个专门为了并行遍历元素而设计的迭代器，其有两个特点：<br>&emsp;&emsp;&emsp;&emsp;<strong>元素可分割</strong>：Spliterator支持对元素进行分割。如果一个Spliterator是可分割的，那么Spliterator可以从所有元素中分割出部分组成新的Spliterator。之所以要对元素进行分割，是为了在并行计算时将数据源拆分成多份供多个线程使用，以加快计算速度。<br>&emsp;&emsp;&emsp;&emsp;<strong>特征值</strong>：Spliterator内部有一个特征值（Characteristics）的属性，表示的是Spliterator的一些特性，这些特性可以使我们更好地控制和优化Spliterator的使用。比如<code>Spliterator.CONCURRENT</code>特性表示元素可以安全地并行修改，<code>Spliterator.DISTINCT</code>特性表示所有元素中无重复元素等。<br>&emsp;&emsp;我们再回头看下<code>Collection.stream()</code>方法内部在调用<code>StreamSupport.stream()</code>方法时传递的参数。第二个参数传入的是false，表示创建的是一个非并行流。第一个参数spliterator是通过调用<code>Collection.spliterator()</code>方法获取的，<code>Collection.spliterator()</code>源码如下：  </p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">default</span> <span class="token class-name">Spliterator</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">E</span><span class="token punctuation">></span></span> <span class="token function">spliterator</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+    <span class="token keyword">return</span> <span class="token class-name">Spliterators</span><span class="token punctuation">.</span><span class="token function">spliterator</span><span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
+
+<p>&emsp;&emsp;<code>Collection.spliterator()</code>方法内部通过调用<code>Spliterators.spliterator()</code>方法传入当前集合及集合元素特征来获取Spliterator对象。<code>Spliterators.spliterator()</code>源码如下：  </p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">T</span><span class="token punctuation">></span></span> <span class="token class-name">Spliterator</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">T</span><span class="token punctuation">></span></span> <span class="token function">spliterator</span><span class="token punctuation">(</span><span class="token class-name">Collection</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token operator">?</span> <span class="token keyword">extends</span> <span class="token class-name">T</span><span class="token punctuation">></span></span> c<span class="token punctuation">,</span>
+                                             <span class="token keyword">int</span> characteristics<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+    <span class="token keyword">return</span> <span class="token keyword">new</span> <span class="token class-name">IteratorSpliterator</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token punctuation">></span></span><span class="token punctuation">(</span><span class="token class-name">Objects</span><span class="token punctuation">.</span><span class="token function">requireNonNull</span><span class="token punctuation">(</span>c<span class="token punctuation">)</span><span class="token punctuation">,</span>
+                                     characteristics<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>&emsp;&emsp;<code>Spliterators.spliterator()</code>内部创建了一个IteratorSpliterator对象返回，IteratorSpliterator类是Spliterator接口的一个实现类。即<code>Collection.spliterator()</code>中的iterator参数最终传入的是一个IteratorSpliterator对象。<br>&emsp;&emsp;继续看<code>StreamSupport.stream()</code>方法。该方法也没有创建流的具体实现，而是直接返回一个<code>ReferencePipeline.Head</code>对象。Head类是ReferencePipeline的一个静态内部实现类，所以<code>StreamSupport.stream()</code>就相当于返回了一个ReferencePipeline对象。Head的类定义源码如下：  </p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token comment">/**
+ * Source stage of a ReferencePipeline.
+ *
+ * @param &lt;E_IN> type of elements in the upstream source
+ * @param &lt;E_OUT> type of elements in produced by this stage
+ * @since 1.8
+ */</span>
+<span class="token keyword">static</span> <span class="token keyword">class</span> <span class="token class-name">Head</span><span class="token generics"><span class="token punctuation">&lt;</span>E_IN<span class="token punctuation">,</span> E_OUT<span class="token punctuation">></span></span> <span class="token keyword">extends</span> <span class="token class-name">ReferencePipeline</span><span class="token generics"><span class="token punctuation">&lt;</span>E_IN<span class="token punctuation">,</span> E_OUT<span class="token punctuation">></span></span> <span class="token punctuation">&#123;</span><span class="token comment">//省略其他代码&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>&emsp;&emsp;Head类的注释说明，Head是被描述成ReferencePipeline流水线的一个起始Stage（Source stage of a ReferencePipeline），即Head是流水线的开始点。也就是说通过<code>list.stream()</code>创建的是一个流水线的起始点。那流水线中的其它操作是如何创建的呢？我们先查看ReferencePipeline类，其定义如下：  </p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token comment">/**
+ * Abstract base class for an intermediate pipeline stage or pipeline source
+ * stage implementing whose elements are of type &#123;@code U&#125;.
+ *
+ * @param &lt;P_IN> type of elements in the upstream source
+ * @param &lt;P_OUT> type of elements in produced by this stage
+ *
+ * @since 1.8
+ */</span>
+<span class="token keyword">abstract</span> <span class="token keyword">class</span> <span class="token class-name">ReferencePipeline</span><span class="token generics"><span class="token punctuation">&lt;</span>P_IN<span class="token punctuation">,</span> P_OUT<span class="token punctuation">></span></span>
+        <span class="token keyword">extends</span> <span class="token class-name">AbstractPipeline</span><span class="token generics"><span class="token punctuation">&lt;</span>P_IN<span class="token punctuation">,</span> P_OUT<span class="token punctuation">,</span> <span class="token class-name">Stream</span><span class="token punctuation">&lt;</span>P_OUT<span class="token punctuation">></span><span class="token punctuation">></span></span>
+        <span class="token keyword">implements</span> <span class="token class-name">Stream</span><span class="token generics"><span class="token punctuation">&lt;</span>P_OUT<span class="token punctuation">></span></span>  <span class="token punctuation">&#123;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>&emsp;&emsp;ReferencePipeline类实现了Stream接口，Stream流水线的相关操作基本都是在这个接口中定义的。ReferencePipeline类是用于实现流水线中间的stage和流水线起始stage（即流水线上的操作被描述为stage），source stage 对应于前面分析的<code>ReferencePipeline.Head</code>类，中间操作对应于<code>ReferencePipeline.StatefulOp</code>类和<code>ReferencePipeline.StatelessOp</code>类，这两个类分别对应的就是有状态中间操作和无状态中间操作。<br>&emsp;&emsp;我们继续看Head的构造函数：</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token class-name">Head</span><span class="token punctuation">(</span><span class="token class-name">Spliterator</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token operator">?</span><span class="token punctuation">></span></span> source<span class="token punctuation">,</span>
+     <span class="token keyword">int</span> sourceFlags<span class="token punctuation">,</span> <span class="token keyword">boolean</span> parallel<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+    <span class="token keyword">super</span><span class="token punctuation">(</span>source<span class="token punctuation">,</span> sourceFlags<span class="token punctuation">,</span> parallel<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>&emsp;&emsp;Head的构造函数有三个参数：<br>&emsp;&emsp;&emsp;&emsp;<code>source</code>：数据源的一个可分割迭代器对象，即Spliterator对象<br>&emsp;&emsp;&emsp;&emsp;<code>sourceFlags</code>：流数据源的原始标志位，由第一个参数中的特征值决定<br>&emsp;&emsp;&emsp;&emsp;<code>parallel</code>：并行标志，决定创建的是不是并行流<br>&emsp;&emsp;Head的构造函数中是直接调用的父类ReferencePipeline的构造函数，ReferencePipeline的构造函数中又是直接调用的其父类AbstractPipeline的构造函数，最终由AbstractReference的构造函数来实现。所以可以说，创建ReferencePipeline.Head对象实际就是创建AbstractPipeline对象。AbstractPipeline类继承了PipelineHelper类，PipelineHelper是一个执行Stream流水线操作的帮助类，AbstractPipeline通过实现和重载PipelineHelper中定义的方法来实现流水线结束操作的处理和最终计算。  </p>
+<h2 id="filter-：无状态中间操作（stateless-intermediate-operation）"><a href="#filter-：无状态中间操作（stateless-intermediate-operation）" class="headerlink" title="filter()：无状态中间操作（stateless intermediate operation）"></a><strong>filter()：无状态中间操作（stateless intermediate operation）</strong></h2><blockquote>
+<p>filter()方法是Stream接口中定义的流处理方法，由ReferencePipeline抽象类来实现。filter()负责过滤不符合指定条件的流元素。  </p>
+</blockquote>
+<p>&emsp;&emsp;filter()方法的实现代码如下：   </p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">final</span> <span class="token class-name">Stream</span><span class="token generics"><span class="token punctuation">&lt;</span>P_OUT<span class="token punctuation">></span></span> <span class="token function">filter</span><span class="token punctuation">(</span><span class="token class-name">Predicate</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token operator">?</span> <span class="token keyword">super</span> P_OUT<span class="token punctuation">></span></span> predicate<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+    <span class="token class-name">Objects</span><span class="token punctuation">.</span><span class="token function">requireNonNull</span><span class="token punctuation">(</span>predicate<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">return</span> <span class="token keyword">new</span> <span class="token class-name">StatelessOp</span><span class="token generics"><span class="token punctuation">&lt;</span>P_OUT<span class="token punctuation">,</span> P_OUT<span class="token punctuation">></span></span><span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">,</span> <span class="token class-name">StreamShape</span><span class="token punctuation">.</span>REFERENCE<span class="token punctuation">,</span>
+                                 <span class="token class-name">StreamOpFlag</span><span class="token punctuation">.</span>NOT_SIZED<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token annotation punctuation">@Override</span>
+        <span class="token class-name">Sink</span><span class="token generics"><span class="token punctuation">&lt;</span>P_OUT<span class="token punctuation">></span></span> <span class="token function">opWrapSink</span><span class="token punctuation">(</span><span class="token keyword">int</span> flags<span class="token punctuation">,</span> <span class="token class-name">Sink</span><span class="token generics"><span class="token punctuation">&lt;</span>P_OUT<span class="token punctuation">></span></span> sink<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            <span class="token keyword">return</span> <span class="token keyword">new</span> <span class="token class-name">Sink</span><span class="token punctuation">.</span><span class="token class-name">ChainedReference</span><span class="token generics"><span class="token punctuation">&lt;</span>P_OUT<span class="token punctuation">,</span> P_OUT<span class="token punctuation">></span></span><span class="token punctuation">(</span>sink<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+                <span class="token annotation punctuation">@Override</span>
+                <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">begin</span><span class="token punctuation">(</span><span class="token keyword">long</span> size<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+                    downstream<span class="token punctuation">.</span><span class="token function">begin</span><span class="token punctuation">(</span><span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                <span class="token punctuation">&#125;</span>
+
+                <span class="token annotation punctuation">@Override</span>
+                <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">accept</span><span class="token punctuation">(</span><span class="token class-name">P_OUT</span> u<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+                    <span class="token keyword">if</span> <span class="token punctuation">(</span>predicate<span class="token punctuation">.</span><span class="token function">test</span><span class="token punctuation">(</span>u<span class="token punctuation">)</span><span class="token punctuation">)</span>
+                        downstream<span class="token punctuation">.</span><span class="token function">accept</span><span class="token punctuation">(</span>u<span class="token punctuation">)</span><span class="token punctuation">;</span>
+                <span class="token punctuation">&#125;</span>
+            <span class="token punctuation">&#125;</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span>
+    <span class="token punctuation">&#125;</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>&emsp;&emsp;<code>filter()</code>方法返回的是一个StatelessOp对象，表明filter是一个无状态中间操作。<code>filter()</code>方法通过实现<code>StatelessOp.opWrapSink()</code>方法来完成过滤功能，<code>opWrapSink()</code>抽象方法是在AbstractPipeline中定义的，StatelessOp通过两级继承获取。先看下StatelessOp类：  </p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">abstract</span> <span class="token keyword">static</span> <span class="token keyword">class</span> <span class="token class-name">StatelessOp</span><span class="token generics"><span class="token punctuation">&lt;</span>E_IN<span class="token punctuation">,</span> E_OUT<span class="token punctuation">></span></span>
+        <span class="token keyword">extends</span> <span class="token class-name">ReferencePipeline</span><span class="token generics"><span class="token punctuation">&lt;</span>E_IN<span class="token punctuation">,</span> E_OUT<span class="token punctuation">></span></span> <span class="token punctuation">&#123;</span>
+
+    <span class="token class-name">StatelessOp</span><span class="token punctuation">(</span><span class="token class-name">AbstractPipeline</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token operator">?</span><span class="token punctuation">,</span> E_IN<span class="token punctuation">,</span> <span class="token operator">?</span><span class="token punctuation">></span></span> upstream<span class="token punctuation">,</span>
+                <span class="token class-name">StreamShape</span> inputShape<span class="token punctuation">,</span>
+                <span class="token keyword">int</span> opFlags<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">super</span><span class="token punctuation">(</span>upstream<span class="token punctuation">,</span> opFlags<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">assert</span> upstream<span class="token punctuation">.</span><span class="token function">getOutputShape</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">==</span> inputShape<span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">final</span> <span class="token keyword">boolean</span> <span class="token function">opIsStateful</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">return</span> <span class="token boolean">false</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>&emsp;&emsp;StatelessOp类只是实现了一个<code>opIsStateful()</code>方法，返回false，表明其是一个无状态的操作而已。我们再回头去看下StatelessOp实现的<code>AbstractPipeline.opWrapSink()</code>方法，其定义如下：  </p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token comment">/**
+ * Accepts a &#123;@code Sink&#125; which will receive the results of this operation,
+ * and return a &#123;@code Sink&#125; which accepts elements of the input type of
+ * this operation and which performs the operation, passing the results to
+ * the provided &#123;@code Sink&#125;.
+ *
+ * @apiNote
+ * The implementation may use the &#123;@code flags&#125; parameter to optimize the
+ * sink wrapping.  For example, if the input is already &#123;@code DISTINCT&#125;,
+ * the implementation for the &#123;@code Stream#distinct()&#125; method could just
+ * return the sink it was passed.
+ *
+ * @param flags The combined stream and operation flags up to, but not
+ *        including, this operation
+ * @param sink sink to which elements should be sent after processing
+ * @return a sink which accepts elements, perform the operation upon
+ *         each element, and passes the results (if any) to the provided
+ *         &#123;@code Sink&#125;.
+ */</span>
+<span class="token keyword">abstract</span> <span class="token class-name">Sink</span><span class="token generics"><span class="token punctuation">&lt;</span>E_IN<span class="token punctuation">></span></span> <span class="token function">opWrapSink</span><span class="token punctuation">(</span><span class="token keyword">int</span> flags<span class="token punctuation">,</span> <span class="token class-name">Sink</span><span class="token generics"><span class="token punctuation">&lt;</span>E_OUT<span class="token punctuation">></span></span> sink<span class="token punctuation">)</span><span class="token punctuation">;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>&emsp;&emsp;<code>opWrapSink()</code>方法的作用是：接受一个用于存放此操作结果的Sink对象参数，返回一个Sink实例，在这个Sink实例中对输入元素执行当前操作，并将操作结果传入入参提供的Sink对象。简单来说，就是对数据元素执行完当前操作后，将结果作为参数传入下一步操作的Sink中去执行。即执行+转发的模式。<br>&emsp;&emsp;我们再回头看下<code>filter()</code>方法的实现，<code>opWrapSink()</code>方法返回的是一个Sink.ChainedReference对象，ChainedReference也是Sink的静态内部子类，并实现了<code>accept()</code>方法去处理数据。在<code>accept()</code>方法中，先对数据执行当前的过滤操作predicate，再将符合要求的元素通过<code>downstream.accept()</code>方法传入到下级流中继续执行。<code>Sink.ChainedReference</code>的源码如下：  </p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token comment">/**
+ * Abstract &#123;@code Sink&#125; implementation for creating chains of
+ * sinks.  The &#123;@code begin&#125;, &#123;@code end&#125;, and
+ * &#123;@code cancellationRequested&#125; methods are wired to chain to the
+ * downstream &#123;@code Sink&#125;.  This implementation takes a downstream
+ * &#123;@code Sink&#125; of unknown input shape and produces a &#123;@code Sink&lt;T>&#125;.  The
+ * implementation of the &#123;@code accept()&#125; method must call the correct
+ * &#123;@code accept()&#125; method on the downstream &#123;@code Sink&#125;.
+ */</span>
+<span class="token keyword">static</span> <span class="token keyword">abstract</span> <span class="token keyword">class</span> <span class="token class-name">ChainedReference</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">T</span><span class="token punctuation">,</span> E_OUT<span class="token punctuation">></span></span> <span class="token keyword">implements</span> <span class="token class-name">Sink</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">T</span><span class="token punctuation">></span></span> <span class="token punctuation">&#123;</span>
+    <span class="token keyword">protected</span> <span class="token keyword">final</span> <span class="token class-name">Sink</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token operator">?</span> <span class="token keyword">super</span> E_OUT<span class="token punctuation">></span></span> downstream<span class="token punctuation">;</span>
+
+    <span class="token keyword">public</span> <span class="token class-name">ChainedReference</span><span class="token punctuation">(</span><span class="token class-name">Sink</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token operator">?</span> <span class="token keyword">super</span> E_OUT<span class="token punctuation">></span></span> downstream<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">this</span><span class="token punctuation">.</span>downstream <span class="token operator">=</span> <span class="token class-name">Objects</span><span class="token punctuation">.</span><span class="token function">requireNonNull</span><span class="token punctuation">(</span>downstream<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">begin</span><span class="token punctuation">(</span><span class="token keyword">long</span> size<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        downstream<span class="token punctuation">.</span><span class="token function">begin</span><span class="token punctuation">(</span>size<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">end</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        downstream<span class="token punctuation">.</span><span class="token function">end</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token keyword">boolean</span> <span class="token function">cancellationRequested</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">return</span> downstream<span class="token punctuation">.</span><span class="token function">cancellationRequested</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>&emsp;&emsp;可以看到，ChainedReference是用来创建Sink链的，downstream就是<code>Sink.ChainedReference</code>类中的一个受保护的最终Sink变量，代表的是下一步操作的Sink。结合前面<code>opWrapSink()</code>的分析可知：filter操作最终产生的是一个Sink对象，这个对象中封装了<code>filter()</code>中指定的操作，然后将操作结果传递给了下一步操作的Sink对象执行。前后两个操作就通过Sink连接起来了，最终所有中间操作通过Sink连成了一条流水线。<strong>所以中间操作不会立即执行的原因是：Stream API已经将所有的中间操作封装到了Sink里面，并将中间操作按序链接在一起。</strong>  </p>
+<h2 id="distinct-：有状态中间操作（stateful-intermediate-operation）"><a href="#distinct-：有状态中间操作（stateful-intermediate-operation）" class="headerlink" title="distinct()：有状态中间操作（stateful intermediate operation）"></a><strong>distinct()：有状态中间操作（stateful intermediate operation）</strong></h2><p>&emsp;&emsp;有状态中间操作和无状态中间操作的实现比较类似，主要区别在于有状态中间操作一般需要在所有输入元素处理完成后才能继续进行下一步操作。  </p>
+<blockquote>
+<p>distinct()方法是Stream接口中定义的流处理方法，由ReferencePipeline抽象类来实现。distinct()的作用是去除重复的流元素。  </p>
+</blockquote>
+<p>&emsp;&emsp;先来看下<code>distinct()</code>的实现代码：  </p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">final</span> <span class="token class-name">Stream</span><span class="token generics"><span class="token punctuation">&lt;</span>P_OUT<span class="token punctuation">></span></span> <span class="token function">distinct</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+    <span class="token keyword">return</span> <span class="token class-name">DistinctOps</span><span class="token punctuation">.</span><span class="token function">makeRef</span><span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
+
+<p>&emsp;&emsp;继续看<code>DistinctOps.makeRef()</code>源码：  </p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">static</span> <span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">T</span><span class="token punctuation">></span></span> <span class="token class-name">ReferencePipeline</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">T</span><span class="token punctuation">,</span> <span class="token class-name">T</span><span class="token punctuation">></span></span> <span class="token function">makeRef</span><span class="token punctuation">(</span><span class="token class-name">AbstractPipeline</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token operator">?</span><span class="token punctuation">,</span> <span class="token class-name">T</span><span class="token punctuation">,</span> <span class="token operator">?</span><span class="token punctuation">></span></span> upstream<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+    <span class="token keyword">return</span> <span class="token keyword">new</span> <span class="token class-name">ReferencePipeline</span><span class="token punctuation">.</span><span class="token class-name">StatefulOp</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">T</span><span class="token punctuation">,</span> <span class="token class-name">T</span><span class="token punctuation">></span></span><span class="token punctuation">(</span>upstream<span class="token punctuation">,</span> <span class="token class-name">StreamShape</span><span class="token punctuation">.</span>REFERENCE<span class="token punctuation">,</span>
+                                                  <span class="token class-name">StreamOpFlag</span><span class="token punctuation">.</span>IS_DISTINCT <span class="token operator">|</span> <span class="token class-name">StreamOpFlag</span><span class="token punctuation">.</span>NOT_SIZED<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+
+        <span class="token generics"><span class="token punctuation">&lt;</span>P_IN<span class="token punctuation">></span></span> <span class="token class-name">Node</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">T</span><span class="token punctuation">></span></span> <span class="token function">reduce</span><span class="token punctuation">(</span><span class="token class-name">PipelineHelper</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">T</span><span class="token punctuation">></span></span> helper<span class="token punctuation">,</span> <span class="token class-name">Spliterator</span><span class="token generics"><span class="token punctuation">&lt;</span>P_IN<span class="token punctuation">></span></span> spliterator<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            <span class="token comment">// 省略处理代码</span>
+        <span class="token punctuation">&#125;</span>
+
+        <span class="token annotation punctuation">@Override</span>
+        <span class="token generics"><span class="token punctuation">&lt;</span>P_IN<span class="token punctuation">></span></span> <span class="token class-name">Node</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">T</span><span class="token punctuation">></span></span> <span class="token function">opEvaluateParallel</span><span class="token punctuation">(</span><span class="token class-name">PipelineHelper</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">T</span><span class="token punctuation">></span></span> helper<span class="token punctuation">,</span>
+                                          <span class="token class-name">Spliterator</span><span class="token generics"><span class="token punctuation">&lt;</span>P_IN<span class="token punctuation">></span></span> spliterator<span class="token punctuation">,</span>
+                                          <span class="token class-name">IntFunction</span><span class="token operator">&lt;</span><span class="token class-name">T</span><span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token operator">></span> generator<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+           <span class="token comment">// 省略处理代码</span>
+        <span class="token punctuation">&#125;</span>
+
+        <span class="token annotation punctuation">@Override</span>
+        <span class="token generics"><span class="token punctuation">&lt;</span>P_IN<span class="token punctuation">></span></span> <span class="token class-name">Spliterator</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">T</span><span class="token punctuation">></span></span> <span class="token function">opEvaluateParallelLazy</span><span class="token punctuation">(</span><span class="token class-name">PipelineHelper</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">T</span><span class="token punctuation">></span></span> helper<span class="token punctuation">,</span> <span class="token class-name">Spliterator</span><span class="token generics"><span class="token punctuation">&lt;</span>P_IN<span class="token punctuation">></span></span> spliterator<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+           <span class="token comment">// 省略处理代码</span>
+        <span class="token punctuation">&#125;</span>
+
+        <span class="token annotation punctuation">@Override</span>
+        <span class="token class-name">Sink</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">T</span><span class="token punctuation">></span></span> <span class="token function">opWrapSink</span><span class="token punctuation">(</span><span class="token keyword">int</span> flags<span class="token punctuation">,</span> <span class="token class-name">Sink</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">T</span><span class="token punctuation">></span></span> sink<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            <span class="token class-name">Objects</span><span class="token punctuation">.</span><span class="token function">requireNonNull</span><span class="token punctuation">(</span>sink<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+            <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token class-name">StreamOpFlag</span><span class="token punctuation">.</span>DISTINCT<span class="token punctuation">.</span><span class="token function">isKnown</span><span class="token punctuation">(</span>flags<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+                <span class="token keyword">return</span> sink<span class="token punctuation">;</span>
+            <span class="token punctuation">&#125;</span> <span class="token keyword">else</span> <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token class-name">StreamOpFlag</span><span class="token punctuation">.</span>SORTED<span class="token punctuation">.</span><span class="token function">isKnown</span><span class="token punctuation">(</span>flags<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+                <span class="token keyword">return</span> <span class="token keyword">new</span> <span class="token class-name">Sink</span><span class="token punctuation">.</span><span class="token class-name">ChainedReference</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">T</span><span class="token punctuation">,</span> <span class="token class-name">T</span><span class="token punctuation">></span></span><span class="token punctuation">(</span>sink<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+                    <span class="token keyword">boolean</span> seenNull<span class="token punctuation">;</span>
+                    <span class="token class-name">T</span> lastSeen<span class="token punctuation">;</span>
+
+                    <span class="token annotation punctuation">@Override</span>
+                    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">begin</span><span class="token punctuation">(</span><span class="token keyword">long</span> size<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+                        seenNull <span class="token operator">=</span> <span class="token boolean">false</span><span class="token punctuation">;</span>
+                        lastSeen <span class="token operator">=</span> <span class="token keyword">null</span><span class="token punctuation">;</span>
+                        downstream<span class="token punctuation">.</span><span class="token function">begin</span><span class="token punctuation">(</span><span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                    <span class="token punctuation">&#125;</span>
+
+                    <span class="token annotation punctuation">@Override</span>
+                    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">end</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+                        seenNull <span class="token operator">=</span> <span class="token boolean">false</span><span class="token punctuation">;</span>
+                        lastSeen <span class="token operator">=</span> <span class="token keyword">null</span><span class="token punctuation">;</span>
+                        downstream<span class="token punctuation">.</span><span class="token function">end</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                    <span class="token punctuation">&#125;</span>
+
+                    <span class="token annotation punctuation">@Override</span>
+                    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">accept</span><span class="token punctuation">(</span><span class="token class-name">T</span> t<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+                        <span class="token keyword">if</span> <span class="token punctuation">(</span>t <span class="token operator">==</span> <span class="token keyword">null</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+                            <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token operator">!</span>seenNull<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+                                seenNull <span class="token operator">=</span> <span class="token boolean">true</span><span class="token punctuation">;</span>
+                                downstream<span class="token punctuation">.</span><span class="token function">accept</span><span class="token punctuation">(</span>lastSeen <span class="token operator">=</span> <span class="token keyword">null</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                            <span class="token punctuation">&#125;</span>
+                        <span class="token punctuation">&#125;</span> <span class="token keyword">else</span> <span class="token keyword">if</span> <span class="token punctuation">(</span>lastSeen <span class="token operator">==</span> <span class="token keyword">null</span> <span class="token operator">||</span> <span class="token operator">!</span>t<span class="token punctuation">.</span><span class="token function">equals</span><span class="token punctuation">(</span>lastSeen<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+                            downstream<span class="token punctuation">.</span><span class="token function">accept</span><span class="token punctuation">(</span>lastSeen <span class="token operator">=</span> t<span class="token punctuation">)</span><span class="token punctuation">;</span>
+                        <span class="token punctuation">&#125;</span>
+                    <span class="token punctuation">&#125;</span>
+                <span class="token punctuation">&#125;</span><span class="token punctuation">;</span>
+            <span class="token punctuation">&#125;</span> <span class="token keyword">else</span> <span class="token punctuation">&#123;</span>
+                <span class="token keyword">return</span> <span class="token keyword">new</span> <span class="token class-name">Sink</span><span class="token punctuation">.</span><span class="token class-name">ChainedReference</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">T</span><span class="token punctuation">,</span> <span class="token class-name">T</span><span class="token punctuation">></span></span><span class="token punctuation">(</span>sink<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+                    <span class="token class-name">Set</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">T</span><span class="token punctuation">></span></span> seen<span class="token punctuation">;</span>
+
+                    <span class="token annotation punctuation">@Override</span>
+                    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">begin</span><span class="token punctuation">(</span><span class="token keyword">long</span> size<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+                        seen <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">HashSet</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token punctuation">></span></span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                        downstream<span class="token punctuation">.</span><span class="token function">begin</span><span class="token punctuation">(</span><span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                    <span class="token punctuation">&#125;</span>
+
+                    <span class="token annotation punctuation">@Override</span>
+                    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">end</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+                        seen <span class="token operator">=</span> <span class="token keyword">null</span><span class="token punctuation">;</span>
+                        downstream<span class="token punctuation">.</span><span class="token function">end</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                    <span class="token punctuation">&#125;</span>
+
+                    <span class="token annotation punctuation">@Override</span>
+                    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">accept</span><span class="token punctuation">(</span><span class="token class-name">T</span> t<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+                        <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token operator">!</span>seen<span class="token punctuation">.</span><span class="token function">contains</span><span class="token punctuation">(</span>t<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+                            seen<span class="token punctuation">.</span><span class="token function">add</span><span class="token punctuation">(</span>t<span class="token punctuation">)</span><span class="token punctuation">;</span>
+                            downstream<span class="token punctuation">.</span><span class="token function">accept</span><span class="token punctuation">(</span>t<span class="token punctuation">)</span><span class="token punctuation">;</span>
+                        <span class="token punctuation">&#125;</span>
+                    <span class="token punctuation">&#125;</span>
+                <span class="token punctuation">&#125;</span><span class="token punctuation">;</span>
+            <span class="token punctuation">&#125;</span>
+        <span class="token punctuation">&#125;</span>
+    <span class="token punctuation">&#125;</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>&emsp;&emsp;<code>DistinctOps.makeRef()</code>中返回的是一个StatefulOp对象，即表明<code>distinct()</code>操作是一个有状态的操作。里面除了实现了<code>opWrapSink()</code>方法，还实现了几个并行处理相关的方法，我们主要看下<code>opWrapSink()</code>方法。<code>opWrapSink()</code>方法中根据flags标志分了三种情况进行处理：<br>&emsp;&emsp;&emsp;&emsp;<strong>①、当flags中含有<code>StreamOpFlag.DISTINCT</code>时</strong>，说明当前流中的元素已是无重复的了，直接返回传入的sink对象。<br>&emsp;&emsp;&emsp;&emsp;<strong>②、当flags中含有<code>StreamOpFlag.SORTED</code>时</strong>，说明当前流中的元素已是有序的了，返回一个<code>Sink.ChainedReference</code>实例对象。在其实现的<code>accept()</code>方法中对流中元素使用<code>Object.equal()</code>方法进行重复检测，因为流中元素已是有序的，只要保证前一个检测的元素lastSeen与当前元素t不相同，即说明lastSeen是非重复的，就可以将lastSeen传递给下一级流操作，在这里就是调用<code>downstream.accept()</code>方法，然后将t赋值给lastSeen。如果lastSeen与t相同，则忽略t，继续检测下一个元素。<br>&emsp;&emsp;&emsp;&emsp;<strong>③、其它情况下</strong> ，也是返回一个<code>Sink.ChainedReference</code>实例对象，不过重复检测是通过HashSet来实现的。在其实现的<code>begin()</code>方法中创建了一个HashSet，用来存放非重复元素，在<code>accept()</code>方法中通过判断当前元素是否在HashSet中来判断元素是否重复，不重复则加入HashSet中并将元素传递给下级流操作。<br>&emsp;&emsp;再来看下StatefulOp类：  </p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">abstract</span> <span class="token keyword">static</span> <span class="token keyword">class</span> <span class="token class-name">StatefulOp</span><span class="token generics"><span class="token punctuation">&lt;</span>E_IN<span class="token punctuation">,</span> E_OUT<span class="token punctuation">></span></span>
+        <span class="token keyword">extends</span> <span class="token class-name">ReferencePipeline</span><span class="token generics"><span class="token punctuation">&lt;</span>E_IN<span class="token punctuation">,</span> E_OUT<span class="token punctuation">></span></span> <span class="token punctuation">&#123;</span>
+    <span class="token comment">/**
+     * Construct a new Stream by appending a stateful intermediate operation
+     * to an existing stream.
+     * @param upstream The upstream pipeline stage
+     * @param inputShape The stream shape for the upstream pipeline stage
+     * @param opFlags Operation flags for the new stage
+     */</span>
+    <span class="token class-name">StatefulOp</span><span class="token punctuation">(</span><span class="token class-name">AbstractPipeline</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token operator">?</span><span class="token punctuation">,</span> E_IN<span class="token punctuation">,</span> <span class="token operator">?</span><span class="token punctuation">></span></span> upstream<span class="token punctuation">,</span>
+               <span class="token class-name">StreamShape</span> inputShape<span class="token punctuation">,</span>
+               <span class="token keyword">int</span> opFlags<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">super</span><span class="token punctuation">(</span>upstream<span class="token punctuation">,</span> opFlags<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">assert</span> upstream<span class="token punctuation">.</span><span class="token function">getOutputShape</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">==</span> inputShape<span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">final</span> <span class="token keyword">boolean</span> <span class="token function">opIsStateful</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">return</span> <span class="token boolean">true</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">abstract</span> <span class="token generics"><span class="token punctuation">&lt;</span>P_IN<span class="token punctuation">></span></span> <span class="token class-name">Node</span><span class="token generics"><span class="token punctuation">&lt;</span>E_OUT<span class="token punctuation">></span></span> <span class="token function">opEvaluateParallel</span><span class="token punctuation">(</span><span class="token class-name">PipelineHelper</span><span class="token generics"><span class="token punctuation">&lt;</span>E_OUT<span class="token punctuation">></span></span> helper<span class="token punctuation">,</span>
+                                                   <span class="token class-name">Spliterator</span><span class="token generics"><span class="token punctuation">&lt;</span>P_IN<span class="token punctuation">></span></span> spliterator<span class="token punctuation">,</span>
+                                                   <span class="token class-name">IntFunction</span><span class="token operator">&lt;</span>E_OUT<span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token operator">></span> generator<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>&emsp;&emsp;与StatelessOp相似，都是继承自ReferencePipeline抽象类，都实现了<code>opIsStateful()</code>方法用于声明操作是有状态的还是无状态的。不同的是，StatefulOp类中还重写了父类的父类的<code>AbstractPipeline.opEvaluateParallel()</code>方法，并将其修改为抽象方法，即通过StatefulOp实现的有状态操作必须实现<code>opEvaluateParallel()</code>方法，以处理并行计算的问题。<code>opEvaluateParallel()</code>方法的定义如下：  </p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token comment">/**
+ * Performs a parallel evaluation of the operation using the specified
+ * &#123;@code PipelineHelper&#125; which describes the upstream intermediate
+ * operations.  Only called on stateful operations.  If &#123;@link
+ * #opIsStateful()&#125; returns true then implementations must override the
+ * default implementation.
+ *
+ * @implSpec The default implementation always throw
+ * &#123;@code UnsupportedOperationException&#125;.
+ *
+ * @param helper the pipeline helper describing the pipeline stages
+ * @param spliterator the source &#123;@code Spliterator&#125;
+ * @param generator the array generator
+ * @return a &#123;@code Node&#125; describing the result of the evaluation
+ */</span>
+<span class="token generics"><span class="token punctuation">&lt;</span>P_IN<span class="token punctuation">></span></span> <span class="token class-name">Node</span><span class="token generics"><span class="token punctuation">&lt;</span>E_OUT<span class="token punctuation">></span></span> <span class="token function">opEvaluateParallel</span><span class="token punctuation">(</span><span class="token class-name">PipelineHelper</span><span class="token generics"><span class="token punctuation">&lt;</span>E_OUT<span class="token punctuation">></span></span> helper<span class="token punctuation">,</span>
+                                      <span class="token class-name">Spliterator</span><span class="token generics"><span class="token punctuation">&lt;</span>P_IN<span class="token punctuation">></span></span> spliterator<span class="token punctuation">,</span>
+                                      <span class="token class-name">IntFunction</span><span class="token operator">&lt;</span>E_OUT<span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token operator">></span> generator<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+    <span class="token keyword">throw</span> <span class="token keyword">new</span> <span class="token class-name">UnsupportedOperationException</span><span class="token punctuation">(</span><span class="token string">"Parallel evaluation is not supported"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>&emsp;&emsp;从方法说明可知，<code>opEvaluateParallel()</code>方法是用来执行当前操作的并行计算的，并且这个方法只能被有状态的操作调用，有状态的操作必须要实现这个方法。为什么无状态的操作不需要实现这个方法呢？因为调用无状态操作时，当前元素的处理并不受前面元素的影响，即元素的执行顺序不影响最终的结果。而调用有状态操作时，当前元素的执行会受前面元素的影响，如果元素的执行顺序发生变化，就无法保证最后得到的结果的正确性。所以可知，<code>opEvaluateParallel()</code>方法就是为了保证有状态中间操作在并行执行时能够返回正确的结果。那具体又是如何保证的呢？我们重新看下<code>DistinctOps.makeRef()</code>源码中<code>opEvaluateParallel()</code>方法的实现：  </p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">static</span> <span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">T</span><span class="token punctuation">></span></span> <span class="token class-name">ReferencePipeline</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">T</span><span class="token punctuation">,</span> <span class="token class-name">T</span><span class="token punctuation">></span></span> <span class="token function">makeRef</span><span class="token punctuation">(</span><span class="token class-name">AbstractPipeline</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token operator">?</span><span class="token punctuation">,</span> <span class="token class-name">T</span><span class="token punctuation">,</span> <span class="token operator">?</span><span class="token punctuation">></span></span> upstream<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+    <span class="token keyword">return</span> <span class="token keyword">new</span> <span class="token class-name">ReferencePipeline</span><span class="token punctuation">.</span><span class="token class-name">StatefulOp</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">T</span><span class="token punctuation">,</span> <span class="token class-name">T</span><span class="token punctuation">></span></span><span class="token punctuation">(</span>upstream<span class="token punctuation">,</span> <span class="token class-name">StreamShape</span><span class="token punctuation">.</span>REFERENCE<span class="token punctuation">,</span>
+                                                  <span class="token class-name">StreamOpFlag</span><span class="token punctuation">.</span>IS_DISTINCT <span class="token operator">|</span> <span class="token class-name">StreamOpFlag</span><span class="token punctuation">.</span>NOT_SIZED<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+
+        <span class="token generics"><span class="token punctuation">&lt;</span>P_IN<span class="token punctuation">></span></span> <span class="token class-name">Node</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">T</span><span class="token punctuation">></span></span> <span class="token function">reduce</span><span class="token punctuation">(</span><span class="token class-name">PipelineHelper</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">T</span><span class="token punctuation">></span></span> helper<span class="token punctuation">,</span> <span class="token class-name">Spliterator</span><span class="token generics"><span class="token punctuation">&lt;</span>P_IN<span class="token punctuation">></span></span> spliterator<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            <span class="token comment">// If the stream is SORTED then it should also be ORDERED so the following will also</span>
+            <span class="token comment">// preserve the sort order</span>
+            <span class="token class-name">TerminalOp</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">T</span><span class="token punctuation">,</span> <span class="token class-name">LinkedHashSet</span><span class="token punctuation">&lt;</span><span class="token class-name">T</span><span class="token punctuation">></span><span class="token punctuation">></span></span> reduceOp
+                    <span class="token operator">=</span> <span class="token class-name">ReduceOps</span><span class="token punctuation">.</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">T</span><span class="token punctuation">,</span> <span class="token class-name">LinkedHashSet</span><span class="token punctuation">&lt;</span><span class="token class-name">T</span><span class="token punctuation">></span><span class="token punctuation">></span></span><span class="token function">makeRef</span><span class="token punctuation">(</span><span class="token class-name">LinkedHashSet</span><span class="token operator">::</span><span class="token keyword">new</span><span class="token punctuation">,</span> <span class="token class-name">LinkedHashSet</span><span class="token operator">::</span><span class="token function">add</span><span class="token punctuation">,</span>
+                                                             <span class="token class-name">LinkedHashSet</span><span class="token operator">::</span><span class="token function">addAll</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token keyword">return</span> <span class="token class-name">Nodes</span><span class="token punctuation">.</span><span class="token function">node</span><span class="token punctuation">(</span>reduceOp<span class="token punctuation">.</span><span class="token function">evaluateParallel</span><span class="token punctuation">(</span>helper<span class="token punctuation">,</span> spliterator<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span>
+
+        <span class="token annotation punctuation">@Override</span>
+        <span class="token generics"><span class="token punctuation">&lt;</span>P_IN<span class="token punctuation">></span></span> <span class="token class-name">Node</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">T</span><span class="token punctuation">></span></span> <span class="token function">opEvaluateParallel</span><span class="token punctuation">(</span><span class="token class-name">PipelineHelper</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">T</span><span class="token punctuation">></span></span> helper<span class="token punctuation">,</span>
+                                          <span class="token class-name">Spliterator</span><span class="token generics"><span class="token punctuation">&lt;</span>P_IN<span class="token punctuation">></span></span> spliterator<span class="token punctuation">,</span>
+                                          <span class="token class-name">IntFunction</span><span class="token operator">&lt;</span><span class="token class-name">T</span><span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token operator">></span> generator<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token class-name">StreamOpFlag</span><span class="token punctuation">.</span>DISTINCT<span class="token punctuation">.</span><span class="token function">isKnown</span><span class="token punctuation">(</span>helper<span class="token punctuation">.</span><span class="token function">getStreamAndOpFlags</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+                <span class="token comment">// No-op</span>
+                <span class="token keyword">return</span> helper<span class="token punctuation">.</span><span class="token function">evaluate</span><span class="token punctuation">(</span>spliterator<span class="token punctuation">,</span> <span class="token boolean">false</span><span class="token punctuation">,</span> generator<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token punctuation">&#125;</span>
+            <span class="token keyword">else</span> <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token class-name">StreamOpFlag</span><span class="token punctuation">.</span>ORDERED<span class="token punctuation">.</span><span class="token function">isKnown</span><span class="token punctuation">(</span>helper<span class="token punctuation">.</span><span class="token function">getStreamAndOpFlags</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+                <span class="token keyword">return</span> <span class="token function">reduce</span><span class="token punctuation">(</span>helper<span class="token punctuation">,</span> spliterator<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token punctuation">&#125;</span>
+            <span class="token keyword">else</span> <span class="token punctuation">&#123;</span>
+                <span class="token comment">// Holder of null state since ConcurrentHashMap does not support null values</span>
+                <span class="token class-name">AtomicBoolean</span> seenNull <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">AtomicBoolean</span><span class="token punctuation">(</span><span class="token boolean">false</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                <span class="token class-name">ConcurrentHashMap</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">T</span><span class="token punctuation">,</span> <span class="token class-name">Boolean</span><span class="token punctuation">></span></span> map <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">ConcurrentHashMap</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token punctuation">></span></span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                <span class="token class-name">TerminalOp</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">T</span><span class="token punctuation">,</span> <span class="token class-name">Void</span><span class="token punctuation">></span></span> forEachOp <span class="token operator">=</span> <span class="token class-name">ForEachOps</span><span class="token punctuation">.</span><span class="token function">makeRef</span><span class="token punctuation">(</span>t <span class="token operator">-></span> <span class="token punctuation">&#123;</span>
+                    <span class="token keyword">if</span> <span class="token punctuation">(</span>t <span class="token operator">==</span> <span class="token keyword">null</span><span class="token punctuation">)</span>
+                        seenNull<span class="token punctuation">.</span><span class="token function">set</span><span class="token punctuation">(</span><span class="token boolean">true</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                    <span class="token keyword">else</span>
+                        map<span class="token punctuation">.</span><span class="token function">putIfAbsent</span><span class="token punctuation">(</span>t<span class="token punctuation">,</span> <span class="token class-name">Boolean</span><span class="token punctuation">.</span>TRUE<span class="token punctuation">)</span><span class="token punctuation">;</span>
+                <span class="token punctuation">&#125;</span><span class="token punctuation">,</span> <span class="token boolean">false</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                forEachOp<span class="token punctuation">.</span><span class="token function">evaluateParallel</span><span class="token punctuation">(</span>helper<span class="token punctuation">,</span> spliterator<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+                <span class="token comment">// If null has been seen then copy the key set into a HashSet that supports null values</span>
+                <span class="token comment">// and add null</span>
+                <span class="token class-name">Set</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">T</span><span class="token punctuation">></span></span> keys <span class="token operator">=</span> map<span class="token punctuation">.</span><span class="token function">keySet</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                <span class="token keyword">if</span> <span class="token punctuation">(</span>seenNull<span class="token punctuation">.</span><span class="token function">get</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+                    <span class="token comment">// TODO Implement a more efficient set-union view, rather than copying</span>
+                    keys <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">HashSet</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token punctuation">></span></span><span class="token punctuation">(</span>keys<span class="token punctuation">)</span><span class="token punctuation">;</span>
+                    keys<span class="token punctuation">.</span><span class="token function">add</span><span class="token punctuation">(</span><span class="token keyword">null</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                <span class="token punctuation">&#125;</span>
+                <span class="token keyword">return</span> <span class="token class-name">Nodes</span><span class="token punctuation">.</span><span class="token function">node</span><span class="token punctuation">(</span>keys<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token punctuation">&#125;</span>
+        <span class="token punctuation">&#125;</span>
+        <span class="token comment">// 省略其它代码</span>
+    <span class="token punctuation">&#125;</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>&emsp;&emsp;先看下必须实现的<code>opEvaluateParallel()</code>方法。该方法与<code>opWrapSink()</code>方法类似，也是根据StreamOpFlag分为了三种情况分别进行处理：<br>&emsp;&emsp;<code>flags = PipelineHelper.getStreamAndOpFlags</code><br>&emsp;&emsp;&emsp;&emsp;<strong>①、当flags中含有<code>StreamOpFlag.DISTINCT</code>时</strong>，说明当前流中的元素已是无重复的了，无需进行去重处理。<code>opEvaluateParallel()</code>方法直接调用了<code>PipelineHelper.evaluate()</code>方法进行处理。<code>evaluate()</code>方法的作用就是将当前流中的元素收集到一个Node对象中，Node是一个为并行操作方便而创建的数据结构。<br>&emsp;&emsp;&emsp;&emsp;<strong>②、当flags中含有<code>StreamOpFlag.SORTED</code>时</strong>，说明当前流中的元素已是有序的了，后续的操作也会保持这种顺序进行遍历处理。<code>opEvaluateParallel()</code>方法调用了StatefulOp实例中创建的一个<code>reduce()</code>方法进行处理。<code>reduce()</code>方法中，先是使用LinkedHashSet创建了一个处理Stream结束操作的工厂类ReduceOps的对象，然后调用<code>ReduceOps.evaluateParallel()</code>去执行并行计算，此方法内部是通过一个ForkJoinTask的实现类ReduceTask来完成并行计算的，最后将计算结果包装到Node中返回。<br>&emsp;&emsp;&emsp;&emsp;<strong>③、其它情况下</strong> ，先创建一个支持并发的ConcurrentHashMap来存储元素，然后创建了一个TerminalOp对象实例forEachOp去处理相同元素的过滤（过滤通过<code>ConcurrentHashMap.putIfAbsent()</code>方法完成），并调用<code>forEachOp.evaluateParallel()</code>执行并行计算以真正完成distinct操作。<code>ForEachOp.evaluateParallel()</code>方法内部实际也是通过两个ForkJoinTask的实现类ForEachOrderedTask/ForEachTask来实现的。由于ConcurrentHashMap并不支持null值，还要将ConcurrentHashMap中的数据“拷贝”到一个Set中，并向Set中插入null值，最后将Set数据包装到Node中返回。<br>&emsp;&emsp;从filter操作和distinct操作的分析可知，有状态中间操作和无状态中间操作实现时的区别主要在于并行环境下处理方式的不同：无状态中间操作对元素的执行顺序不敏感，无需对并行环境做特殊处理；有状态中间操作因元素执行顺序可能会影响计算结果，一般需要所有元素执行完当前操作后才能确定最终结果，所以需要在并行环境做特殊处理以保证执行结果的正确性。  </p>
+<h2 id="forEach-：结束操作（terminal-operation）"><a href="#forEach-：结束操作（terminal-operation）" class="headerlink" title="forEach()：结束操作（terminal operation）"></a><strong>forEach()：结束操作（terminal operation）</strong></h2><blockquote>
+<p><code>forEach()</code>方法是Stream接口中定义的流处理方法，由ReferencePipeline抽象类来实现。<code>forEach()</code>负责迭代处理流元素。  </p>
+</blockquote>
+<p>&emsp;&emsp;<code>forEach()</code>方法的实现如下：  </p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">forEach</span><span class="token punctuation">(</span><span class="token class-name">Consumer</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token operator">?</span> <span class="token keyword">super</span> P_OUT<span class="token punctuation">></span></span> action<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+    <span class="token function">evaluate</span><span class="token punctuation">(</span><span class="token class-name">ForEachOps</span><span class="token punctuation">.</span><span class="token function">makeRef</span><span class="token punctuation">(</span>action<span class="token punctuation">,</span> <span class="token boolean">false</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
+
+<p>&emsp;&emsp;<code>forEach()</code>方法中首先使用<code>ForEachOps.makeRef()</code>方法创建了一个代表结束操作的类TerminalOp的对象，ForEachOps是一个创建TerminalOp实例的工厂类，然后调用父类的<code>AbstractPipeline.evaluate()</code>方法进行实际的计算。先看<code>makeRef()</code>方法：  </p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">T</span><span class="token punctuation">></span></span> <span class="token class-name">TerminalOp</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">T</span><span class="token punctuation">,</span> <span class="token class-name">Void</span><span class="token punctuation">></span></span> <span class="token function">makeRef</span><span class="token punctuation">(</span><span class="token class-name">Consumer</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token operator">?</span> <span class="token keyword">super</span> <span class="token class-name">T</span><span class="token punctuation">></span></span> action<span class="token punctuation">,</span>
+                                              <span class="token keyword">boolean</span> ordered<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+    <span class="token class-name">Objects</span><span class="token punctuation">.</span><span class="token function">requireNonNull</span><span class="token punctuation">(</span>action<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">return</span> <span class="token keyword">new</span> <span class="token class-name">ForEachOp</span><span class="token punctuation">.</span><span class="token class-name">OfRef</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token punctuation">></span></span><span class="token punctuation">(</span>action<span class="token punctuation">,</span> ordered<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>&emsp;&emsp;<code>makeRef()</code>方法中有两个参数：<br>&emsp;&emsp;&emsp;&emsp;<strong>action参数</strong>：表示元素要执行的函数<br>&emsp;&emsp;&emsp;&emsp;<strong>ordered参数</strong>：表示是否需要按序遍历流元素：在非并行计算时，这个参数不会影响遍历元素的结果，因为此时遍历默认就是顺序执行的；但在并行计算时，会有多个线程去遍历流元素，通常遍历结果都是乱序的，只有指定了ordered=true，才会顺序遍历。如<code>Stream.forEachOrdered()</code>就是通过指定ordered=true保证了在并行或非并行计算时都能顺序遍历流元素。下面将分析其实现方式。<br>&emsp;&emsp;<code>makeRef()</code>方法直接返回一个ForEachOp的一个内部实现类OfRef的实例，OfRef类只实现了一个<code>accept()</code>方法，在<code>accept()</code>方法中直接调用consumer函数去处理元素。OfRef类代码如下： </p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">static</span> <span class="token keyword">final</span> <span class="token keyword">class</span> <span class="token class-name">OfRef</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">T</span><span class="token punctuation">></span></span> <span class="token keyword">extends</span> <span class="token class-name">ForEachOp</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">T</span><span class="token punctuation">></span></span> <span class="token punctuation">&#123;</span>
+    <span class="token keyword">final</span> <span class="token class-name">Consumer</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token operator">?</span> <span class="token keyword">super</span> <span class="token class-name">T</span><span class="token punctuation">></span></span> consumer<span class="token punctuation">;</span>
+
+    <span class="token class-name">OfRef</span><span class="token punctuation">(</span><span class="token class-name">Consumer</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token operator">?</span> <span class="token keyword">super</span> <span class="token class-name">T</span><span class="token punctuation">></span></span> consumer<span class="token punctuation">,</span> <span class="token keyword">boolean</span> ordered<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">super</span><span class="token punctuation">(</span>ordered<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">this</span><span class="token punctuation">.</span>consumer <span class="token operator">=</span> consumer<span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">accept</span><span class="token punctuation">(</span><span class="token class-name">T</span> t<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        consumer<span class="token punctuation">.</span><span class="token function">accept</span><span class="token punctuation">(</span>t<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>&emsp;&emsp;再来看下OfRef父类ForEachOp的源码：  </p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">static</span> <span class="token keyword">abstract</span> <span class="token keyword">class</span> <span class="token class-name">ForEachOp</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">T</span><span class="token punctuation">></span></span>
+        <span class="token keyword">implements</span> <span class="token class-name">TerminalOp</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">T</span><span class="token punctuation">,</span> <span class="token class-name">Void</span><span class="token punctuation">></span></span><span class="token punctuation">,</span> <span class="token class-name">TerminalSink</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">T</span><span class="token punctuation">,</span> <span class="token class-name">Void</span><span class="token punctuation">></span></span> <span class="token punctuation">&#123;</span>
+  <span class="token comment">// 省略其他代码</span>
+
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">S</span><span class="token punctuation">></span></span> <span class="token class-name">Void</span> <span class="token function">evaluateSequential</span><span class="token punctuation">(</span><span class="token class-name">PipelineHelper</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">T</span><span class="token punctuation">></span></span> helper<span class="token punctuation">,</span>
+                                       <span class="token class-name">Spliterator</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">S</span><span class="token punctuation">></span></span> spliterator<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">return</span> helper<span class="token punctuation">.</span><span class="token function">wrapAndCopyInto</span><span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">,</span> spliterator<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">get</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">S</span><span class="token punctuation">></span></span> <span class="token class-name">Void</span> <span class="token function">evaluateParallel</span><span class="token punctuation">(</span><span class="token class-name">PipelineHelper</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">T</span><span class="token punctuation">></span></span> helper<span class="token punctuation">,</span>
+                                     <span class="token class-name">Spliterator</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">S</span><span class="token punctuation">></span></span> spliterator<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>ordered<span class="token punctuation">)</span>
+            <span class="token keyword">new</span> <span class="token class-name">ForEachOrderedTask</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token punctuation">></span></span><span class="token punctuation">(</span>helper<span class="token punctuation">,</span> spliterator<span class="token punctuation">,</span> <span class="token keyword">this</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">invoke</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">else</span>
+            <span class="token keyword">new</span> <span class="token class-name">ForEachTask</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token punctuation">></span></span><span class="token punctuation">(</span>helper<span class="token punctuation">,</span> spliterator<span class="token punctuation">,</span> helper<span class="token punctuation">.</span><span class="token function">wrapSink</span><span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">invoke</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">return</span> <span class="token keyword">null</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token comment">// 省略其他代码</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>&emsp;&emsp;ForEachOp类主要实现了父类的顺序计算方法<code>evaluateSequential()</code>并重写了并行计算方法<code>evaluateParallel()</code>。<br>&emsp;&emsp;在<code>evaluateSequential()</code>方法中，先是调用<code>PipelineHelper.wrapAndCopyInfo()</code>方法对流元素执行流水线中的所有操作并将操作结果存放到提供的sink对象中，然后通过<code>TerminalSink.get()</code>方法返回存放在sink中的数据。<br>&emsp;&emsp;在<code>evaluateParallel()</code>方法中，根据order属性值分为两种情况进行处理，此ordered就是前面<code>ForEachOps.makeRef()</code>方法传入的ordered参数：<br>&emsp;&emsp;&emsp;&emsp;①、当ordered=true时，说明需要顺序遍历流元素，<code>evaluateParallel()</code>方法中直接创建一个<code>ForEachOrderedTask</code>实例来处理元素的递归。<code>ForEachOrderedTask</code>是一个用于并行执行for-each操作的ForkJoinTask实现，而且<code>ForEachOrderedTask</code>能够保证元素在并行计算时依然能够顺序执行。<br>&emsp;&emsp;&emsp;&emsp;②、当ordered=false时，说明不需要保证元素按序遍历，<code>evaluateParallel()</code>方法中直接创建一个ForEachTask实例来处理元素的递归。ForEachTask也是一个ForkJoinTask实现，只是不能保证元素能够顺序遍历。<br>&emsp;&emsp;<code>ForEachOps.makeRef()</code>方法分析完了，我们再回头看下forEach操作中的<code>evaluate()</code>方法。<code>evaluate()</code>方法是AbstractPipeline中定义的一个方法，是对AbstractPipeline的父类<code>PipelineHelper.evaluate()</code>方法的重载。其方法源码如下：  </p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">final</span> <span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">R</span><span class="token punctuation">></span></span> <span class="token class-name">R</span> <span class="token function">evaluate</span><span class="token punctuation">(</span><span class="token class-name">TerminalOp</span><span class="token generics"><span class="token punctuation">&lt;</span>E_OUT<span class="token punctuation">,</span> <span class="token class-name">R</span><span class="token punctuation">></span></span> terminalOp<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+    <span class="token keyword">assert</span> <span class="token function">getOutputShape</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">==</span> terminalOp<span class="token punctuation">.</span><span class="token function">inputShape</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span>linkedOrConsumed<span class="token punctuation">)</span>
+        <span class="token keyword">throw</span> <span class="token keyword">new</span> <span class="token class-name">IllegalStateException</span><span class="token punctuation">(</span>MSG_STREAM_LINKED<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    linkedOrConsumed <span class="token operator">=</span> <span class="token boolean">true</span><span class="token punctuation">;</span>
+
+    <span class="token keyword">return</span> <span class="token function">isParallel</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+           <span class="token operator">?</span> terminalOp<span class="token punctuation">.</span><span class="token function">evaluateParallel</span><span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">,</span> <span class="token function">sourceSpliterator</span><span class="token punctuation">(</span>terminalOp<span class="token punctuation">.</span><span class="token function">getOpFlags</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+           <span class="token operator">:</span> terminalOp<span class="token punctuation">.</span><span class="token function">evaluateSequential</span><span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">,</span> <span class="token function">sourceSpliterator</span><span class="token punctuation">(</span>terminalOp<span class="token punctuation">.</span><span class="token function">getOpFlags</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>&emsp;&emsp;可以看到：<code>evaluate()</code>方法中就是直接调用ForEachOp实现的父类TerminalOp的两个方法<code>evaluateSequential()</code>和<code>evaluateParallel()</code>，具体实现还是在上面的分析中。</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="followme">
+  <span>欢迎关注我的其它发布渠道</span>
+
+  <div class="social-list">
+
+      <div class="social-item">
+        <a target="_blank" class="social-link" href="https://github.com/CharlieJiang">
+          <span class="icon">
+            <i class="fab fa-github"></i>
+          </span>
+
+          <span class="label">GitHub</span>
+        </a>
+      </div>
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/Stream/" rel="tag"># Stream</a>
+              <a href="/tags/Stream%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/" rel="tag"># Stream源码解析</a>
+              <a href="/tags/fiter/" rel="tag"># fiter</a>
+              <a href="/tags/distinct/" rel="tag"># distinct</a>
+              <a href="/tags/forEach/" rel="tag"># forEach</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2020/12/14/Java-Stream-%E5%8E%9F%E7%90%86/" rel="prev" title="Java Stream 原理">
+                  <i class="fa fa-chevron-left"></i> Java Stream 原理
+                </a>
+            </div>
+            <div class="post-nav-item">
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+      
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-at"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">cocoas的博客</span>
+</div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+</div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
