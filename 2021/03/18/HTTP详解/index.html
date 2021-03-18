@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.1/css/all.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"8.0.1","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12},"copycode":true,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}};
+  </script>
+
+  <meta name="description" content="什么是HTTP协议 HTTP协议是HyperText Transfer Protocol的简写，即超文本传输协议，但HTTP协议其实是应用层的协议。HTTP协议规定了客户端与服务端间数据的传输规则，所传输的内容不限于文本，可以是图片、音视频、二进制格式数据等。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="HTTP详解">
+<meta property="og:url" content="http://example.com/2021/03/18/HTTP%E8%AF%A6%E8%A7%A3/index.html">
+<meta property="og:site_name" content="Cocoas">
+<meta property="og:description" content="什么是HTTP协议 HTTP协议是HyperText Transfer Protocol的简写，即超文本传输协议，但HTTP协议其实是应用层的协议。HTTP协议规定了客户端与服务端间数据的传输规则，所传输的内容不限于文本，可以是图片、音视频、二进制格式数据等。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2021-03-18T10:42:12.000Z">
+<meta property="article:modified_time" content="2021-03-18T13:20:29.305Z">
+<meta property="article:author" content="Cocoas">
+<meta property="article:tag" content="HTTP">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="http://example.com/2021/03/18/HTTP%E8%AF%A6%E8%A7%A3/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>HTTP详解 | Cocoas</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">Cocoas</h1>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">欢迎光临</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+		<li>
+          第三标题
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <section class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AFHTTP%E5%8D%8F%E8%AE%AE"><span class="nav-text">什么是HTTP协议</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#HTTP%E8%AF%B7%E6%B1%82%E4%B8%8E%E5%93%8D%E5%BA%94%E7%9A%84%E5%86%85%E5%AE%B9"><span class="nav-text">HTTP请求与响应的内容</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%AF%B7%E6%B1%82%E8%A1%8C"><span class="nav-text">请求行</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%AF%B7%E6%B1%82%E5%A4%B4headerField"><span class="nav-text">请求头headerField</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%AF%B7%E6%B1%82%E4%BD%93body"><span class="nav-text">请求体body</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%93%8D%E5%BA%94%E7%8A%B6%E6%80%81%E8%A1%8C"><span class="nav-text">响应状态行</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%93%8D%E5%BA%94%E5%A4%B4%E4%B8%8E%E5%93%8D%E5%BA%94%E5%86%85%E5%AE%B9"><span class="nav-text">响应头与响应内容</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#HTTP%E5%8D%8F%E8%AE%AE%E5%90%84%E7%89%88%E6%9C%AC%E7%89%B9%E6%80%A7"><span class="nav-text">HTTP协议各版本特性</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#HTTP-0-9%EF%BC%9A%E6%9C%80%E5%8F%A4%E8%80%81%E7%9A%84%E7%89%88%E6%9C%AC"><span class="nav-text">HTTP 0.9：最古老的版本</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#HTTP-1-0"><span class="nav-text">HTTP 1.0</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#HTTP-1-1"><span class="nav-text">HTTP 1.1</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#HTTP-2-0"><span class="nav-text">HTTP 2.0</span></a></li></ol></li></ol></div>
+        </section>
+        <!--/noindex-->
+
+        <section class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Cocoas</p>
+  <div class="site-description" itemprop="description">Android,Java,Android SDK,Kotlin,</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">26</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">11</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">78</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/CharlieJiang" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;CharlieJiang" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:cocoasjiang@foxmail.com" title="E-Mail → mailto:cocoasjiang@foxmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+        </section>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/03/18/HTTP%E8%AF%A6%E8%A7%A3/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Cocoas">
+      <meta itemprop="description" content="Android,Java,Android SDK,Kotlin,">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Cocoas">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          HTTP详解
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+      
+
+      <time title="创建时间：2021-03-18 18:42:12 / 修改时间：21:20:29" itemprop="dateCreated datePublished" datetime="2021-03-18T18:42:12+08:00">2021-03-18</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE/" itemprop="url" rel="index"><span itemprop="name">网络协议</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h2 id="什么是HTTP协议"><a href="#什么是HTTP协议" class="headerlink" title="什么是HTTP协议"></a><strong>什么是HTTP协议</strong></h2><blockquote>
+<p>HTTP协议是HyperText Transfer Protocol的简写，即超文本传输协议，但HTTP协议其实是应用层的协议。<br>HTTP协议规定了客户端与服务端间数据的传输规则，所传输的内容不限于文本，可以是图片、音视频、二进制格式数据等。</p>
+</blockquote>
+<a id="more"></a>
+
+<h2 id="HTTP请求与响应的内容"><a href="#HTTP请求与响应的内容" class="headerlink" title="HTTP请求与响应的内容"></a><strong>HTTP请求与响应的内容</strong></h2><p>&emsp;&emsp;<strong>HTTP请求的必备元素</strong>：请求行、请求头（headerField）、请求体（body）<br>&emsp;&emsp;<strong>HTTP响应的必备元素</strong>：响应状态行、响应头、响应内容  </p>
+<ol>
+<li><h3 id="请求行"><a href="#请求行" class="headerlink" title="请求行"></a>请求行</h3><blockquote>
+<p>请求行包含内容：请求方法、请求统一资源标识符URI、HTTP版本号  </p>
+</blockquote>
+</li>
+</ol>
+<ul>
+<li>请求方法：GET、POST、DELETE等  </li>
+<li>URI：就是URL中去除host后剩余的部分，也就是资源在服务器上的路径  </li>
+<li>HTTP版本号：HTTP协议的版本，如HTTP/1.0、HTTP/1.1、HTTP/2.0等  </li>
+</ul>
+<ol start="2">
+<li><h3 id="请求头headerField"><a href="#请求头headerField" class="headerlink" title="请求头headerField"></a>请求头headerField</h3><blockquote>
+<p>请求头主要存放客户端准备发送给服务端的附加信息，如Host、connection、Content-Type等。HTTP请求与响应在Java中以HttpURLConnection表示，并可以通过其setRequestProperty()/addRequestProperty()方法设置请求头参数。请求头使用sun.net.<a target="_blank" rel="noopener" href="http://www.messageheader表示./">www.MessageHeader表示。</a></p>
+</blockquote>
+</li>
+</ol>
+<ul>
+<li><strong>Host</strong>：目标服务器的网络地址  </li>
+<li><strong>Accept</strong>：让服务端知道客户端所能接收的数据类型。如text/html、*/*等  </li>
+<li><strong>Content-Type</strong>：请求body中的内容。如application/json;charset=utf-8  </li>
+<li><strong>Accept-Language</strong>：客户端的语言环境。如zh-cn  </li>
+<li><strong>Accept-Encoding</strong>：客户端支持的数据压缩格式。如gzip  </li>
+<li><strong>User-Agent</strong>：客户端的软件环境。我们可以更改字段为自己客户端的名字，如XXClient 1.0；比如浏览器的可以是Chrome/88.0等  </li>
+<li><strong>connection:keep-alive</strong>：该字段自HTTP1.1才有，用来表示这是一个持久连接，默认值为keep-alive，可选值为close，表示一次请求完成后即关闭此连接。  </li>
+<li><strong>Content-Length</strong>：请求body的长度，body为空时此值为0。该字段一般在POST请求中才会有。  </li>
+<li><strong>Cookie</strong>：记录保存在本地的用户数据，如果有会被附加上。<br>更多请求头参数可参考：<a target="_blank" rel="noopener" href="http://tools.jb51.net/table/http_header">请求头响应头列表 </a> </li>
+</ul>
+<ol start="3">
+<li><h3 id="请求体body"><a href="#请求体body" class="headerlink" title="请求体body"></a>请求体body</h3><blockquote>
+<p>请求体就是客户端实际要发送给服务端的数据。  </p>
+</blockquote>
+</li>
+</ol>
+<ul>
+<li>在GET请求中请求体为空，在POST请求中请求体就是一些表单数据。</li>
+</ul>
+<ol start="4">
+<li><h3 id="响应状态行"><a href="#响应状态行" class="headerlink" title="响应状态行"></a>响应状态行</h3><blockquote>
+<p>状态行是服务端返回给客户端的状态信息，包含HTTP版本、状态码、状态码对应的英文名称。典型的正确状态行：HTTP/1.1    200    OK</p>
+</blockquote>
+</li>
+</ol>
+<p>&emsp;&emsp;状态码分类：</p>
+<ul>
+<li><strong>1XX</strong>：信息提示。不代表成功或失败，表示临时响应。如100表示继续、101表示切换协议。  </li>
+<li><strong>2XX</strong>：成功  </li>
+<li><strong>3XX</strong>：重定向  </li>
+<li><strong>4XX</strong>：客户端错误。如404表示查找不到指定的资源，即URI有问题；414表示URI过长。  </li>
+<li><strong>5XX</strong>：服务器错误。如504表示网关超时。  </li>
+</ul>
+<ol start="5">
+<li><h3 id="响应头与响应内容"><a href="#响应头与响应内容" class="headerlink" title="响应头与响应内容"></a><strong>响应头与响应内容</strong></h3>这部分与请求头、请求体类似，差异不大。  </li>
+</ol>
+<h2 id="HTTP协议各版本特性"><a href="#HTTP协议各版本特性" class="headerlink" title="HTTP协议各版本特性"></a><strong>HTTP协议各版本特性</strong></h2><ol>
+<li><h3 id="HTTP-0-9：最古老的版本"><a href="#HTTP-0-9：最古老的版本" class="headerlink" title="HTTP 0.9：最古老的版本"></a><strong>HTTP 0.9</strong>：最古老的版本</h3></li>
+</ol>
+<ul>
+<li>只支持GET请求。由于不支持其它类型请求，客户端无法向服务端传送太多的数据。  </li>
+<li>没有请求头与响应头概念  </li>
+<li>不支持长连接  </li>
+</ul>
+<ol start="2">
+<li><h3 id="HTTP-1-0"><a href="#HTTP-1-0" class="headerlink" title="HTTP 1.0"></a><strong>HTTP 1.0</strong></h3></li>
+</ol>
+<ul>
+<li>丰富的请求方式。新增POST、PUT、DELETE等请求方式。  </li>
+<li>新增请求头和响应头  </li>
+<li>丰富的传输内容格式。支持图片、音视频、二进制等内容格式传输。  </li>
+<li>不支持持久连接。一旦服务端对客户端发出响应后就会立即断开连接。  </li>
+<li>请求同步。客户端的多个请求是同步的，下一个请求只有等到上一个请求从服务端拿到响应后才能发出。  </li>
+</ul>
+<ol start="3">
+<li><h3 id="HTTP-1-1"><a href="#HTTP-1-1" class="headerlink" title="HTTP 1.1"></a><strong>HTTP 1.1</strong></h3></li>
+</ol>
+<ul>
+<li>丰富的请求头和响应头。新增connection、cache-control等字段  </li>
+<li>支持持久连接。HTTP1.1默认支持持久连接，客户端在请求头中通过设置connection:keep-alive告知服务端此连接为持久连接，服务端在响应数据的响应头中也通过设置connection:keep-alive与客户端确认此持久连接。  </li>
+<li>请求异步。管道技术Pipelining可以支持多个请求连续发出，而不用等到前一个请求得到服务端的响应。但存在的问题是，服务端返回响应数据的顺序可能与客户端发送请求的顺序不一致，客户端无法判断请求与响应是否匹配。  </li>
+<li>缓存控制。新增的cache-control字段可以使得浏览器会优先加载本地缓存资源，本地无缓存时才会发送请求。  </li>
+</ul>
+<ol start="4">
+<li><h3 id="HTTP-2-0"><a href="#HTTP-2-0" class="headerlink" title="HTTP 2.0"></a><strong>HTTP 2.0</strong></h3></li>
+</ol>
+<ul>
+<li>二进制分帧。HTTP1.x的解析是基于文本，HTTP2.0在传输层（TCP）与应用层（HTTP）之间增加了一个二进制分帧层。在二进制分帧层上，HTTP2.0会将多有传输信息分割为更小的消息和帧，并采用二进制编码对它们进行封装，以提高传输效率。如HTTP1.x的头部信息header被封装到headers帧中，请求的body被封装到Data帧中。  </li>
+<li>多路复用Multiplexing。基于二进制分帧，HTTP消息被分解为独立的帧，而不会破坏其原本的语义，然后交错发送出去，在另一端根据流标识符和头部将他们重新组装起来。HTTP2.0改进了1.x中单个TCP连接中发送HTTP请求数量的限制，同时，实现了真正的并行发送多个HTTP请求。  </li>
+<li>头部压缩。HTTP2.0可以维护一个头部信息字典，差量进行头部信息更新，减少头部信息传输占用的资源。  </li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="followme">
+  <span>欢迎关注我的其它发布渠道</span>
+
+  <div class="social-list">
+
+      <div class="social-item">
+        <a target="_blank" class="social-link" href="https://github.com/CharlieJiang">
+          <span class="icon">
+            <i class="fab fa-github"></i>
+          </span>
+
+          <span class="label">GitHub</span>
+        </a>
+      </div>
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/HTTP/" rel="tag"># HTTP</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2021/01/13/%E5%9F%BA%E4%BA%8EJava%E5%AE%9E%E7%8E%B0%E8%BD%AF%E8%91%97%E6%BA%90%E4%BB%A3%E7%A0%81%E8%87%AA%E5%8A%A8%E7%94%9F%E6%88%90%E5%B7%A5%E5%85%B7/" rel="prev" title="基于Java实现的软著源代码自动生成工具">
+                  <i class="fa fa-chevron-left"></i> 基于Java实现的软著源代码自动生成工具
+                </a>
+            </div>
+            <div class="post-nav-item">
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+      
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+
+<div class="copyright">
+  
+  &copy; 2020 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-at"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">cocoas的博客</span>
+</div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+</div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
