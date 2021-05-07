@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.1/css/all.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"8.0.1","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12},"copycode":true,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}};
+  </script>
+
+  <meta name="description" content="多种进程间通信方式 Android系统中存在多种方式用于实现进程间的通信，包括文件共享、Socket、Bundle、ContentProvider、BroadcastReceiver、Messenger、AIDL等。这些方式中，除了文件共享和Socket外，其余都是基于Binder实现的。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Android进程间通信方式">
+<meta property="og:url" content="http://example.com/2021/05/07/Android%E8%BF%9B%E7%A8%8B%E9%97%B4%E9%80%9A%E4%BF%A1%E6%96%B9%E5%BC%8F/index.html">
+<meta property="og:site_name" content="Cocoas">
+<meta property="og:description" content="多种进程间通信方式 Android系统中存在多种方式用于实现进程间的通信，包括文件共享、Socket、Bundle、ContentProvider、BroadcastReceiver、Messenger、AIDL等。这些方式中，除了文件共享和Socket外，其余都是基于Binder实现的。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2021-05-07T12:36:14.000Z">
+<meta property="article:modified_time" content="2021-05-07T14:15:59.586Z">
+<meta property="article:author" content="Cocoas">
+<meta property="article:tag" content="Android">
+<meta property="article:tag" content="进程通信">
+<meta property="article:tag" content="Bundle">
+<meta property="article:tag" content="文件共享">
+<meta property="article:tag" content="ContentProvider">
+<meta property="article:tag" content="BroadcastReceiver">
+<meta property="article:tag" content="Socket">
+<meta property="article:tag" content="Messenger">
+<meta property="article:tag" content="AIDL">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="http://example.com/2021/05/07/Android%E8%BF%9B%E7%A8%8B%E9%97%B4%E9%80%9A%E4%BF%A1%E6%96%B9%E5%BC%8F/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Android进程间通信方式 | Cocoas</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">Cocoas</h1>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">欢迎光临</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+		<li>
+          第三标题
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <section class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%A4%9A%E7%A7%8D%E8%BF%9B%E7%A8%8B%E9%97%B4%E9%80%9A%E4%BF%A1%E6%96%B9%E5%BC%8F"><span class="nav-text">多种进程间通信方式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%96%87%E4%BB%B6%E5%85%B1%E4%BA%AB"><span class="nav-text">文件共享</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Socket"><span class="nav-text">Socket</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Bundle"><span class="nav-text">Bundle</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ContentProvider"><span class="nav-text">ContentProvider</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#BroadcastReceiver"><span class="nav-text">BroadcastReceiver</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Messenger"><span class="nav-text">Messenger</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#AIDL"><span class="nav-text">AIDL</span></a></li></ol></div>
+        </section>
+        <!--/noindex-->
+
+        <section class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Cocoas</p>
+  <div class="site-description" itemprop="description">Android,Java,Android SDK,Kotlin,</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">35</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">16</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">101</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/CharlieJiang" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;CharlieJiang" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:cocoasjiang@foxmail.com" title="E-Mail → mailto:cocoasjiang@foxmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+        </section>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/05/07/Android%E8%BF%9B%E7%A8%8B%E9%97%B4%E9%80%9A%E4%BF%A1%E6%96%B9%E5%BC%8F/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Cocoas">
+      <meta itemprop="description" content="Android,Java,Android SDK,Kotlin,">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Cocoas">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Android进程间通信方式
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+      
+
+      <time title="创建时间：2021-05-07 20:36:14 / 修改时间：22:15:59" itemprop="dateCreated datePublished" datetime="2021-05-07T20:36:14+08:00">2021-05-07</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/android/" itemprop="url" rel="index"><span itemprop="name">android</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/android/%E8%BF%9B%E7%A8%8B%E9%80%9A%E4%BF%A1/" itemprop="url" rel="index"><span itemprop="name">进程通信</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h2 id="多种进程间通信方式"><a href="#多种进程间通信方式" class="headerlink" title="多种进程间通信方式"></a><strong>多种进程间通信方式</strong></h2><blockquote>
+<p>Android系统中存在多种方式用于实现进程间的通信，包括文件共享、Socket、Bundle、ContentProvider、BroadcastReceiver、Messenger、AIDL等。这些方式中，除了文件共享和Socket外，其余都是基于Binder实现的。  </p>
+</blockquote>
+<a id="more"></a>
+
+<h2 id="文件共享"><a href="#文件共享" class="headerlink" title="文件共享"></a><strong>文件共享</strong></h2><ul>
+<li><strong>实现方式</strong>：两个进程通过读写同一个文件实现数据交换。  </li>
+<li><strong>使用场景</strong>：数据同步要求不高的进程间通信。  </li>
+<li><strong>局限</strong>：<br>并发读写问题<br>数据的完整性和时效性问题  </li>
+</ul>
+<h2 id="Socket"><a href="#Socket" class="headerlink" title="Socket"></a><strong>Socket</strong></h2><blockquote>
+<p>Socket是一种基于网络套接字的进程间通信方式，通信双方通过建立起C/S模型进行数据交换。类似于Messenger方式。</p>
+</blockquote>
+<h2 id="Bundle"><a href="#Bundle" class="headerlink" title="Bundle"></a><strong>Bundle</strong></h2><ul>
+<li><strong>实现方式</strong>：<br>Bundle实现了Parceable接口，使得Bundle可以用于进程间数据传递。<br>Android 的Activity、Service、Receiver均支持在Intent中传递Bundle数据，所以Bundle可以借助于Intent在各组件间跳转时传递数据。当各组件不在同一进程时，Bundle便实现了进程间的数据传递。  </li>
+<li><strong>使用场景</strong>：从当前进程中唤起其它进程的Activity、Service、Receiver时，可以通过Bundle传递需要发送给其它进程的数据。  </li>
+<li><strong>局限</strong>：<br>传输数据限制：只支持基本数据类型或是序列化的数据类型。<br>只能实现单向的简单数据传输。 </li>
+</ul>
+<h2 id="ContentProvider"><a href="#ContentProvider" class="headerlink" title="ContentProvider"></a><strong>ContentProvider</strong></h2><ul>
+<li><strong>实现方式</strong>：ContentProvider本身就是Android提供的不同应用间数据交换的API，ContentProvider通过指定的scheme+资源的路径，向外暴露数据的访问路径，其它应用可以基于资源访问路径构建ContentProvider，来实现远程进程资源的访问，并支持对资源的增删改查。Android系统提供的联系人、媒体文件等都是支持其它应用通过ContentProvider进行访问的。  </li>
+<li><strong>优点</strong>：<br>一旦一个应用暴露出自己数据访问的scheme，不管此应用是否启动，其它应用均可通过该scheme访问暴露出来的数据。<br>其它应用不仅能访问暴露出来的数据，还可以对数据进行增删改等操作。  </li>
+<li><strong>局限</strong>：<br>应用需要自定义ContentProvider、自定义scheme，并在Manifest.xml中注册自定义的ContentProvider才能对外暴露自己的数据。  </li>
+</ul>
+<h2 id="BroadcastReceiver"><a href="#BroadcastReceiver" class="headerlink" title="BroadcastReceiver"></a><strong>BroadcastReceiver</strong></h2><ul>
+<li><strong>实现方式</strong>：一个应用通过监听指定action的广播来读取另一个应用广播出来的数据。  </li>
+<li><strong>局限</strong>：广播是一种被动式的进程间通信方式，当一个应用向系统发送广播时，其它应用只能被动地接收广播数据。  </li>
+</ul>
+<h2 id="Messenger"><a href="#Messenger" class="headerlink" title="Messenger"></a><strong>Messenger</strong></h2><blockquote>
+<p>Messenger是基于消息Message的一种进程间通信方式，进程间通过交换各自的Messenger实现相互发送消息。Messenger是一种轻量级的IPC方案，它的底层实现是AIDL。  </p>
+</blockquote>
+<ul>
+<li><p><strong>实现方式</strong>：服务端+客户端  </p>
+</li>
+<li><p><strong>服务端进程</strong>：<br>首先创建一个service，在service中创建一个Handler处理消息，然后通过这个Handler构架一个Messenger对象，最后在service的onBind()中返回这个Messenger中的IBinder对象，客户端便可以利用返回的IBinder对象重新构建服务端进程的Messenger对象，并利用此Messenger对象访问服务端。<br>若要向客户端进程发送消息，则可以在Handler处理消息时，从Message.replyTo中获取客户端进程的Messenger，并利用此Messenger向客户端进程发送消息。<br>服务端实现代码：  </p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token comment">// 服务端进程的服务</span>
+<span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">MessengerService</span> <span class="token keyword">extends</span> <span class="token class-name">Service</span> <span class="token punctuation">&#123;</span>
+
+    <span class="token keyword">private</span> <span class="token keyword">final</span> <span class="token class-name">String</span> TAG <span class="token operator">=</span> <span class="token string">"MessengerIPC"</span><span class="token punctuation">;</span>
+    <span class="token comment">// Handler</span>
+    <span class="token keyword">private</span> <span class="token class-name">Handler</span> serverHandler<span class="token punctuation">;</span>
+    <span class="token comment">// Messenger</span>
+    <span class="token keyword">private</span> <span class="token class-name">Messenger</span> serverMessenger<span class="token punctuation">;</span>
+    <span class="token comment">// 服务端消息id</span>
+    <span class="token keyword">private</span> <span class="token keyword">final</span> <span class="token keyword">int</span> MSG_FROM_SERVER <span class="token operator">=</span> <span class="token number">10088</span><span class="token punctuation">;</span>
+    <span class="token comment">// 服务端返回数据的key</span>
+    <span class="token keyword">private</span> <span class="token keyword">final</span> <span class="token class-name">String</span> SERVER_DATA_KEY <span class="token operator">=</span> <span class="token string">"serverDataKey"</span><span class="token punctuation">;</span>
+
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">onCreate</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">super</span><span class="token punctuation">.</span><span class="token function">onCreate</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        serverHandler <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Handler</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">&#123;</span>
+            <span class="token annotation punctuation">@Override</span>
+            <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">handleMessage</span><span class="token punctuation">(</span><span class="token annotation punctuation">@NonNull</span> <span class="token class-name">Message</span> msg<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+                <span class="token keyword">super</span><span class="token punctuation">.</span><span class="token function">handleMessage</span><span class="token punctuation">(</span>msg<span class="token punctuation">)</span><span class="token punctuation">;</span>
+                <span class="token comment">// 处理客户端发送的消息</span>
+                <span class="token class-name">Log</span><span class="token punctuation">.</span><span class="token function">d</span><span class="token punctuation">(</span>TAG<span class="token punctuation">,</span><span class="token string">"收到来自客户端进程的消息"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                <span class="token comment">// 向客户端进程发送消息</span>
+                <span class="token class-name">Message</span> replyToClientMsg <span class="token operator">=</span> <span class="token class-name">Message</span><span class="token punctuation">.</span><span class="token function">obtain</span><span class="token punctuation">(</span>msg<span class="token punctuation">)</span><span class="token punctuation">;</span>
+                <span class="token comment">// 构建要发送的数据</span>
+                <span class="token class-name">Bundle</span> data <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Bundle</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                data<span class="token punctuation">.</span><span class="token function">putString</span><span class="token punctuation">(</span>SERVER_DATA_KEY<span class="token punctuation">,</span><span class="token string">"来自服务端进程的回复"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                replyToClientMsg<span class="token punctuation">.</span><span class="token function">setData</span><span class="token punctuation">(</span>data<span class="token punctuation">)</span><span class="token punctuation">;</span>
+                replyToClientMsg<span class="token punctuation">.</span>what <span class="token operator">=</span> MSG_FROM_SERVER<span class="token punctuation">;</span>
+                <span class="token keyword">try</span> <span class="token punctuation">&#123;</span>
+                    <span class="token class-name">Thread</span><span class="token punctuation">.</span><span class="token function">sleep</span><span class="token punctuation">(</span><span class="token number">3000</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                    msg<span class="token punctuation">.</span>replyTo<span class="token punctuation">.</span><span class="token function">send</span><span class="token punctuation">(</span>replyToClientMsg<span class="token punctuation">)</span><span class="token punctuation">;</span>
+                <span class="token punctuation">&#125;</span> <span class="token keyword">catch</span> <span class="token punctuation">(</span><span class="token class-name">RemoteException</span> <span class="token operator">|</span> <span class="token class-name">InterruptedException</span> e<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+                    e<span class="token punctuation">.</span><span class="token function">printStackTrace</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                <span class="token punctuation">&#125;</span>
+            <span class="token punctuation">&#125;</span>
+        <span class="token punctuation">&#125;</span><span class="token punctuation">;</span>
+        <span class="token comment">// 通过Handler构建Messenger</span>
+        serverMessenger <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Messenger</span><span class="token punctuation">(</span>serverHandler<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token annotation punctuation">@Nullable</span>
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token class-name">IBinder</span> <span class="token function">onBind</span><span class="token punctuation">(</span><span class="token class-name">Intent</span> intent<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token comment">// 返回服务端Messenger的IBinder对象，客户端可根据此对象重新构建服务端的Messenger对象</span>
+        <span class="token comment">// 并通过此对象向服务端发送消息</span>
+        <span class="token keyword">return</span> serverMessenger<span class="token punctuation">.</span><span class="token function">getBinder</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span>
+
+<span class="token comment">// AndroidManifest.xml中注册服务</span>
+<span class="token operator">&lt;</span>service android<span class="token operator">:</span>name<span class="token operator">=</span><span class="token string">".MessengerService"</span><span class="token operator">></span>
+    <span class="token operator">&lt;</span>intent<span class="token operator">-</span>filter<span class="token operator">></span>
+            <span class="token operator">&lt;</span>action android<span class="token operator">:</span>name<span class="token operator">=</span><span class="token string">"com.cocoas.messenger.service"</span><span class="token operator">></span><span class="token operator">&lt;</span><span class="token operator">/</span>action<span class="token operator">></span>
+        <span class="token operator">&lt;</span>category android<span class="token operator">:</span>name<span class="token operator">=</span><span class="token string">"android.intent.category.DEFAULT"</span><span class="token operator">></span><span class="token operator">&lt;</span><span class="token operator">/</span>category<span class="token operator">></span>
+    <span class="token operator">&lt;</span><span class="token operator">/</span>intent<span class="token operator">-</span>filter<span class="token operator">></span>
+<span class="token operator">&lt;</span><span class="token operator">/</span>service<span class="token operator">></span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+</li>
+<li><p><strong>客户端进程</strong>：<br>发送消息：首先通过ServiceConnection绑定服务端进程的service，根据service返回的IBinder对象创建服务端进程的Messenger对象，使用此Messenger对象向服务端进程发送消息。<br>接收消息：创建Handler处理接收的消息，并基于此Handler构建客户端的Messenger对象，在向服务端进程发送消息时，将客户端进程的Messager对象放入Message.replyTo中随消息一起发送，服务端进程便可通过Message.replyTo引用到客户端进程的Messenger对象，并基于此向客户端进程发送消息。<br>客户端实现代码：  </p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">MainActivity</span> <span class="token keyword">extends</span> <span class="token class-name">AppCompatActivity</span> <span class="token punctuation">&#123;</span>
+
+    <span class="token keyword">private</span> <span class="token keyword">final</span> <span class="token class-name">String</span> TAG <span class="token operator">=</span> <span class="token string">"MessengerIPC"</span><span class="token punctuation">;</span>
+    <span class="token comment">// ServiceConnection</span>
+    <span class="token keyword">private</span> <span class="token class-name">ServiceConnection</span> serviceConn <span class="token punctuation">;</span>
+    <span class="token comment">// 服务端 Messenger</span>
+    <span class="token keyword">private</span> <span class="token class-name">Messenger</span> serviceMessenger<span class="token punctuation">;</span>
+    <span class="token comment">// 客户端 Handler</span>
+    <span class="token keyword">private</span> <span class="token class-name">Handler</span> clientHandler<span class="token punctuation">;</span>
+    <span class="token comment">// 客户端Messenger</span>
+    <span class="token keyword">private</span> <span class="token class-name">Messenger</span> clientMessenger<span class="token punctuation">;</span>
+
+    <span class="token comment">// 服务端消息id</span>
+    <span class="token keyword">private</span> <span class="token keyword">final</span> <span class="token keyword">int</span> MSG_FROM_SERVER <span class="token operator">=</span> <span class="token number">10088</span><span class="token punctuation">;</span>
+    <span class="token comment">// 服务端返回数据的key</span>
+    <span class="token keyword">private</span> <span class="token keyword">final</span> <span class="token class-name">String</span> SERVER_DATA_KEY <span class="token operator">=</span> <span class="token string">"serverDataKey"</span><span class="token punctuation">;</span>
+
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">protected</span> <span class="token keyword">void</span> <span class="token function">onCreate</span><span class="token punctuation">(</span><span class="token class-name">Bundle</span> savedInstanceState<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">super</span><span class="token punctuation">.</span><span class="token function">onCreate</span><span class="token punctuation">(</span>savedInstanceState<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token function">setContentView</span><span class="token punctuation">(</span><span class="token class-name">R</span><span class="token punctuation">.</span>layout<span class="token punctuation">.</span>activity_main<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token comment">// 处理服务端返回消息</span>
+        clientHandler <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Handler</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">&#123;</span>
+            <span class="token annotation punctuation">@Override</span>
+            <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">handleMessage</span><span class="token punctuation">(</span><span class="token annotation punctuation">@NonNull</span> <span class="token class-name">Message</span> msg<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+                <span class="token keyword">super</span><span class="token punctuation">.</span><span class="token function">handleMessage</span><span class="token punctuation">(</span>msg<span class="token punctuation">)</span><span class="token punctuation">;</span>
+                <span class="token keyword">switch</span> <span class="token punctuation">(</span>msg<span class="token punctuation">.</span>what<span class="token punctuation">)</span><span class="token punctuation">&#123;</span>
+                    <span class="token keyword">case</span> MSG_FROM_SERVER<span class="token operator">:</span>
+                        <span class="token comment">// 读取服务端消息</span>
+                        <span class="token class-name">Bundle</span> data <span class="token operator">=</span> msg<span class="token punctuation">.</span><span class="token function">getData</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                        <span class="token class-name">String</span> info <span class="token operator">=</span> data<span class="token punctuation">.</span><span class="token function">getString</span><span class="token punctuation">(</span>SERVER_DATA_KEY<span class="token punctuation">)</span><span class="token punctuation">;</span>
+                        <span class="token class-name">Log</span><span class="token punctuation">.</span><span class="token function">d</span><span class="token punctuation">(</span>TAG<span class="token punctuation">,</span><span class="token string">"服务端返回数据："</span> <span class="token operator">+</span> info<span class="token punctuation">)</span><span class="token punctuation">;</span>
+                <span class="token punctuation">&#125;</span>
+            <span class="token punctuation">&#125;</span>
+        <span class="token punctuation">&#125;</span><span class="token punctuation">;</span>
+        <span class="token comment">// 构建客户端Messenger</span>
+        clientMessenger <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Messenger</span><span class="token punctuation">(</span>clientHandler<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token comment">// 远程服务连接</span>
+        serviceConn  <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">ServiceConnection</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            <span class="token annotation punctuation">@Override</span>
+            <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">onServiceConnected</span><span class="token punctuation">(</span><span class="token class-name">ComponentName</span> name<span class="token punctuation">,</span> <span class="token class-name">IBinder</span> service<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+                <span class="token class-name">Log</span><span class="token punctuation">.</span><span class="token function">d</span><span class="token punctuation">(</span>TAG<span class="token punctuation">,</span><span class="token string">"onServiceConnected"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                <span class="token comment">// 构建服务端Messenger对象</span>
+                serviceMessenger <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Messenger</span><span class="token punctuation">(</span>service<span class="token punctuation">)</span><span class="token punctuation">;</span>
+                <span class="token comment">// 发送消息</span>
+                <span class="token class-name">Message</span> msg <span class="token operator">=</span> <span class="token class-name">Message</span><span class="token punctuation">.</span><span class="token function">obtain</span><span class="token punctuation">(</span><span class="token keyword">null</span><span class="token punctuation">,</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                msg<span class="token punctuation">.</span>replyTo <span class="token operator">=</span> clientMessenger<span class="token punctuation">;</span>
+                <span class="token keyword">try</span> <span class="token punctuation">&#123;</span>
+                    <span class="token class-name">Thread</span><span class="token punctuation">.</span><span class="token function">sleep</span><span class="token punctuation">(</span><span class="token number">3000</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                    serviceMessenger<span class="token punctuation">.</span><span class="token function">send</span><span class="token punctuation">(</span>msg<span class="token punctuation">)</span><span class="token punctuation">;</span>
+                <span class="token punctuation">&#125;</span> <span class="token keyword">catch</span> <span class="token punctuation">(</span><span class="token class-name">RemoteException</span> <span class="token operator">|</span> <span class="token class-name">InterruptedException</span> e<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+                    e<span class="token punctuation">.</span><span class="token function">printStackTrace</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                <span class="token punctuation">&#125;</span>
+            <span class="token punctuation">&#125;</span>
+
+            <span class="token annotation punctuation">@Override</span>
+            <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">onServiceDisconnected</span><span class="token punctuation">(</span><span class="token class-name">ComponentName</span> name<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+
+            <span class="token punctuation">&#125;</span>
+        <span class="token punctuation">&#125;</span><span class="token punctuation">;</span>
+        <span class="token function">bindService</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token comment">/**
+     * 绑定远程服务
+     */</span>
+    <span class="token keyword">private</span> <span class="token keyword">void</span> <span class="token function">bindService</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">&#123;</span>
+        <span class="token class-name">Intent</span> serviceIntent <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Intent</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        serviceIntent<span class="token punctuation">.</span><span class="token function">setAction</span><span class="token punctuation">(</span><span class="token string">"com.cocoas.messenger.service"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        serviceIntent<span class="token punctuation">.</span><span class="token function">setPackage</span><span class="token punctuation">(</span><span class="token string">"com.cocoas.ipcmessagerserver"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token function">bindService</span><span class="token punctuation">(</span>serviceIntent<span class="token punctuation">,</span>serviceConn<span class="token punctuation">,</span>BIND_AUTO_CREATE<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token comment">/**
+     * 解绑远程服务
+     */</span>
+    <span class="token keyword">private</span> <span class="token keyword">void</span> <span class="token function">unBindService</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">&#123;</span>
+        <span class="token function">unbindService</span><span class="token punctuation">(</span>serviceConn<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">protected</span> <span class="token keyword">void</span> <span class="token function">onDestroy</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">super</span><span class="token punctuation">.</span><span class="token function">onDestroy</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token function">unBindService</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+</li>
+<li><p><strong>局限性</strong>：<br>不适用高并发场景：Messenger内部通过Handler实现消息处理，消息处理是串行的方式，多条消息只能逐一处理。<br>仅适合跨进程传递消息：Messenger主要就是用来传递消息，无法做到跨进程方法调用等需求。  </p>
+</li>
+</ul>
+<h2 id="AIDL"><a href="#AIDL" class="headerlink" title="AIDL"></a><strong>AIDL</strong></h2><blockquote>
+<p>AIDL即Android Interface Definition Language，是一种Android接口定义语言，使用AIDL可以生成用于Android设备上两个进程间进行通信的代码。  </p>
+</blockquote>
+<ul>
+<li><strong>使用场景</strong>：多客户端、多线程并发访问。<br>当允许多客户端访问应用提供的服务，并且需要处理多线程问题时，才需要使用AIDL。如果不需要处理多线程问题，可以选择使用封装好的Messenger。  </li>
+<li><strong>优点</strong>：客户端进程可以直接调用服务端进程暴露出来的方法。  </li>
+<li><strong>原理</strong>：<br>AIDL IPC机制是面相接口的，AIDL使用代理类在客户端进程和服务端进程间传递数据。<br>AIDL规定了两个进程之间如何使用Binder进行通讯，AIDL文件就是接口和数据声明。<br>Android 使用我们写好的AIDL文件生成基于Binder的可以实现进程间通信的java代码，并在打包APK时将生成的Java代码打包进去，AIDL文件不会被打包。  </li>
+<li><strong>实现方式</strong>：<br>服务端进程：<br>&emsp;&emsp;创建AIDL接口描述文件，如IMyAidlInterface.aidl。<br>&emsp;&emsp;实现AIDL接口：构建项目生成AIDL文件对应的java接口类IMyAidlInterface.java和内部抽象类IMyAidlInterface.Stub，通过实现Stub抽象类以实现AIDL接口。<br>&emsp;&emsp;创建Service以向外暴露AIDL接口：创建Stub抽象类的实例来实现AIDL接口，并在onBind()中返回Stub实例对象以供客户端进程调用AIDL接口。<br>客户端进程：<br>&emsp;&emsp;创建AIDL接口描述文件IMyAidlInterface.aidl：与服务端AIDL文件相同。<br>&emsp;&emsp;构建项目生成AIDL文件对应的接口类IMyAidlInterface.java和内部抽象类IMyAidlInterface.Stub。<br>&emsp;&emsp;连接远程service：使用ServiceConnection连接远程服务，连接成功后，使用IMyAidlInterface.Stub.asInterface()方法将获取到的Ibinder对象转换为AIDL接口类IMyAidlInterface，然后就可以调用服务端AIDL方法。  </li>
+<li><strong>支持的数据类型</strong>：<br>JAVA基本数据类型： int, long, double, char, boolean等。<br>String和CharSequence<br>List：AIDL实际接收的是ArrayList<br>Map：AIDL实际接收的是HashMap<br>序列化数据：实现了Parcelable或Serializable接口的数据  </li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="followme">
+  <span>欢迎关注我的其它发布渠道</span>
+
+  <div class="social-list">
+
+      <div class="social-item">
+        <a target="_blank" class="social-link" href="https://github.com/CharlieJiang">
+          <span class="icon">
+            <i class="fab fa-github"></i>
+          </span>
+
+          <span class="label">GitHub</span>
+        </a>
+      </div>
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/Android/" rel="tag"># Android</a>
+              <a href="/tags/%E8%BF%9B%E7%A8%8B%E9%80%9A%E4%BF%A1/" rel="tag"># 进程通信</a>
+              <a href="/tags/Bundle/" rel="tag"># Bundle</a>
+              <a href="/tags/%E6%96%87%E4%BB%B6%E5%85%B1%E4%BA%AB/" rel="tag"># 文件共享</a>
+              <a href="/tags/ContentProvider/" rel="tag"># ContentProvider</a>
+              <a href="/tags/BroadcastReceiver/" rel="tag"># BroadcastReceiver</a>
+              <a href="/tags/Socket/" rel="tag"># Socket</a>
+              <a href="/tags/Messenger/" rel="tag"># Messenger</a>
+              <a href="/tags/AIDL/" rel="tag"># AIDL</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2021/05/06/Android-APP%E5%A4%9A%E8%BF%9B%E7%A8%8B/" rel="prev" title="Android APP多进程">
+                  <i class="fa fa-chevron-left"></i> Android APP多进程
+                </a>
+            </div>
+            <div class="post-nav-item">
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+      
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+
+<div class="copyright">
+  
+  &copy; 2020 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-at"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">cocoas的博客</span>
+</div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+</div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
