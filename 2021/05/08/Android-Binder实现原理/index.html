@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.1/css/all.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"8.0.1","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12},"copycode":true,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}};
+  </script>
+
+  <meta name="description" content="Linux下传统的进程间通信原理 理解Linux下IPC的相关概念和原理，有助于我们理解Binder通信原理。  基本概念 进程隔离：简单的说，就是在操作系统中，进程与进程间的内存是不共享的。进程A无法直接访问进程B的数据，进程间数据交互需要通过IPC机制来完成。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Android Binder实现原理">
+<meta property="og:url" content="http://example.com/2021/05/08/Android-Binder%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/index.html">
+<meta property="og:site_name" content="Cocoas">
+<meta property="og:description" content="Linux下传统的进程间通信原理 理解Linux下IPC的相关概念和原理，有助于我们理解Binder通信原理。  基本概念 进程隔离：简单的说，就是在操作系统中，进程与进程间的内存是不共享的。进程A无法直接访问进程B的数据，进程间数据交互需要通过IPC机制来完成。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2021-05-08T14:50:19.000Z">
+<meta property="article:modified_time" content="2021-05-08T15:49:47.419Z">
+<meta property="article:author" content="Cocoas">
+<meta property="article:tag" content="进程通信">
+<meta property="article:tag" content="AIDL">
+<meta property="article:tag" content="Binder">
+<meta property="article:tag" content="IPC">
+<meta property="article:tag" content="内存映射">
+<meta property="article:tag" content="Binder驱动">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="http://example.com/2021/05/08/Android-Binder%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Android Binder实现原理 | Cocoas</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">Cocoas</h1>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">欢迎光临</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+		<li>
+          第三标题
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <section class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Linux%E4%B8%8B%E4%BC%A0%E7%BB%9F%E7%9A%84%E8%BF%9B%E7%A8%8B%E9%97%B4%E9%80%9A%E4%BF%A1%E5%8E%9F%E7%90%86"><span class="nav-text">Linux下传统的进程间通信原理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5"><span class="nav-text">基本概念</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#IPC%E5%8E%9F%E7%90%86"><span class="nav-text">IPC原理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AD%98%E5%9C%A8%E7%9A%84%E9%97%AE%E9%A2%98"><span class="nav-text">存在的问题</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Binder%E8%B7%A8%E8%BF%9B%E7%A8%8B%E9%80%9A%E4%BF%A1%E5%8E%9F%E7%90%86"><span class="nav-text">Binder跨进程通信原理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%9B%B8%E5%85%B3%E6%A6%82%E5%BF%B5"><span class="nav-text">相关概念</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Binder-IPC-%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86"><span class="nav-text">Binder IPC 实现原理</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Binder-%E8%B7%A8%E8%BF%9B%E7%A8%8B%E9%80%9A%E4%BF%A1%E6%A8%A1%E5%9E%8B"><span class="nav-text">Binder 跨进程通信模型</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9F%BA%E4%BA%8EC-S%E6%9E%B6%E6%9E%84"><span class="nav-text">基于C&#x2F;S架构</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%B1%BB%E4%BC%BC%E4%BA%92%E8%81%94%E7%BD%91%E7%BB%84%E4%BB%B6%E8%A7%92%E8%89%B2"><span class="nav-text">类似互联网组件角色</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Binder%E9%A9%B1%E5%8A%A8"><span class="nav-text">Binder驱动</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ServiceManager"><span class="nav-text">ServiceManager</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Binder%E9%80%9A%E4%BF%A1%E8%BF%87%E7%A8%8B"><span class="nav-text">Binder通信过程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Binder%E9%80%9A%E4%BF%A1%E4%B8%AD%E7%9A%84%E4%BB%A3%E7%90%86%E6%A8%A1%E5%BC%8F%EF%BC%9A%E5%AF%B9%E8%B1%A1%E4%BB%A3%E7%90%86"><span class="nav-text">Binder通信中的代理模式：对象代理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Android%E4%B8%AD%E7%9A%84AIDL"><span class="nav-text">Android中的AIDL</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83"><span class="nav-text">参考</span></a></li></ol></div>
+        </section>
+        <!--/noindex-->
+
+        <section class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Cocoas</p>
+  <div class="site-description" itemprop="description">Android,Java,Android SDK,Kotlin,</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">36</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">17</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">105</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/CharlieJiang" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;CharlieJiang" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:cocoasjiang@foxmail.com" title="E-Mail → mailto:cocoasjiang@foxmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+        </section>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/05/08/Android-Binder%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Cocoas">
+      <meta itemprop="description" content="Android,Java,Android SDK,Kotlin,">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Cocoas">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Android Binder实现原理
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+      
+
+      <time title="创建时间：2021-05-08 22:50:19 / 修改时间：23:49:47" itemprop="dateCreated datePublished" datetime="2021-05-08T22:50:19+08:00">2021-05-08</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Android/" itemprop="url" rel="index"><span itemprop="name">Android</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Android/%E8%BF%9B%E7%A8%8B%E9%80%9A%E4%BF%A1/" itemprop="url" rel="index"><span itemprop="name">进程通信</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h2 id="Linux下传统的进程间通信原理"><a href="#Linux下传统的进程间通信原理" class="headerlink" title="Linux下传统的进程间通信原理"></a><strong>Linux下传统的进程间通信原理</strong></h2><blockquote>
+<p>理解Linux下IPC的相关概念和原理，有助于我们理解Binder通信原理。</p>
+</blockquote>
+<h3 id="基本概念"><a href="#基本概念" class="headerlink" title="基本概念"></a><strong>基本概念</strong></h3><ul>
+<li><strong>进程隔离</strong>：简单的说，就是在操作系统中，进程与进程间的内存是不共享的。进程A无法直接访问进程B的数据，进程间数据交互需要通过IPC机制来完成。  </li>
+</ul>
+<a id="more"></a>
+
+<ul>
+<li><strong>进程空间划分</strong>：用户空间和内核空间<br>为了保护用户程序不能直接操作内核，保证内核的安全，操作系统从逻辑上将寻址空间（即虚拟存储空间）划分为<strong>用户空间User Space</strong>和<strong>内核空间 Kernal Space</strong>。用户空间和内核空间是相互隔离的。<br>&emsp;<strong>用户空间</strong>：用户程序运行的空间<br>&emsp;<strong>内核空间</strong>：系统内核运行的空间  </li>
+<li><strong>系统调用</strong>：用户态和内核态<br>系统调用是用于突破用户空间和内核空间隔离的方式，也是用户空间访问内核空间的唯一方式。系统调用保证了所有资源访问都在内核空间的控制下，避免了用户空间对内核空间的越权访问，提升了系统的安全性和稳定性。<br>&emsp;<strong>内核运行态（内核态）</strong>：当一个进程执行系统调用而陷入内核代码执行时，称其处于内核运行态。<br>&emsp;<strong>用户运行态（用户态）</strong>：当进程执行自己的代码时，称其处于用户运行态。<br>&emsp;<strong>系统调用的实现方式</strong>：两个函数<br>&emsp;&emsp;<strong><code>copy_from_user()</code>**：将数据从用户空间拷贝到内核空间<br>&emsp;&emsp;</strong><code>copy_to_user()</code>**：将数据从内核空间拷贝到用户空间  </li>
+</ul>
+<h3 id="IPC原理"><a href="#IPC原理" class="headerlink" title="IPC原理"></a><strong>IPC原理</strong></h3><ol>
+<li>发送消息进程将要发送的数据存储在内存缓存区中，通过系统调用进入内核态。</li>
+<li>内核程序在内核空间分配内存，开辟一块内核缓存区，然后调用<code>copy_from _user()</code>函数，将数据从用户空间的内存缓存区拷贝到内核空间的内核缓存区中。</li>
+<li>接收消息进程在接收数据时，在自己的用户空间开辟一块内存缓存区，然后调用<code>copy_to_user()</code>函数将数据从内核空间的内核缓存区拷贝到用户空间的内存缓存区中。</li>
+</ol>
+<h3 id="存在的问题"><a href="#存在的问题" class="headerlink" title="存在的问题"></a><strong>存在的问题</strong></h3><ol>
+<li>性能低下，一次数据拷贝需要经过：内存缓存区——内核缓存区——内存缓存区，需要拷贝两次。</li>
+<li>接收数据的进程并不知道所接收数据的大小，在开辟内存缓存区时，要么尽可能大，要么先通过消息头获取数据大小后再开辟。这两种做法不是浪费空间，就是浪费时间。  </li>
+</ol>
+<h2 id="Binder跨进程通信原理"><a href="#Binder跨进程通信原理" class="headerlink" title="Binder跨进程通信原理"></a><strong>Binder跨进程通信原理</strong></h2><h3 id="相关概念"><a href="#相关概念" class="headerlink" title="相关概念"></a><strong>相关概念</strong></h3><ul>
+<li><strong>动态内核可加载模块</strong>：Loadable Kernal Module，简称LKM。<br>Linux的LKM机制中，模块是具有独立功能的程序，<strong>它可以被单独编译，不过不能独立运行</strong>。它在运行时被链接到内核中作为内核的一部分运行。<br>Android系统中，可以通过动态添加一个内核模块运行在内核空间，用户进程间通过这个内核模块作为桥梁实现通信。<br>在Android系统中，这个运行在内核空间，负责各个进程间通过Binder实现通信的内核模块叫做<strong>Binder驱动（Binder Driver）</strong>。    </li>
+<li><strong>内存映射</strong><br>&emsp;<strong>概念</strong>：简单说就是将用户空间的一块内存区域映射到内核空间，映射完成后，用户空间对这块内存区域的修改可以直接反应到内核空间；反之，内核空间对这块区域的修改也能直接反应到用户空间。<br>&emsp;<strong>实现方式</strong>：<code>mmap()</code>方法<br>&emsp;<strong>优点</strong>：内存映射能减少数据拷贝的次数，实现用户空间和内核空间的高效互动。  </li>
+</ul>
+<h3 id="Binder-IPC-实现原理"><a href="#Binder-IPC-实现原理" class="headerlink" title="Binder IPC 实现原理"></a><strong>Binder IPC 实现原理</strong></h3><blockquote>
+<p>Binder IPC 是基于内存映射实现的。</p>
+</blockquote>
+<ul>
+<li><strong>Binder中<code>mmap()</code>作用</strong>：在内核空间开辟一块数据接收的缓存空间  </li>
+<li><strong>一次Binder IPC通信过程</strong>：<br>①、使用Binder驱动在内核空间创建一个数据接收的缓存区。<br>②、在内核空间开辟一个内核缓存区，建立起内核缓存区与内核中数据接收缓存区间的映射关系，以及内核中数据接收缓存区与接收数据进程的用户空间地址间的映射关系。<br>③、发送数据的进程通过系统调用<code>copy_from_user()</code>将数据拷贝到内核中的内核缓存区，由于建立的双重映射关系，数据会直接映射到接收数据进程的用户空间，接收数据进程就可以访问到发送过来的数据。  </li>
+</ul>
+<h2 id="Binder-跨进程通信模型"><a href="#Binder-跨进程通信模型" class="headerlink" title="Binder 跨进程通信模型"></a><strong>Binder 跨进程通信模型</strong></h2><h3 id="基于C-S架构"><a href="#基于C-S架构" class="headerlink" title="基于C/S架构"></a><strong>基于C/S架构</strong></h3><blockquote>
+<p>Binder是基于C/S架构实现的，由一系列组件组成，包括Client、Server、ServiceManager、Binder驱动。<br>其中Client、Server、ServerManager运行在用户空间，Binder驱动运行在内核空间。<br>其中ServiceManager、Binder驱动由系统提供，Client、Server由用户程序实现。  </p>
+</blockquote>
+<h3 id="类似互联网组件角色"><a href="#类似互联网组件角色" class="headerlink" title="类似互联网组件角色"></a><strong>类似互联网组件角色</strong></h3><blockquote>
+<p>Binder进程通信C/S架构中的Client、Server、ServiceManager、Binder驱动这些组件在进程通信中扮演的角色，与网络通信中客户端、服务器、DNS域名服务器、路由器组件扮演的角色比较类似。  </p>
+</blockquote>
+<h3 id="Binder驱动"><a href="#Binder驱动" class="headerlink" title="Binder驱动"></a><strong>Binder驱动</strong></h3><blockquote>
+<p>Binder驱动类似于路由器，是整个进程通信的核心。驱动负责进程间Binder通信的建立、Binder在进程间的传递、Binder的引用计数管理、数据包在进程间的传递和交互等一系列底层支持。</p>
+</blockquote>
+<h3 id="ServiceManager"><a href="#ServiceManager" class="headerlink" title="ServiceManager"></a><strong>ServiceManager</strong></h3><blockquote>
+<p>ServiceManager类似于DNS服务器，其作用就是负责Binder实体的注册与查询。<br>ServiceManager已由系统实现，一个进程通过BINDERSETCONTEXT_MGR命令可以将自己注册为ServiceManager。  </p>
+</blockquote>
+<ul>
+<li><strong>注册Binder</strong><br>第一步：Server创建一个Binder实体，并起一个名字name，然后将Binder实体同name一起以数据包的形式通过Binder驱动发送给ServiceManager，通知ServerManager注册一个名字为name的Binder实体。<br>第二步：驱动为Binder创建位于内核中的实体节点和ServiceManager对实体的引用，将名字name和引用打包传给ServiceManager，ServiceManager收到数据后将名字和引用填入查找表。  </li>
+<li><strong>匿名Binder</strong><br>&emsp;<strong>由来</strong>：ServiceManager、Server与Client均属于不同进程，当Server需要向ServiceManager注册Binder时，必然会涉及到进程间通信。但由于ServiceManager就是用于注册进程间通信的Binder的，所以ServiceManager与Server间的进程通信便无法通过注册、查找Binder的方式实现。为了实现ServiceManager与其它进程间的通信，系统为其提供了一个特殊的Binder，它没有名字也不需要注册。<br>&emsp;<strong>创建方式</strong>：当一个进程通过BINDERSETCONTEXT_MGR命令将其注册为ServiceManager时，Binder驱动会自动为其创建一个Binder实体。并且这个Binder实体的引用在任何其它进程中都固定为0，即其它进程可以通过0号引用与ServiceManager进行通信。<br>匿名Binder的0号引用就相当于网络中域名服务器的地址，由系统预先设置好。Server就是通过这个预先配置好的0号引用与ServiceManager进行进程间通信，以完成Binder的注册。同样的，Client也是通过这个0号引用完成向ServiceManager查找已注册的Binder。  </li>
+<li><strong>查询Binder</strong><br>Client通过0号引用与ServiceManager间通信，将待查找Binder的名字放在数据包中发送给ServiceManager，ServiceManager根据名字从表中查出Binder实体的引用，然后再通过匿名Binder回传给Client。  </li>
+</ul>
+<h3 id="Binder通信过程"><a href="#Binder通信过程" class="headerlink" title="Binder通信过程"></a><strong>Binder通信过程</strong></h3><ol>
+<li><strong>注册ServiceManager</strong>：<br>首先，一个进程使用BINDERSETCONTEXT_MGR命令通过Binder驱动将自己注册为ServiceManager。  </li>
+<li><strong>注册Server 的Binder</strong>：<br>Server通过驱动向ServiceManager中注册自己的Binder，表明可以向外提供服务。驱动为这个Binder创建位于内核中的实体节点和ServiceManager对这个Binder实体的引用，然后将Binder的名称和实体引用打包传给ServiceManager，ServiceManager获取后将其填入查找表中。  </li>
+<li><strong>查找Server的Binder</strong>：<br>Client使用Server端Binder的名字，通过Binder驱动从ServiceManager中查找到对应的Binder实体引用。通过这个Binder引用，Client就可以实现与Server间的通信。  </li>
+</ol>
+<h3 id="Binder通信中的代理模式：对象代理"><a href="#Binder通信中的代理模式：对象代理" class="headerlink" title="Binder通信中的代理模式：对象代理"></a><strong>Binder通信中的代理模式：对象代理</strong></h3><blockquote>
+<p>进程通信中，对象代理的目的是为了实现对远端进程中对象的调用。即访问远端进程暴露出来的功能。  </p>
+</blockquote>
+<ul>
+<li><strong>创建对象代理</strong>：<br>当进程A想要获取进程B中的Object时，Binder驱动会返回A进程一个与Object一模一样的代理对象ObjectProxy，但代理对象中的方法并没有Object中对应方法的能力，即刚创建的代理对象并没有实现原对象的功能。  </li>
+<li><strong>代理对象功能实现</strong>：<br>ObjectProxy要实现Object的功能，就需要把方法的请求参数交给Binder驱动。驱动通过ObjectProxy可以查询到Object对应的进程B，然后要求B进程调用Object对应的方法，并将方法结果返回给驱动，驱动再将返回结果转发给A进程。A进程通过代理对象+Binder驱动完成了对B进程Object功能的实现，就相当于A进程直接调用了B进程的Object。  </li>
+</ul>
+<h3 id="Android中的AIDL"><a href="#Android中的AIDL" class="headerlink" title="Android中的AIDL"></a><strong>Android中的AIDL</strong></h3><ul>
+<li><p><strong>AIDL文件的编译</strong>：  </p>
+<blockquote>
+<p>当构建应用时，Android SDK会生成MyInterface.aidl文件对应的java接口文件MyInterface.java，生成的接口包含一个名为Stub的子类，该子类是其父类接口的抽象实现。Stub抽象子类的作用主要是用于实现AIDL接口定义的功能。Stub类中还包含一个名为Proxy的静态内部类，Proxy类也实现了MyInterface接口，Proxy类的主要作用是构建远程进程的服务，以访问远程进程对外公开的功能。  </p>
+</blockquote>
+</li>
+<li><p><strong>相关Java类的职责</strong>：<br>&emsp;<strong>IBinder</strong>：IBinder是一个接口，代表了一种跨进程通信的能力。一个对象只要实现了这个接口，它就能跨进程传输。<br>&emsp;<strong>IInterface</strong>：IInterface代表的就是Server端进程对象的功能，即在aidl文件中定义的接口。<br>&emsp;<strong>Binder</strong>：java中的Binder类，代表的是Binder本地对象。Binder类有一个内部类BinderProxy，它代表的是远程进程的Binder对象的本地代理。Binder和BinderProxy均继承自IBinder，都具有跨进程传输能力。在跨进程的时候，Binder驱动会自动完成这两个类的转换。<br>&emsp;<strong>Stub</strong>：Stub类是构建MyInterface.aidl文件时自动生成的MyInterface.java接口中的一个抽象子类，MyInterface.Stub继承了Binder，说明它是一个可以跨进程传输的Binder本地对象；MyInterface.Stub实现了MyInterface接口，不过只是抽象实现，具体实现还需要通过实例化Stub完成。  </p>
+</li>
+</ul>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a><strong>参考</strong></h2><p><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/35519585">写给 Android 应用工程师的 Binder 原理剖析</a>  </p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="followme">
+  <span>欢迎关注我的其它发布渠道</span>
+
+  <div class="social-list">
+
+      <div class="social-item">
+        <a target="_blank" class="social-link" href="https://github.com/CharlieJiang">
+          <span class="icon">
+            <i class="fab fa-github"></i>
+          </span>
+
+          <span class="label">GitHub</span>
+        </a>
+      </div>
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%9B%E7%A8%8B%E9%80%9A%E4%BF%A1/" rel="tag"># 进程通信</a>
+              <a href="/tags/AIDL/" rel="tag"># AIDL</a>
+              <a href="/tags/Binder/" rel="tag"># Binder</a>
+              <a href="/tags/IPC/" rel="tag"># IPC</a>
+              <a href="/tags/%E5%86%85%E5%AD%98%E6%98%A0%E5%B0%84/" rel="tag"># 内存映射</a>
+              <a href="/tags/Binder%E9%A9%B1%E5%8A%A8/" rel="tag"># Binder驱动</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2021/05/07/Android%E8%BF%9B%E7%A8%8B%E9%97%B4%E9%80%9A%E4%BF%A1%E6%96%B9%E5%BC%8F/" rel="prev" title="Android进程间通信方式">
+                  <i class="fa fa-chevron-left"></i> Android进程间通信方式
+                </a>
+            </div>
+            <div class="post-nav-item">
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+      
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+
+<div class="copyright">
+  
+  &copy; 2020 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-at"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">cocoas的博客</span>
+</div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+</div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
