@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.1/css/all.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"8.0.1","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12},"copycode":true,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}};
+  </script>
+
+  <meta name="description" content="原生多模块间的页面跳转实现方式：隐式Intent 隐式启动依赖于我们在AndroidManifest.xml中定义activity时通过intent-filter设置的匹配规则。在intent-filter中，我们可以设置三种匹配规则，分别是action、category、data。一个隐式Intent只有同时匹配了这三个规则，才能成功启动目标页面。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="阿里ARouter路由实现原理">
+<meta property="og:url" content="http://example.com/2021/05/12/%E9%98%BF%E9%87%8CARouter%E8%B7%AF%E7%94%B1%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/index.html">
+<meta property="og:site_name" content="Cocoas">
+<meta property="og:description" content="原生多模块间的页面跳转实现方式：隐式Intent 隐式启动依赖于我们在AndroidManifest.xml中定义activity时通过intent-filter设置的匹配规则。在intent-filter中，我们可以设置三种匹配规则，分别是action、category、data。一个隐式Intent只有同时匹配了这三个规则，才能成功启动目标页面。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2021-05-12T13:22:09.000Z">
+<meta property="article:modified_time" content="2021-05-13T14:41:27.355Z">
+<meta property="article:author" content="Cocoas">
+<meta property="article:tag" content="ARouter">
+<meta property="article:tag" content="路由表">
+<meta property="article:tag" content="隐式Intent">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="http://example.com/2021/05/12/%E9%98%BF%E9%87%8CARouter%E8%B7%AF%E7%94%B1%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>阿里ARouter路由实现原理 | Cocoas</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">Cocoas</h1>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">欢迎光临</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+		<li>
+          第三标题
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <section class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8E%9F%E7%94%9F%E5%A4%9A%E6%A8%A1%E5%9D%97%E9%97%B4%E7%9A%84%E9%A1%B5%E9%9D%A2%E8%B7%B3%E8%BD%AC%E5%AE%9E%E7%8E%B0%E6%96%B9%E5%BC%8F%EF%BC%9A%E9%9A%90%E5%BC%8FIntent"><span class="nav-text">原生多模块间的页面跳转实现方式：隐式Intent</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF"><span class="nav-text">使用场景</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8C%B9%E9%85%8D%E8%A7%84%E5%88%99"><span class="nav-text">匹配规则</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%9B%AE%E6%A0%87%E9%A1%B5%E9%9D%A2%E9%9A%90%E5%BC%8F%E8%B7%B3%E8%BD%AC%E9%85%8D%E7%BD%AE"><span class="nav-text">目标页面隐式跳转配置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BC%BA%E7%82%B9"><span class="nav-text">缺点</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%B7%AF%E7%94%B1%E4%B8%BA%E4%BB%80%E4%B9%88%E8%83%BD%E5%A4%9F%E5%AE%9E%E7%8E%B0%E6%A8%A1%E5%9D%97%E9%97%B4%E7%9A%84%E8%B7%B3%E8%BD%AC"><span class="nav-text">路由为什么能够实现模块间的跳转</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ARouter%E8%B7%AF%E7%94%B1%E8%B7%B3%E8%BD%AC%E5%8E%9F%E7%90%86"><span class="nav-text">ARouter路由跳转原理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#ARouter%E5%B8%B8%E7%94%A8%E8%87%AA%E5%AE%9A%E4%B9%89%E6%B3%A8%E8%A7%A3"><span class="nav-text">ARouter常用自定义注解</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8%E6%B3%A8%E8%A7%A3%E5%A4%84%E7%90%86%E5%99%A8Processor%E8%A7%A3%E6%9E%90%E6%B3%A8%E8%A7%A3"><span class="nav-text">使用注解处理器Processor解析注解</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#JavaPoet%E7%94%9F%E6%88%90Java%E7%B1%BB"><span class="nav-text">JavaPoet生成Java类</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%B7%AF%E7%94%B1%E8%A1%A8Warehouse"><span class="nav-text">路由表Warehouse</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Postcard"><span class="nav-text">Postcard</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8B%A6%E6%88%AA%E5%99%A8Interceptor"><span class="nav-text">拦截器Interceptor</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ARouter%E4%BC%98%E7%82%B9"><span class="nav-text">ARouter优点</span></a></li></ol></div>
+        </section>
+        <!--/noindex-->
+
+        <section class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Cocoas</p>
+  <div class="site-description" itemprop="description">Android,Java,Android SDK,Kotlin,</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">38</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">111</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/CharlieJiang" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;CharlieJiang" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:cocoasjiang@foxmail.com" title="E-Mail → mailto:cocoasjiang@foxmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+        </section>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/05/12/%E9%98%BF%E9%87%8CARouter%E8%B7%AF%E7%94%B1%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Cocoas">
+      <meta itemprop="description" content="Android,Java,Android SDK,Kotlin,">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Cocoas">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          阿里ARouter路由实现原理
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2021-05-12 21:22:09" itemprop="dateCreated datePublished" datetime="2021-05-12T21:22:09+08:00">2021-05-12</time>
+    </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">更新于</span>
+        <time title="修改时间：2021-05-13 22:41:27" itemprop="dateModified" datetime="2021-05-13T22:41:27+08:00">2021-05-13</time>
+      </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Android/" itemprop="url" rel="index"><span itemprop="name">Android</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Android/ARouter/" itemprop="url" rel="index"><span itemprop="name">ARouter</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Android/ARouter/%E7%AC%AC%E4%B8%89%E6%96%B9%E6%A1%86%E6%9E%B6%E5%8E%9F%E7%90%86/" itemprop="url" rel="index"><span itemprop="name">第三方框架原理</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h2 id="原生多模块间的页面跳转实现方式：隐式Intent"><a href="#原生多模块间的页面跳转实现方式：隐式Intent" class="headerlink" title="原生多模块间的页面跳转实现方式：隐式Intent"></a><strong>原生多模块间的页面跳转实现方式：隐式Intent</strong></h2><blockquote>
+<p>隐式启动依赖于我们在AndroidManifest.xml中定义activity时通过intent-filter设置的匹配规则。在intent-filter中，我们可以设置三种匹配规则，分别是action、category、data。一个隐式Intent只有同时匹配了这三个规则，才能成功启动目标页面。  </p>
+</blockquote>
+<a id="more"></a>
+
+<h3 id="使用场景"><a href="#使用场景" class="headerlink" title="使用场景"></a><strong>使用场景</strong></h3><blockquote>
+<p>应用之间跳转、H5与原生间交互、应用内部模块间跳转。  </p>
+</blockquote>
+<h3 id="匹配规则"><a href="#匹配规则" class="headerlink" title="匹配规则"></a><strong>匹配规则</strong></h3><ul>
+<li><strong>单一intent-filter匹配</strong>：通常一个activity可以设置多个intent-filter，一般只需要匹配成功一个intent-filter，即可成功跳转目标页面。  </li>
+<li><strong>成套action、category、data匹配</strong>：若要匹配成功intent-filter，需要同时匹配成功其中的action、category、data。一个intent-filter中可以设置多个action、category、data，当intent-filter中存在多个action、category、data时，隐式Intent只需匹配成功intent-filter中的任意一组action、category、data即可。  </li>
+</ul>
+<p>&emsp;&emsp;需要注意的是，使用隐式Intent启动activity时，如果没有设置category，startActivity()或startActivityForResult()方法会自动为我们添加一个默认category “<code>android.intent.category.DEFAULT</code>“。所以通常我们只要在intent-filter中添加这个默认的category，使用隐式Intent时就无需再设置category。即只需要匹配intent-filter中的action和data。  </p>
+<h3 id="目标页面隐式跳转配置"><a href="#目标页面隐式跳转配置" class="headerlink" title="目标页面隐式跳转配置"></a><strong>目标页面隐式跳转配置</strong></h3><ul>
+<li><p><strong>配置跳转的URL Scheme</strong>：基于intent-filter中的data匹配规则，配置隐式跳转所需的URL Scheme。<br>&emsp;&emsp;<strong>什么是URL Scheme</strong>：Android中的scheme是一种页面内跳转协议，通过定义自己的scheme协议，可以非常方便跳转app中的各个页面；通过scheme协议，服务器可以定制化告诉App跳转那个页面，可以通过通知栏消息定制化跳转页面，可以通过H5页面跳转其他页面等。<br>&emsp;&emsp;<strong>URL Scheme格式</strong>：scheme://host:post/path?params<br>&emsp;&emsp;&emsp;&emsp;URL Scheme中包括协议Scheme、主机host、端口post、页面路径path及页面跳转参数params。<br>&emsp;&emsp;<strong>如何设置URL Scheme</strong>：  </p>
+<pre class="line-numbers language-xml" data-language="xml"><code class="language-xml"><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>activity</span> <span class="token attr-name"><span class="token namespace">android:</span>name</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>com.cocoas.module3.Module3Activity<span class="token punctuation">"</span></span><span class="token punctuation">></span></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>intent-filter</span><span class="token punctuation">></span></span>
+        <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>data</span>
+            <span class="token attr-name"><span class="token namespace">android:</span>scheme</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>app<span class="token punctuation">"</span></span>
+            <span class="token attr-name"><span class="token namespace">android:</span>host</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>com.cocoas.module3<span class="token punctuation">"</span></span>
+            <span class="token attr-name"><span class="token namespace">android:</span>port</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>80<span class="token punctuation">"</span></span>
+            <span class="token attr-name"><span class="token namespace">android:</span>path</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>/activity<span class="token punctuation">"</span></span>
+            <span class="token punctuation">/></span></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>intent-filter</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>activity</span><span class="token punctuation">></span></span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre></li>
+<li><p><strong>配置默认的action和category</strong>：<br>一般情况下，只要设置好默认的action和category，再配置好data，即配置好URL Scheme，即可实现隐式页面跳转。  </p>
+<pre class="line-numbers language-xml" data-language="xml"><code class="language-xml"><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>activity</span> <span class="token attr-name"><span class="token namespace">android:</span>name</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>com.cocoas.module3.Module3Activity<span class="token punctuation">"</span></span><span class="token punctuation">></span></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>intent-filter</span><span class="token punctuation">></span></span>
+        <span class="token comment">&lt;!--必须的action：根据用户的数据类型打开响应的activity--></span>
+        <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>action</span> <span class="token attr-name"><span class="token namespace">android:</span>name</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>android.intent.action.VIEW<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+        <span class="token comment">&lt;!--必须：表示可通过浏览器中的链接跳转该页面--></span>
+        <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>category</span> <span class="token attr-name"><span class="token namespace">android:</span>name</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>android.intent.category.BROWSABLE<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+        <span class="token comment">&lt;!--必须：表示该页面可以被隐式启动--></span>
+        <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>category</span> <span class="token attr-name"><span class="token namespace">android:</span>name</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>android.intent.category.DEFAULT<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>intent-filter</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>activity</span><span class="token punctuation">></span></span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+</li>
+<li><p><strong>实现隐式跳转</strong>:<br>&emsp;&emsp;<strong>原生跳转</strong></p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token class-name">Uri</span> uri <span class="token operator">=</span> <span class="token class-name">Uri</span><span class="token punctuation">.</span><span class="token function">parse</span><span class="token punctuation">(</span><span class="token string">"app://com.cocoas.module3:80/activity"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token class-name">Intent</span> intent <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Intent</span><span class="token punctuation">(</span><span class="token class-name">Intent</span><span class="token punctuation">.</span>ACTION_VIEW<span class="token punctuation">,</span>uri<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token function">startActivity</span><span class="token punctuation">(</span>intent<span class="token punctuation">)</span><span class="token punctuation">;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
+<p>&emsp;&emsp;<strong>H5链接跳转</strong>  </p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token operator">&lt;</span>a href<span class="token operator">=</span><span class="token string">"app://com.cocoas.module3:80/activity"</span><span class="token operator">></span>打开页面<span class="token operator">&lt;</span><span class="token operator">/</span>a<span class="token operator">></span><span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+</li>
+</ul>
+<h3 id="缺点"><a href="#缺点" class="headerlink" title="缺点"></a><strong>缺点</strong></h3><ul>
+<li>每个页面都需要定义自己的intent-filter，比较繁琐。同时所有的页面规则都需要定义在Manifest文件中，导致扩展性和可维护性比较差，也不利于团队协作。  </li>
+<li>跳转过程无法控制，如果通过intent-filter匹配的页面找不到，应用会直接崩溃。  </li>
+</ul>
+<h2 id="路由为什么能够实现模块间的跳转"><a href="#路由为什么能够实现模块间的跳转" class="headerlink" title="路由为什么能够实现模块间的跳转"></a><strong>路由为什么能够实现模块间的跳转</strong></h2><blockquote>
+<p>ARouter通过<code>@Router</code>注解将页面与页面路径之间的映射关系保存到一张路由表中，其它模块页面通过页面路径从路由表中查找到目标页面，然后就可以通过Intent实现跳转。  </p>
+</blockquote>
+<h2 id="ARouter路由跳转原理"><a href="#ARouter路由跳转原理" class="headerlink" title="ARouter路由跳转原理"></a><strong>ARouter路由跳转原理</strong></h2><blockquote>
+<p>ARouter通过自定义注解设置页面访问路径、优先级、参数等信息；<br>编译时使用注解处理器APT生成用于存储页面路径path和activity.class映射关系的类文件，即路由表；<br>app进程启动时，加载这些类文件并将映射关系的数据读取到内存中；<br>进行路由跳转时，通过路由路径查找到目标页面的class，通过class构建跳转Intent，然后执行跳转。</p>
+</blockquote>
+<h3 id="ARouter常用自定义注解"><a href="#ARouter常用自定义注解" class="headerlink" title="ARouter常用自定义注解"></a><strong>ARouter常用自定义注解</strong></h3><ul>
+<li><strong>@Route</strong>：声明路由路径path、分组group、优先级priority、额外信息extras等路由节点信息。  </li>
+<li><strong>@Autowired</strong>：声明页面跳转携带的参数，用于页面间参数传递  </li>
+<li><strong>@Interceptor</strong>：声明拦截器，用于拦截跳转并增加额外事件处理    </li>
+</ul>
+<h3 id="使用注解处理器Processor解析注解"><a href="#使用注解处理器Processor解析注解" class="headerlink" title="使用注解处理器Processor解析注解"></a><strong>使用注解处理器Processor解析注解</strong></h3><ul>
+<li><strong>多种Processor</strong>：Processor是javax中的注解处理器类，ARouter通过声明继承了Processor的RouteProcessor来处理<code>@Route</code>注解，类似的还有InterceptorProcessor、AutowiredProcessor用于处理Interceptor、Autowired注解。  </li>
+<li><strong>@Route注解处理</strong>：遍历被<code>@Route</code>注解的节点，使用RouteMeta保存节点信息。根据分组名称保存节点信息到groupMap中。  </li>
+</ul>
+<h3 id="JavaPoet生成Java类"><a href="#JavaPoet生成Java类" class="headerlink" title="JavaPoet生成Java类"></a><strong>JavaPoet生成Java类</strong></h3><blockquote>
+<p>JavaPoet是square公司开源的一款Java代码生成框架，JavaPoet根据注解可以很方便地生成Java源文件。<br>ARouter中，通过遍历groupMap，使用JavaPoet生成分组信息Java类和表信息Java类。</p>
+</blockquote>
+<ul>
+<li><strong>路由节点信息类RouteMeta</strong>：RouteMeta是用于保存路由信息的Java类，通过解析<code>@Route</code>注解获取。RouteMeta类的结构如下：<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">RouteMeta</span> <span class="token punctuation">&#123;</span>
+    <span class="token comment">//路由页面的类型：Activity或者IService</span>
+    <span class="token keyword">public</span> <span class="token keyword">enum</span> <span class="token class-name">Type</span> <span class="token punctuation">&#123;</span>
+        ACTIVITY<span class="token punctuation">,</span>
+        ISERVICE
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token keyword">private</span> <span class="token class-name">Type</span> type<span class="token punctuation">;</span>
+    <span class="token comment">//节点 (Activity)</span>
+    <span class="token keyword">private</span> <span class="token class-name">Element</span> element<span class="token punctuation">;</span>
+    <span class="token comment">//注解使用的类对象</span>
+    <span class="token keyword">private</span> <span class="token class-name">Class</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token operator">?</span><span class="token punctuation">></span></span> destination<span class="token punctuation">;</span>
+    <span class="token comment">//路由地址</span>
+    <span class="token keyword">private</span> <span class="token class-name">String</span> path<span class="token punctuation">;</span>
+    <span class="token comment">//路由分组</span>
+    <span class="token keyword">private</span> <span class="token class-name">String</span> group<span class="token punctuation">;</span>
+    <span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">.</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre></li>
+<li><strong>分组信息类</strong>：根据路由路径的分组名（即<code>@Route</code>注解中的group参数）生成一个实现IRouteGroup接口的Java类，用来保存每个分组的路由信息。如：<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">ARouter</span>$$<span class="token class-name">Group</span>$$order <span class="token keyword">implements</span> <span class="token class-name">IRouteGroup</span> <span class="token punctuation">&#123;</span>
+  <span class="token annotation punctuation">@Override</span>
+  <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">loadInto</span><span class="token punctuation">(</span><span class="token class-name">Map</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">String</span><span class="token punctuation">,</span> <span class="token class-name">RouteMeta</span><span class="token punctuation">></span></span> atlas<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+    atlas<span class="token punctuation">.</span><span class="token function">put</span><span class="token punctuation">(</span><span class="token string">"/order/RealOrderActivity"</span><span class="token punctuation">,</span> <span class="token class-name">RouteMeta</span><span class="token punctuation">.</span><span class="token function">build</span><span class="token punctuation">(</span><span class="token class-name">RouteType</span><span class="token punctuation">.</span>ACTIVITY<span class="token punctuation">,</span> <span class="token class-name">RealOrderActivity</span><span class="token punctuation">.</span><span class="token keyword">class</span><span class="token punctuation">,</span> <span class="token string">"/order/realorderactivity"</span><span class="token punctuation">,</span> <span class="token string">"order"</span><span class="token punctuation">,</span> <span class="token keyword">null</span><span class="token punctuation">,</span> <span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    atlas<span class="token punctuation">.</span><span class="token function">put</span><span class="token punctuation">(</span><span class="token string">"/order/RefundOrderListActivity"</span><span class="token punctuation">,</span> <span class="token class-name">RouteMeta</span><span class="token punctuation">.</span><span class="token function">build</span><span class="token punctuation">(</span><span class="token class-name">RouteType</span><span class="token punctuation">.</span>ACTIVITY<span class="token punctuation">,</span> <span class="token class-name">RefundOrderListActivity</span><span class="token punctuation">.</span><span class="token keyword">class</span><span class="token punctuation">,</span> <span class="token string">"/order/refundorderlistactivity"</span><span class="token punctuation">,</span> <span class="token string">"order"</span><span class="token punctuation">,</span> <span class="token keyword">null</span><span class="token punctuation">,</span> <span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre></li>
+<li><strong>表信息类</strong>：根据模块名称生成一个实现了IRouteRoot接口的Java类，用来保存所有的分组信息类。如：<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">ARouter</span>$$<span class="token class-name">Root</span>$$order_list <span class="token keyword">implements</span> <span class="token class-name">IRouteRoot</span> <span class="token punctuation">&#123;</span>
+  <span class="token annotation punctuation">@Override</span>
+  <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">loadInto</span><span class="token punctuation">(</span><span class="token class-name">Map</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">String</span><span class="token punctuation">,</span> <span class="token class-name">Class</span><span class="token punctuation">&lt;</span><span class="token operator">?</span> <span class="token keyword">extends</span> <span class="token class-name">IRouteGroup</span><span class="token punctuation">></span><span class="token punctuation">></span></span> routes<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+    routes<span class="token punctuation">.</span><span class="token function">put</span><span class="token punctuation">(</span><span class="token string">"order"</span><span class="token punctuation">,</span> <span class="token class-name">ARouter</span>$$<span class="token class-name">Group</span>$$order<span class="token punctuation">.</span><span class="token keyword">class</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    routes<span class="token punctuation">.</span><span class="token function">put</span><span class="token punctuation">(</span><span class="token string">"real"</span><span class="token punctuation">,</span> <span class="token class-name">ARouter</span>$$<span class="token class-name">Group</span>$$real<span class="token punctuation">.</span><span class="token keyword">class</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+</li>
+</ul>
+<h3 id="路由表Warehouse"><a href="#路由表Warehouse" class="headerlink" title="路由表Warehouse"></a><strong>路由表Warehouse</strong></h3><blockquote>
+<p>路由表用于保存应用所有模块中的路由信息，包括分组信息类，路由页面、IService对象、拦截器等。</p>
+</blockquote>
+<p><strong>如何生成路由表</strong>：遍历所有的dex，查找所有使用JavaPoet生成的分组信息类和表信息类，并将分组信息类加载到Warehouse.groupsIndex中，在实际跳转时加载对应分组的路由信息。  </p>
+<h3 id="Postcard"><a href="#Postcard" class="headerlink" title="Postcard"></a><strong>Postcard</strong></h3><blockquote>
+<p>ARouter调用build()方法查询路由表返回的对象就是PostCard，Postcard继承自RouteMeta，用于保存路由节点的路径、分组名、传递的数据等信息，并可发出实际的跳转操作navigation。</p>
+</blockquote>
+<ul>
+<li><strong>传递数据</strong>：Postcard.withXXX()</li>
+<li><strong>页面跳转</strong>：Postcard.navigation()</li>
+<li><strong>页面跳转动画</strong>：PostCard.withTransition()  </li>
+</ul>
+<h3 id="拦截器Interceptor"><a href="#拦截器Interceptor" class="headerlink" title="拦截器Interceptor"></a><strong>拦截器Interceptor</strong></h3><blockquote>
+<p>Android中使用startActivity()执行页面跳转后，页面跳转的过程则不再受控。ARouter实现了在页面跳转过程中添加一些自定义的功能，比如添加参数、判断是否需要登录等，是一种AOP思想的实现。</p>
+</blockquote>
+<ul>
+<li><strong>拦截器声明</strong>：拦截器使用<code>@Interceptor</code>注解声明，并可设定拦截器的优先级priority和名称name。    </li>
+<li><strong>实现拦截器</strong>：拦截器实现类需要实现拦截器接口IInterceptor，并实现其process()方法和init()方法。  </li>
+<li><strong>生成拦截器映射类</strong>：项目编译时，JavaPoet会根据模块名称生成一个实现了IInterceptorGroup接口的Java类，用于保存模块中所有的拦截器实现类。如：<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">ARouter</span>$$<span class="token class-name">Interceptors</span>$$commonutil <span class="token keyword">implements</span> <span class="token class-name">IInterceptorGroup</span> <span class="token punctuation">&#123;</span>
+  <span class="token annotation punctuation">@Override</span>
+  <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">loadInto</span><span class="token punctuation">(</span><span class="token class-name">Map</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">Integer</span><span class="token punctuation">,</span> <span class="token class-name">Class</span><span class="token punctuation">&lt;</span><span class="token operator">?</span> <span class="token keyword">extends</span> <span class="token class-name">IInterceptor</span><span class="token punctuation">></span><span class="token punctuation">></span></span> interceptors<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+    interceptors<span class="token punctuation">.</span><span class="token function">put</span><span class="token punctuation">(</span><span class="token number">2</span><span class="token punctuation">,</span> <span class="token class-name">RouterInterceptor</span><span class="token punctuation">.</span><span class="token keyword">class</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre></li>
+<li><strong>加载拦截器映射类到Warehouse中</strong>：APP进程启动时ARouter会将拦截器映射关系分组加载到Warehouse.interceptorsIndex中，并在需要时进行拦截器实例化。  </li>
+</ul>
+<h2 id="ARouter优点"><a href="#ARouter优点" class="headerlink" title="ARouter优点"></a><strong>ARouter优点</strong></h2><ul>
+<li>基于注解实现了路由映射关系自动注册与分布式路由管理。</li>
+<li>编译期间基于注解处理器实现注解解析，并生成路由映射文件，而非使用反射，不会影响运行时性能。</li>
+<li>映射关系按组分类、多级管理，按需初始化。</li>
+<li>灵活的降级策略，每次跳转都会返回跳转结果，避免原生跳转失败导致的应用崩溃。</li>
+<li>自定义拦截器对路由跳转进行拦截，实现跳转过程中的可控干预，如参数插入、登录判断等处理。</li>
+<li>支持依赖注入，可实现跨模块API调用。</li>
+<li>支持直接解析标准URL进行跳转，并自动注入参数到目标页面中。</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="followme">
+  <span>欢迎关注我的其它发布渠道</span>
+
+  <div class="social-list">
+
+      <div class="social-item">
+        <a target="_blank" class="social-link" href="https://github.com/CharlieJiang">
+          <span class="icon">
+            <i class="fab fa-github"></i>
+          </span>
+
+          <span class="label">GitHub</span>
+        </a>
+      </div>
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/ARouter/" rel="tag"># ARouter</a>
+              <a href="/tags/%E8%B7%AF%E7%94%B1%E8%A1%A8/" rel="tag"># 路由表</a>
+              <a href="/tags/%E9%9A%90%E5%BC%8FIntent/" rel="tag"># 隐式Intent</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2021/05/11/MacBook%E4%B8%8A%E9%85%8D%E7%BD%AEgradle%E7%8E%AF%E5%A2%83%E5%8F%98%E9%87%8F/" rel="prev" title="MacBook上配置gradle环境变量">
+                  <i class="fa fa-chevron-left"></i> MacBook上配置gradle环境变量
+                </a>
+            </div>
+            <div class="post-nav-item">
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+      
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+
+<div class="copyright">
+  
+  &copy; 2020 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-at"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">cocoas的博客</span>
+</div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+</div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
