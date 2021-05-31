@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.1/css/all.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"8.0.1","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12},"copycode":true,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}};
+  </script>
+
+  <meta name="description" content="RxJava是什么 RxJava是Java虚拟机的响应式扩展，是一个在Java虚拟机上使用可观测的序列来组成异步的、基于事件的程序的库。简而言之，就是一个用于处理异步事件的框架。  响应式编程：一种使用异步数据流编程的思想，RxJava是基于观察者模式的响应式编程。链式调用：链式调用，说白了就是函数调用的结果能够执行下一次函数调用，即多个函数调用可以链式地连接在一起执行调用，而不是需要单独进行多次">
+<meta property="og:type" content="article">
+<meta property="og:title" content="RxJava原理解析">
+<meta property="og:url" content="http://example.com/2021/05/30/RxJava%E5%8E%9F%E7%90%86%E8%A7%A3%E6%9E%90/index.html">
+<meta property="og:site_name" content="Cocoas">
+<meta property="og:description" content="RxJava是什么 RxJava是Java虚拟机的响应式扩展，是一个在Java虚拟机上使用可观测的序列来组成异步的、基于事件的程序的库。简而言之，就是一个用于处理异步事件的框架。  响应式编程：一种使用异步数据流编程的思想，RxJava是基于观察者模式的响应式编程。链式调用：链式调用，说白了就是函数调用的结果能够执行下一次函数调用，即多个函数调用可以链式地连接在一起执行调用，而不是需要单独进行多次">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2021-05-30T21:40:45.000Z">
+<meta property="article:modified_time" content="2021-05-31T14:39:53.627Z">
+<meta property="article:author" content="Cocoas">
+<meta property="article:tag" content="RxJava">
+<meta property="article:tag" content="响应式编程">
+<meta property="article:tag" content="异步">
+<meta property="article:tag" content="链式调用">
+<meta property="article:tag" content="线程切换">
+<meta property="article:tag" content="调度器Scheduler">
+<meta property="article:tag" content="背压">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="http://example.com/2021/05/30/RxJava%E5%8E%9F%E7%90%86%E8%A7%A3%E6%9E%90/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>RxJava原理解析 | Cocoas</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">Cocoas</h1>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">欢迎光临</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+		<li>
+          第三标题
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <section class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#RxJava%E6%98%AF%E4%BB%80%E4%B9%88"><span class="nav-text">RxJava是什么</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E4%BD%BF%E7%94%A8RxJava%EF%BC%8C%E8%80%8C%E4%B8%8D%E6%98%AFAsyncTask%E6%88%96%E8%80%85Handler%EF%BC%9F"><span class="nav-text">为什么使用RxJava，而不是AsyncTask或者Handler？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#RxJava%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5"><span class="nav-text">RxJava基本概念</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#RxJava%E5%A6%82%E4%BD%95%E5%AE%9E%E7%8E%B0%E5%BC%82%E6%AD%A5"><span class="nav-text">RxJava如何实现异步</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%87%AA%E7%94%B1%E7%9A%84%E7%BA%BF%E7%A8%8B%E5%88%87%E6%8D%A2"><span class="nav-text">自由的线程切换</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%BB%98%E8%AE%A4%E5%8D%95%E7%BA%BF%E7%A8%8B"><span class="nav-text">默认单线程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8%E8%B0%83%E5%BA%A6%E5%99%A8Scheduler%E5%88%87%E6%8D%A2%E7%BA%BF%E7%A8%8B"><span class="nav-text">使用调度器Scheduler切换线程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%B0%83%E5%BA%A6%E5%99%A8Scheduler"><span class="nav-text">调度器Scheduler</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BA%BF%E7%A8%8B%E5%88%87%E6%8D%A2%E5%85%B7%E4%BD%93%E5%AE%9E%E7%8E%B0%E6%96%B9%E5%BC%8F"><span class="nav-text">线程切换具体实现方式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%87%E6%8D%A2%E7%BA%BF%E7%A8%8B%E7%A4%BA%E4%BE%8B"><span class="nav-text">切换线程示例</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%8B%E4%BB%B6%E5%BA%8F%E5%88%97%E5%8F%98%E6%8D%A2"><span class="nav-text">事件序列变换</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%80%82%E7%94%A8%E5%9C%BA%E6%99%AF"><span class="nav-text">适用场景</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#RxJava-2-0-%E6%96%B0%E7%89%B9%E6%80%A7"><span class="nav-text">RxJava 2.0 新特性</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BE%9D%E8%B5%96%E7%8B%AC%E7%AB%8B"><span class="nav-text">依赖独立</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%96%B0%E5%A2%9E%E5%9F%BA%E7%A1%80%E6%8E%A5%E5%8F%A3"><span class="nav-text">新增基础接口</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%94%AF%E6%8C%81%E8%83%8C%E5%8E%8BBackpressure"><span class="nav-text">支持背压Backpressure</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#RxJava%E4%B8%8ERxAndroid"><span class="nav-text">RxJava与RxAndroid</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#RxJava%E4%B8%8EJava-8-Stream"><span class="nav-text">RxJava与Java 8 Stream</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%9B%B8%E5%85%B3%E7%9F%A5%E8%AF%86"><span class="nav-text">相关知识</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Promise"><span class="nav-text">Promise</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#java-util-concurrent-Executor"><span class="nav-text">java.util.concurrent.Executor</span></a></li></ol></li></ol></div>
+        </section>
+        <!--/noindex-->
+
+        <section class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Cocoas</p>
+  <div class="site-description" itemprop="description">Android,Java,Android SDK,Kotlin,</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">40</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">22</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">121</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/CharlieJiang" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;CharlieJiang" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:cocoasjiang@foxmail.com" title="E-Mail → mailto:cocoasjiang@foxmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+        </section>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/05/30/RxJava%E5%8E%9F%E7%90%86%E8%A7%A3%E6%9E%90/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Cocoas">
+      <meta itemprop="description" content="Android,Java,Android SDK,Kotlin,">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Cocoas">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          RxJava原理解析
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+      
+
+      <time title="创建时间：2021-05-31 05:40:45 / 修改时间：22:39:53" itemprop="dateCreated datePublished" datetime="2021-05-31T05:40:45+08:00">2021-05-31</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Android/" itemprop="url" rel="index"><span itemprop="name">Android</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Android/RxJava/" itemprop="url" rel="index"><span itemprop="name">RxJava</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Android/RxJava/%E7%AC%AC%E4%B8%89%E6%96%B9%E6%A1%86%E6%9E%B6%E5%8E%9F%E7%90%86%E8%A7%A3%E6%9E%90/" itemprop="url" rel="index"><span itemprop="name">第三方框架原理解析</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h2 id="RxJava是什么"><a href="#RxJava是什么" class="headerlink" title="RxJava是什么"></a><strong>RxJava是什么</strong></h2><blockquote>
+<p>RxJava是Java虚拟机的响应式扩展，是一个在Java虚拟机上使用可观测的序列来组成异步的、基于事件的程序的库。简而言之，就是一个用于处理异步事件的框架。</p>
+</blockquote>
+<p><strong>响应式编程</strong>：一种使用异步数据流编程的思想，RxJava是基于观察者模式的响应式编程。<br><strong>链式调用</strong>：链式调用，说白了就是函数调用的结果能够执行下一次函数调用，即多个函数调用可以链式地连接在一起执行调用，而不是需要单独进行多次调用。  </p>
+<a id="more"></a>
+
+<h2 id="为什么使用RxJava，而不是AsyncTask或者Handler？"><a href="#为什么使用RxJava，而不是AsyncTask或者Handler？" class="headerlink" title="为什么使用RxJava，而不是AsyncTask或者Handler？"></a><strong>为什么使用RxJava，而不是AsyncTask或者Handler？</strong></h2><blockquote>
+<p>RxJava的实现更加简洁。第一，RxJava是基于事件流的方式实现链式调用，使得处理异步任务的逻辑简洁清晰。第二，RxJava基于观察者模式的事件回调函数中，除了提供一般的事件回调函数next()外，还额外提供了特殊的事件处理函数onCompleted()和onError()，以帮助处理事件的回调。</p>
+</blockquote>
+<h2 id="RxJava基本概念"><a href="#RxJava基本概念" class="headerlink" title="RxJava基本概念"></a><strong>RxJava基本概念</strong></h2><ul>
+<li><strong>Observable</strong>：被观察者，负责产生事件  </li>
+<li><strong>Observer</strong>：观察者，接收事件并消费事件    </li>
+<li><strong>subscribe()：</strong>订阅操作，连接被观察者和观察者<br>Observable和Observer通过subscribe()实现订阅关系，当Observable产生事件时，Observer就可以接收到并消费此事件。</li>
+<li><strong>onNext()：</strong>观察者产生事件  </li>
+</ul>
+<h2 id="RxJava如何实现异步"><a href="#RxJava如何实现异步" class="headerlink" title="RxJava如何实现异步"></a><strong>RxJava如何实现异步</strong></h2><blockquote>
+<p>RxJava的异步是通过一种扩展的观察者模式来实现的。<br>RxJava中，观察者Observer通过<code>subscribe()</code>方法订阅到Observable上，Observable便可以在需要的时候将订阅的事件发送到Observer。不过与传统的观察者模式不同的是，RxJava的事件回调方法除了普通事件<code>onNext()</code>方法（相当于<code>onClick()</code>/<code>onEvent()</code>）外，还定义了两个特殊的事件：<code>onCompleted()</code>和<code>onError()</code>。</p>
+</blockquote>
+<ul>
+<li><strong>onCompleted()：</strong>事件队列完结<br>RxJava不仅把每个事件单独处理，还会把它们看做一个队列。RxJava规定，当不会再有新的onNext()发出时，需要触发onCompleted()方法作为标志。  </li>
+<li><strong>onError()：</strong>事件队列异常<br>当事件处理过程中出现异常时，onError()会被触发，同时事件队列自动终止，不允许再有事件发出。  </li>
+</ul>
+<h2 id="自由的线程切换"><a href="#自由的线程切换" class="headerlink" title="自由的线程切换"></a><strong>自由的线程切换</strong></h2><h3 id="默认单线程"><a href="#默认单线程" class="headerlink" title="默认单线程"></a><strong>默认单线程</strong></h3><blockquote>
+<p>默认情况下，RxJava是单线程的，只在当前线程中执行。此时，Observable用于发射数据流，Observer用于接收和响应数据流，各种操作符Operators用于加工数据流，它们都在同一个线程中运行。  </p>
+</blockquote>
+<h3 id="使用调度器Scheduler切换线程"><a href="#使用调度器Scheduler切换线程" class="headerlink" title="使用调度器Scheduler切换线程"></a><strong>使用调度器Scheduler切换线程</strong></h3><blockquote>
+<p>RxJava在链式调用的基础上，通过设置不同的调度器Scheduler，可以灵活的在不同线程间切换并执行对应的任务。比如先切换到子线程中执行耗时的任务，然后再切回主线程更新页面。<br>RxJava提供便捷的线程切换功能，通过执行subscribeOn和observeOn操作即可轻松地实现线程切换。基于便捷的线程切换功能，RxJava也常常会被用于代替Android原生的AsyncTask、Handler等来执行异步任务。  </p>
+</blockquote>
+<h3 id="调度器Scheduler"><a href="#调度器Scheduler" class="headerlink" title="调度器Scheduler"></a><strong>调度器Scheduler</strong></h3><blockquote>
+<p>Scheduler相当于线程调度器，是所有RxJava调度器的抽象父类，子类需要实现其<code>createWorker()</code>方法，返回一个Worker实例，用于接受并执行Task。同时也可以重写其scheduleDirect()方法决定如何将Task分配给不同的Worker。RxJava通过Scheduler让操作跑在指定的线程，从而实现多线程调度。  </p>
+</blockquote>
+<p>RxJava内置了多个Scheduler的实现，它们能满足大多数使用场景。例如：  </p>
+<ul>
+<li><strong><code>Scheduler.single</code>：</strong>使用定长为1的线程池，并重复利用这个线程。</li>
+<li><strong><code>Scheduler.newThread</code>：</strong>每次都启用新线程，并在新线程中执行操作。</li>
+<li><strong><code>Scheduler.computation</code>：</strong>使用固定的线程池，线程池大小为CPU的核数 ，适用于CPU密集型计算。</li>
+<li><strong><code>Scheduler.io</code>：</strong>适用I/O操作（读写文件、数据库、网络数据等），行为模式与newThread类似，区别在于io的内部实现是使用一个无数量上线的线程池，并可以重用空闲的线程，因此多数情况下，io的效率会比newThread要高。</li>
+<li><strong><code>Scheduler.trampoline</code>：</strong>直接在当前线程执行，如果当前线程中其它任务在执行，则会先暂停其它任务。</li>
+<li><strong><code>Scheduler.from</code>：</strong>将<code>java.util.concurrent.Executor</code>转换成一个Scheduler实例，即可以自定义一个Executor来作为调度器。</li>
+<li><strong><code>AndroidScheduler.mainThread</code>：</strong>Android专用的一个调度器，它指定的操作将会在Android的主线程中执行。</li>
+</ul>
+<h3 id="线程切换具体实现方式"><a href="#线程切换具体实现方式" class="headerlink" title="线程切换具体实现方式"></a><strong>线程切换具体实现方式</strong></h3><ul>
+<li><strong>subscribeOn()</strong><blockquote>
+<p><code>subscribeOn()</code>指定<code>subscribe()</code>所发生的线程，或者叫作事件产生的线程。<br>如果调用多次，则只有第一次会起作用。</p>
+</blockquote>
+</li>
+</ul>
+<p><strong>实现原理</strong>：<br>创建一个实现了Runnable接口的线程类SubscribeTask，在SubscribeTask的run()方法中调用Observable.subscribe()，然后调用调度器Scheduler的scheduleDirect()方法进行线程切换。相关源码如下：<br>ObservableSubscribeOn.SubscribeTask线程的run()中执行订阅操作：</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">final</span> <span class="token keyword">class</span> <span class="token class-name">SubscribeTask</span> <span class="token keyword">implements</span> <span class="token class-name">Runnable</span> <span class="token punctuation">&#123;</span>
+    <span class="token keyword">private</span> <span class="token keyword">final</span> <span class="token class-name">SubscribeOnObserver</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">T</span><span class="token punctuation">></span></span> parent<span class="token punctuation">;</span>
+
+    <span class="token class-name">SubscribeTask</span><span class="token punctuation">(</span><span class="token class-name">SubscribeOnObserver</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">T</span><span class="token punctuation">></span></span> parent<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">this</span><span class="token punctuation">.</span>parent <span class="token operator">=</span> parent<span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">run</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        source<span class="token punctuation">.</span><span class="token function">subscribe</span><span class="token punctuation">(</span>parent<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>ObservableSubscribeOn的subscribeActual()中将订阅处理线程SubscribeTask交由线程调度器Scheduler进行线程切换处理：  </p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">subscribeActual</span><span class="token punctuation">(</span><span class="token keyword">final</span> <span class="token class-name">Observer</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token operator">?</span> <span class="token keyword">super</span> <span class="token class-name">T</span><span class="token punctuation">></span></span> observer<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+    <span class="token keyword">final</span> <span class="token class-name">SubscribeOnObserver</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">T</span><span class="token punctuation">></span></span> parent <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">SubscribeOnObserver</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token punctuation">></span></span><span class="token punctuation">(</span>observer<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+    observer<span class="token punctuation">.</span><span class="token function">onSubscribe</span><span class="token punctuation">(</span>parent<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+    parent<span class="token punctuation">.</span><span class="token function">setDisposable</span><span class="token punctuation">(</span>scheduler<span class="token punctuation">.</span><span class="token function">scheduleDirect</span><span class="token punctuation">(</span><span class="token keyword">new</span> <span class="token class-name">SubscribeTask</span><span class="token punctuation">(</span>parent<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<ul>
+<li><strong>observeOn()</strong>  <blockquote>
+<p>指定观察者Observer所在的线程，或者叫做事件消费的线程。<br>如果调用多次，则每次都会起作用。</p>
+</blockquote>
+</li>
+</ul>
+<p><strong>实现原理</strong>：<br>先基于Scheduler.createWorker()方法创建一个新的Worker，再创建一个实现了Runnable和Observer接口的线程类ObserveonObserver，通过在其事件回调方法onNext()、onComplete()、onError()等中调用Worker.schedule()方法实现线程切换。相关源码如下：<br>ObservableObserveOn.subscribeActual()方法中创建Scheduler.Worker对象用于线程切换：</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">protected</span> <span class="token keyword">void</span> <span class="token function">subscribeActual</span><span class="token punctuation">(</span><span class="token class-name">Observer</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token operator">?</span> <span class="token keyword">super</span> <span class="token class-name">T</span><span class="token punctuation">></span></span> observer<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span>scheduler <span class="token keyword">instanceof</span> <span class="token class-name">TrampolineScheduler</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        source<span class="token punctuation">.</span><span class="token function">subscribe</span><span class="token punctuation">(</span>observer<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span> <span class="token keyword">else</span> <span class="token punctuation">&#123;</span>
+        <span class="token class-name">Scheduler</span><span class="token punctuation">.</span><span class="token class-name">Worker</span> w <span class="token operator">=</span> scheduler<span class="token punctuation">.</span><span class="token function">createWorker</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        source<span class="token punctuation">.</span><span class="token function">subscribe</span><span class="token punctuation">(</span><span class="token keyword">new</span> <span class="token class-name">ObserveOnObserver</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token punctuation">></span></span><span class="token punctuation">(</span>observer<span class="token punctuation">,</span> w<span class="token punctuation">,</span> delayError<span class="token punctuation">,</span> bufferSize<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>ObservableObserveOn.ObserveOnObserver线程类中定义了一个schedule()方法，在其中通过调用Worker.schedule()实现切换线程。此方法由ObserveOnObserver类的事件回调方法调用，即有事件回调时触发线程的切换。</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">static</span> <span class="token keyword">final</span> <span class="token keyword">class</span> <span class="token class-name">ObserveOnObserver</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">T</span><span class="token punctuation">></span></span> <span class="token keyword">extends</span> <span class="token class-name">BasicIntQueueDisposable</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">T</span><span class="token punctuation">></span></span>
+    <span class="token keyword">implements</span> <span class="token class-name">Observer</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">T</span><span class="token punctuation">></span></span><span class="token punctuation">,</span> <span class="token class-name">Runnable</span> <span class="token punctuation">&#123;</span>
+    <span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">.</span>
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">onNext</span><span class="token punctuation">(</span><span class="token class-name">T</span> t<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">.</span>
+        <span class="token function">schedule</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">onError</span><span class="token punctuation">(</span><span class="token class-name">Throwable</span> t<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">.</span>
+        <span class="token function">schedule</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">onComplete</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">.</span>
+        <span class="token function">schedule</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token keyword">void</span> <span class="token function">schedule</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token function">getAndIncrement</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">==</span> <span class="token number">0</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            worker<span class="token punctuation">.</span><span class="token function">schedule</span><span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span>
+    <span class="token punctuation">&#125;</span>
+    <span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">.</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+
+<h3 id="切换线程示例"><a href="#切换线程示例" class="headerlink" title="切换线程示例"></a><strong>切换线程示例</strong></h3><pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token class-name">Observable</span><span class="token punctuation">.</span><span class="token function">from</span><span class="token punctuation">(</span><span class="token keyword">new</span> <span class="token class-name">String</span><span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">&#123;</span><span class="token string">"one"</span><span class="token punctuation">,</span><span class="token string">"two"</span><span class="token punctuation">,</span><span class="token string">"three"</span><span class="token punctuation">&#125;</span><span class="token punctuation">)</span>
+      <span class="token punctuation">.</span><span class="token function">subscribeOn</span><span class="token punctuation">(</span><span class="token class-name">Schedulers</span><span class="token punctuation">.</span><span class="token function">io</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token comment">// 指定事件分发所在线程</span>
+      <span class="token punctuation">.</span><span class="token function">observeOn</span><span class="token punctuation">(</span><span class="token class-name">AndroidSchedulers</span><span class="token punctuation">.</span><span class="token function">mainThread</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token comment">// 指定事件消费所在线程</span>
+      <span class="token punctuation">.</span><span class="token function">subscribe</span><span class="token punctuation">(</span>str <span class="token operator">-></span> <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span>str<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// 事件消费</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre>
+
+
+<h2 id="事件序列变换"><a href="#事件序列变换" class="headerlink" title="事件序列变换"></a><strong>事件序列变换</strong></h2><blockquote>
+<p>类似Java 8 的Stream API，对事件进行流式加工。如map()、filter()等操作。</p>
+</blockquote>
+<h2 id="适用场景"><a href="#适用场景" class="headerlink" title="适用场景"></a><strong>适用场景</strong></h2><ul>
+<li><strong>与Retrofit结合</strong>：代码逻辑清晰、简捷明了  </li>
+<li><strong>RxBinding</strong>：实现Android平台的Binding API，绑定Android平台上的控件，并以Observable的形式提供事件反馈等。  </li>
+<li><strong>执行异步操作</strong>：替代AsyncTask、Handler等  </li>
+<li><strong>实现事件总线</strong>：替代otto、EventBus等  </li>
+</ul>
+<h2 id="RxJava-2-0-新特性"><a href="#RxJava-2-0-新特性" class="headerlink" title="RxJava 2.0 新特性"></a><strong>RxJava 2.0 新特性</strong></h2><h3 id="依赖独立"><a href="#依赖独立" class="headerlink" title="依赖独立"></a><strong>依赖独立</strong></h3><p>RxJava 2.0的依赖是全新的<code>io.reactivex.rxjave2:rxjava:2.x.x</code>，1.0的则是<code>io.reactivex:rxjava:x.y.z</code>。  </p>
+<h3 id="新增基础接口"><a href="#新增基础接口" class="headerlink" title="新增基础接口"></a><strong>新增基础接口</strong></h3><ul>
+<li><strong>Publisher</strong>：事件生产者接口  </li>
+<li><strong>Subscriber</strong>：事件订阅者接口  </li>
+<li><strong>Subscription</strong>：用于处理背压的接口<br>Subscription接口提供了request(long n)和cancel()两个方法，使得Subscriber可以主动的决定是向上游请求数据，还是打断事件流并释放资源。  </li>
+<li><strong>Processor</strong>：Publisher + Subscriber，且支持背压  </li>
+</ul>
+<h3 id="支持背压Backpressure"><a href="#支持背压Backpressure" class="headerlink" title="支持背压Backpressure"></a><strong>支持背压Backpressure</strong></h3><blockquote>
+<p>背压是指在异步场景中，被观察者发送事件速度远快于观察者处理事件速度的情况。</p>
+</blockquote>
+<p>RxJava 1.x中Observable可以使用背压策略支持背压。RxJava 2.x中，原来的Observable被分成了新的Observable和Flowable。新的Observable用于订阅Observer，不支持背压；Flowable实现了Publisher接口，用于订阅Subscriber，支持背压。  </p>
+<h2 id="RxJava与RxAndroid"><a href="#RxJava与RxAndroid" class="headerlink" title="RxJava与RxAndroid"></a><strong>RxJava与RxAndroid</strong></h2><blockquote>
+<p>RxAndroid是一个RxJava针对Android平台的扩展，主要用于Android开发。</p>
+</blockquote>
+<h2 id="RxJava与Java-8-Stream"><a href="#RxJava与Java-8-Stream" class="headerlink" title="RxJava与Java 8 Stream"></a><strong>RxJava与Java 8 Stream</strong></h2><ul>
+<li>Stream是同步、阻塞的，RxJava是异步、非阻塞的。</li>
+<li>流只能使用一次，Observable可以多次订阅</li>
+<li>并行流无法指定使用的线程池，RxJava可以通过Scheduler设定多种线程池</li>
+</ul>
+<h2 id="相关知识"><a href="#相关知识" class="headerlink" title="相关知识"></a><strong>相关知识</strong></h2><h3 id="Promise"><a href="#Promise" class="headerlink" title="Promise"></a><strong>Promise</strong></h3><blockquote>
+<p>Promise是JavaScript中异步任务处理的对象。支持基于事件流的任务处理。</p>
+</blockquote>
+<h3 id="java-util-concurrent-Executor"><a href="#java-util-concurrent-Executor" class="headerlink" title="java.util.concurrent.Executor"></a><strong>java.util.concurrent.Executor</strong></h3><ul>
+<li>是什么：Executor是Java提供的多线程框架</li>
+<li>干什么：管理线程池、调度和执行异步任务、异步任务结果反馈</li>
+<li>怎么用：  </li>
+</ul>
+<ol>
+<li>使用Executors创建线程池：<code>ExecutorService threadPool = Executors.newFixedThreadPool(4)</code>;  </li>
+<li>创建异步任务Task：<code>Thread task = new Thread()&#123;...run()&#123;//to do something&#125;&#125;</code>  </li>
+<li>提交任务到线程池：<code>Future&lt;String&gt; taskResult = threadPool.submit(task)</code>;  </li>
+<li>线程池调度执行任务并提供执行结果反馈：<code>String result = taskResult.get()</code>;  </li>
+<li>关闭线程池：<code>threadPool.shutdown()</code>; </li>
+</ol>
+<p><strong>Executor线程池种类</strong><br>单线程池<code>SingleThreadExecutor</code>：顺序执行任务，线程dead后重新创建线程进行替换。<br>固定数量线程池<code>FixedThreadPool(n)</code>：线程可复用， 线程池满后，新的线程需要在队列中等待。<br>缓存线程池<code>CachedThreadPool</code>：适用执行大量短期任务；线程数量无限制，需要即创建；线程空闲超过60秒即会被从缓存中删除。<br>计划型线程池<code>Scheduledexecutor</code>：执行定期任务  </p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="followme">
+  <span>欢迎关注我的其它发布渠道</span>
+
+  <div class="social-list">
+
+      <div class="social-item">
+        <a target="_blank" class="social-link" href="https://github.com/CharlieJiang">
+          <span class="icon">
+            <i class="fab fa-github"></i>
+          </span>
+
+          <span class="label">GitHub</span>
+        </a>
+      </div>
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/RxJava/" rel="tag"># RxJava</a>
+              <a href="/tags/%E5%93%8D%E5%BA%94%E5%BC%8F%E7%BC%96%E7%A8%8B/" rel="tag"># 响应式编程</a>
+              <a href="/tags/%E5%BC%82%E6%AD%A5/" rel="tag"># 异步</a>
+              <a href="/tags/%E9%93%BE%E5%BC%8F%E8%B0%83%E7%94%A8/" rel="tag"># 链式调用</a>
+              <a href="/tags/%E7%BA%BF%E7%A8%8B%E5%88%87%E6%8D%A2/" rel="tag"># 线程切换</a>
+              <a href="/tags/%E8%B0%83%E5%BA%A6%E5%99%A8Scheduler/" rel="tag"># 调度器Scheduler</a>
+              <a href="/tags/%E8%83%8C%E5%8E%8B/" rel="tag"># 背压</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2021/05/30/Android-%E5%9F%BA%E4%BA%8Egradle%E5%AE%9E%E7%8E%B0%E5%A4%9A%E6%B8%A0%E9%81%93%E6%89%93%E5%8C%85/" rel="prev" title="Android 基于gradle实现多渠道打包">
+                  <i class="fa fa-chevron-left"></i> Android 基于gradle实现多渠道打包
+                </a>
+            </div>
+            <div class="post-nav-item">
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+      
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+
+<div class="copyright">
+  
+  &copy; 2020 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-at"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">cocoas的博客</span>
+</div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+</div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
