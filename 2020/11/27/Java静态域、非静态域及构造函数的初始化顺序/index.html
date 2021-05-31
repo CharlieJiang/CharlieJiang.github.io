@@ -26,7 +26,7 @@
   <meta name="description" content="域的概念 域是英文field的翻译，指的是类中的成员变量（Member Variable），即我们常说的类的字段。    注意：属性和字段是有区别的。&amp;emsp;&amp;emsp;属性是JavaBean规范中提出的概念，针对的是对象，而类本身是没有属性的概念的。&amp;emsp;&amp;emsp;属性定义的规则是：get&#x2F;set方法名，去掉get&#x2F;set后，将剩余部分字符串的首字母小写后得到的字符串就是这个类的属性">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Java静态域、非静态域及构造函数的相关概念及初始化顺序">
-<meta property="og:url" content="http://example.com/2020/11/28/Java%E9%9D%99%E6%80%81%E5%9F%9F%E3%80%81%E9%9D%9E%E9%9D%99%E6%80%81%E5%9F%9F%E5%8F%8A%E6%9E%84%E9%80%A0%E5%87%BD%E6%95%B0%E7%9A%84%E5%88%9D%E5%A7%8B%E5%8C%96%E9%A1%BA%E5%BA%8F/index.html">
+<meta property="og:url" content="http://example.com/2020/11/27/Java%E9%9D%99%E6%80%81%E5%9F%9F%E3%80%81%E9%9D%9E%E9%9D%99%E6%80%81%E5%9F%9F%E5%8F%8A%E6%9E%84%E9%80%A0%E5%87%BD%E6%95%B0%E7%9A%84%E5%88%9D%E5%A7%8B%E5%8C%96%E9%A1%BA%E5%BA%8F/index.html">
 <meta property="og:site_name" content="Cocoas">
 <meta property="og:description" content="域的概念 域是英文field的翻译，指的是类中的成员变量（Member Variable），即我们常说的类的字段。    注意：属性和字段是有区别的。&amp;emsp;&amp;emsp;属性是JavaBean规范中提出的概念，针对的是对象，而类本身是没有属性的概念的。&amp;emsp;&amp;emsp;属性定义的规则是：get&#x2F;set方法名，去掉get&#x2F;set后，将剩余部分字符串的首字母小写后得到的字符串就是这个类的属性">
 <meta property="og:locale" content="zh_CN">
@@ -42,7 +42,7 @@
 <meta name="twitter:card" content="summary">
 
 
-<link rel="canonical" href="http://example.com/2020/11/28/Java%E9%9D%99%E6%80%81%E5%9F%9F%E3%80%81%E9%9D%9E%E9%9D%99%E6%80%81%E5%9F%9F%E5%8F%8A%E6%9E%84%E9%80%A0%E5%87%BD%E6%95%B0%E7%9A%84%E5%88%9D%E5%A7%8B%E5%8C%96%E9%A1%BA%E5%BA%8F/">
+<link rel="canonical" href="http://example.com/2020/11/27/Java%E9%9D%99%E6%80%81%E5%9F%9F%E3%80%81%E9%9D%9E%E9%9D%99%E6%80%81%E5%9F%9F%E5%8F%8A%E6%9E%84%E9%80%A0%E5%87%BD%E6%95%B0%E7%9A%84%E5%88%9D%E5%A7%8B%E5%8C%96%E9%A1%BA%E5%BA%8F/">
 
 
 <script class="page-configurations">
@@ -201,20 +201,20 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">38</span>
+          <span class="site-state-item-count">39</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-count">20</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">111</span>
+        <span class="site-state-item-count">114</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -263,7 +263,7 @@
   
 
   <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2020/11/28/Java%E9%9D%99%E6%80%81%E5%9F%9F%E3%80%81%E9%9D%9E%E9%9D%99%E6%80%81%E5%9F%9F%E5%8F%8A%E6%9E%84%E9%80%A0%E5%87%BD%E6%95%B0%E7%9A%84%E5%88%9D%E5%A7%8B%E5%8C%96%E9%A1%BA%E5%BA%8F/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2020/11/27/Java%E9%9D%99%E6%80%81%E5%9F%9F%E3%80%81%E9%9D%9E%E9%9D%99%E6%80%81%E5%9F%9F%E5%8F%8A%E6%9E%84%E9%80%A0%E5%87%BD%E6%95%B0%E7%9A%84%E5%88%9D%E5%A7%8B%E5%8C%96%E9%A1%BA%E5%BA%8F/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
