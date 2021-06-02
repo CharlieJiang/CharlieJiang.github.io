@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.1/css/all.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"8.0.1","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12},"copycode":true,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}};
+  </script>
+
+  <meta name="description" content="Engine的主要数据结构分析Engine的加载流程前，先看下Engine的主要数据结构：">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Glide原理解析二：Glide加载引擎Engine的加载流程">
+<meta property="og:url" content="http://example.com/2021/06/01/Glide%E5%8E%9F%E7%90%86%E8%A7%A3%E6%9E%90%E4%BA%8C%EF%BC%9AGlide%E5%8A%A0%E8%BD%BD%E5%BC%95%E6%93%8EEngine%E7%9A%84%E5%8A%A0%E8%BD%BD%E6%B5%81%E7%A8%8B/index.html">
+<meta property="og:site_name" content="Cocoas">
+<meta property="og:description" content="Engine的主要数据结构分析Engine的加载流程前，先看下Engine的主要数据结构：">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2021-06-01T21:44:54.000Z">
+<meta property="article:modified_time" content="2021-06-02T14:39:53.581Z">
+<meta property="article:author" content="Cocoas">
+<meta property="article:tag" content="Glide">
+<meta property="article:tag" content="Android图片加载">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="http://example.com/2021/06/01/Glide%E5%8E%9F%E7%90%86%E8%A7%A3%E6%9E%90%E4%BA%8C%EF%BC%9AGlide%E5%8A%A0%E8%BD%BD%E5%BC%95%E6%93%8EEngine%E7%9A%84%E5%8A%A0%E8%BD%BD%E6%B5%81%E7%A8%8B/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Glide原理解析二：Glide加载引擎Engine的加载流程 | Cocoas</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">Cocoas</h1>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">欢迎光临</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+		<li>
+          第三标题
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <section class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Engine%E7%9A%84%E4%B8%BB%E8%A6%81%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84"><span class="nav-text">Engine的主要数据结构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Engine-load-%E6%96%B9%E6%B3%95%E5%8A%A0%E8%BD%BD%E8%B5%84%E6%BA%90%E5%88%86%E6%9E%90"><span class="nav-text">Engine.load()方法加载资源分析</span></a></li></ol></div>
+        </section>
+        <!--/noindex-->
+
+        <section class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Cocoas</p>
+  <div class="site-description" itemprop="description">Android,Java,Android SDK,Kotlin,</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">42</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">25</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">123</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/CharlieJiang" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;CharlieJiang" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:cocoasjiang@foxmail.com" title="E-Mail → mailto:cocoasjiang@foxmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+        </section>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/06/01/Glide%E5%8E%9F%E7%90%86%E8%A7%A3%E6%9E%90%E4%BA%8C%EF%BC%9AGlide%E5%8A%A0%E8%BD%BD%E5%BC%95%E6%93%8EEngine%E7%9A%84%E5%8A%A0%E8%BD%BD%E6%B5%81%E7%A8%8B/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Cocoas">
+      <meta itemprop="description" content="Android,Java,Android SDK,Kotlin,">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Cocoas">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Glide原理解析二：Glide加载引擎Engine的加载流程
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+      
+
+      <time title="创建时间：2021-06-02 05:44:54 / 修改时间：22:39:53" itemprop="dateCreated datePublished" datetime="2021-06-02T05:44:54+08:00">2021-06-02</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Glide/" itemprop="url" rel="index"><span itemprop="name">Glide</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Glide/Android/" itemprop="url" rel="index"><span itemprop="name">Android</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Glide/Android/%E7%AC%AC%E4%B8%89%E6%96%B9%E6%A1%86%E6%9E%B6%E5%8E%9F%E7%90%86%E8%A7%A3%E6%9E%90/" itemprop="url" rel="index"><span itemprop="name">第三方框架原理解析</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h2 id="Engine的主要数据结构"><a href="#Engine的主要数据结构" class="headerlink" title="Engine的主要数据结构"></a><strong>Engine的主要数据结构</strong></h2><p>分析Engine的加载流程前，先看下Engine的主要数据结构：</p>
+<a id="more"></a>
+
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token comment">// Engine.java</span>
+<span class="token comment">// Jobs是EngineJob的管理类，负责对缓存EngineJob的管理</span>
+<span class="token keyword">private</span> <span class="token keyword">final</span> <span class="token class-name">Jobs</span> jobs<span class="token punctuation">;</span>
+<span class="token comment">// 负责创建缓存的key的工厂类</span>
+<span class="token keyword">private</span> <span class="token keyword">final</span> <span class="token class-name">EngineKeyFactory</span> keyFactory<span class="token punctuation">;</span>
+<span class="token comment">// DecodeJob工厂类。DecodeJob负责从原始资源或缓存中解码资源，并可执行变换和转码处理</span>
+<span class="token keyword">private</span> <span class="token keyword">final</span> <span class="token class-name">DecodeJobFactory</span> decodeJobFactory<span class="token punctuation">;</span>
+<span class="token comment">// EngineJob工厂类，EngineJob负责处理DecodeJob的解码结果（EngineJob实现了DecodeJob.Callback接口）</span>
+<span class="token keyword">private</span> <span class="token keyword">final</span> <span class="token class-name">EngineJobFactory</span> engineJobFactory<span class="token punctuation">;</span>
+<span class="token comment">// 回收资源：当资源被移除或释放时</span>
+<span class="token keyword">private</span> <span class="token keyword">final</span> <span class="token class-name">ResourceRecycler</span> resourceRecycler<span class="token punctuation">;</span>
+<span class="token comment">// 内存缓存：内存缓存中资源的增删管理，内部是LruCache缓存</span>
+<span class="token keyword">private</span> <span class="token keyword">final</span> <span class="token class-name">MemoryCache</span> cache<span class="token punctuation">;</span>
+<span class="token comment">// 磁盘缓存：内部是DiskLruCache缓存</span>
+<span class="token keyword">private</span> <span class="token keyword">final</span> <span class="token class-name">LazyDiskCacheProvider</span> diskCacheProvider<span class="token punctuation">;</span>
+<span class="token comment">// 活动资源缓存：内部通过弱引用实现缓存，优先级要高于内存缓存</span>
+<span class="token keyword">private</span> <span class="token keyword">final</span> <span class="token class-name">ActiveResources</span> activeResources<span class="token punctuation">;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h2 id="Engine-load-方法加载资源分析"><a href="#Engine-load-方法加载资源分析" class="headerlink" title="Engine.load()方法加载资源分析"></a><strong>Engine.load()方法加载资源分析</strong></h2><p>在分析SingleRequest时，SingleRequest在<code>onSizeReady()</code>方法中通过调用<code>Engine.load()</code>方法去加载处理资源。<code>load()</code>的源码如下：</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token comment">// Engine.java</span>
+<span class="token keyword">public</span> <span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">R</span><span class="token punctuation">></span></span> <span class="token class-name">LoadStatus</span> <span class="token function">load</span><span class="token punctuation">(</span>
+    <span class="token class-name">GlideContext</span> glideContext<span class="token punctuation">,</span>
+    <span class="token class-name">Object</span> model<span class="token punctuation">,</span>
+    <span class="token class-name">Key</span> signature<span class="token punctuation">,</span>
+    <span class="token keyword">int</span> width<span class="token punctuation">,</span>
+    <span class="token keyword">int</span> height<span class="token punctuation">,</span>
+    <span class="token class-name">Class</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token operator">?</span><span class="token punctuation">></span></span> resourceClass<span class="token punctuation">,</span>
+    <span class="token class-name">Class</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">R</span><span class="token punctuation">></span></span> transcodeClass<span class="token punctuation">,</span>
+    <span class="token class-name">Priority</span> priority<span class="token punctuation">,</span>
+    <span class="token class-name">DiskCacheStrategy</span> diskCacheStrategy<span class="token punctuation">,</span>
+    <span class="token class-name">Map</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">Class</span><span class="token punctuation">&lt;</span><span class="token operator">?</span><span class="token punctuation">></span><span class="token punctuation">,</span> <span class="token class-name">Transformation</span><span class="token punctuation">&lt;</span><span class="token operator">?</span><span class="token punctuation">></span><span class="token punctuation">></span></span> transformations<span class="token punctuation">,</span>
+    <span class="token keyword">boolean</span> isTransformationRequired<span class="token punctuation">,</span>
+    <span class="token keyword">boolean</span> isScaleOnlyOrNoTransform<span class="token punctuation">,</span>
+    <span class="token class-name">Options</span> options<span class="token punctuation">,</span>
+    <span class="token keyword">boolean</span> isMemoryCacheable<span class="token punctuation">,</span>
+    <span class="token keyword">boolean</span> useUnlimitedSourceExecutorPool<span class="token punctuation">,</span>
+    <span class="token keyword">boolean</span> useAnimationPool<span class="token punctuation">,</span>
+    <span class="token keyword">boolean</span> onlyRetrieveFromCache<span class="token punctuation">,</span>
+    <span class="token class-name">ResourceCallback</span> cb<span class="token punctuation">,</span>
+    <span class="token class-name">Executor</span> callbackExecutor<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+  <span class="token keyword">long</span> startTime <span class="token operator">=</span> VERBOSE_IS_LOGGABLE <span class="token operator">?</span> <span class="token class-name">LogTime</span><span class="token punctuation">.</span><span class="token function">getLogTime</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">:</span> <span class="token number">0</span><span class="token punctuation">;</span>
+    <span class="token comment">// 创建资源内存缓存的key：由资源类型、签名、图片长宽等参数决定唯一性标识</span>
+  <span class="token class-name">EngineKey</span> key <span class="token operator">=</span>
+      keyFactory<span class="token punctuation">.</span><span class="token function">buildKey</span><span class="token punctuation">(</span>
+          model<span class="token punctuation">,</span>
+          signature<span class="token punctuation">,</span>
+          width<span class="token punctuation">,</span>
+          height<span class="token punctuation">,</span>
+          transformations<span class="token punctuation">,</span>
+          resourceClass<span class="token punctuation">,</span>
+          transcodeClass<span class="token punctuation">,</span>
+          options<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+  <span class="token class-name">EngineResource</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token operator">?</span><span class="token punctuation">></span></span> memoryResource<span class="token punctuation">;</span>
+  <span class="token keyword">synchronized</span> <span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+      <span class="token comment">// 从内存中加载资源</span>
+    memoryResource <span class="token operator">=</span> <span class="token function">loadFromMemory</span><span class="token punctuation">(</span>key<span class="token punctuation">,</span> isMemoryCacheable<span class="token punctuation">,</span> startTime<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token comment">// 内存中未找到资源：等待从磁盘缓存EngineJob中读取，或是重新创建Job加载资源</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span>memoryResource <span class="token operator">==</span> <span class="token keyword">null</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+      <span class="token keyword">return</span> <span class="token function">waitForExistingOrStartNewJob</span><span class="token punctuation">(</span>
+          glideContext<span class="token punctuation">,</span>
+          model<span class="token punctuation">,</span>
+          signature<span class="token punctuation">,</span>
+          width<span class="token punctuation">,</span>
+          height<span class="token punctuation">,</span>
+          resourceClass<span class="token punctuation">,</span>
+          transcodeClass<span class="token punctuation">,</span>
+          priority<span class="token punctuation">,</span>
+          diskCacheStrategy<span class="token punctuation">,</span>
+          transformations<span class="token punctuation">,</span>
+          isTransformationRequired<span class="token punctuation">,</span>
+          isScaleOnlyOrNoTransform<span class="token punctuation">,</span>
+          options<span class="token punctuation">,</span>
+          isMemoryCacheable<span class="token punctuation">,</span>
+          useUnlimitedSourceExecutorPool<span class="token punctuation">,</span>
+          useAnimationPool<span class="token punctuation">,</span>
+          onlyRetrieveFromCache<span class="token punctuation">,</span>
+          cb<span class="token punctuation">,</span>
+          callbackExecutor<span class="token punctuation">,</span>
+          key<span class="token punctuation">,</span>
+          startTime<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+  <span class="token punctuation">&#125;</span>
+
+  <span class="token comment">// Avoid calling back while holding the engine lock, doing so makes it easier for callers to</span>
+  <span class="token comment">// deadlock.</span>
+  cb<span class="token punctuation">.</span><span class="token function">onResourceReady</span><span class="token punctuation">(</span>
+      memoryResource<span class="token punctuation">,</span> <span class="token class-name">DataSource</span><span class="token punctuation">.</span>MEMORY_CACHE<span class="token punctuation">,</span> <span class="token comment">/* isLoadedFromAlternateCacheKey= */</span> <span class="token boolean">false</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token keyword">return</span> <span class="token keyword">null</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p><code>load()</code>方法做了两件事：构建资源的key；根据key加载资源。加载资源分三种方式：一是直接从内存中查找加载；二是从磁盘缓存中查找加载；三是需要重新加工原始资源。先看下<code>loadFromMemory()</code>方法：  </p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token comment">// Engine.java</span>
+<span class="token keyword">private</span> <span class="token class-name">EngineResource</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token operator">?</span><span class="token punctuation">></span></span> <span class="token function">loadFromMemory</span><span class="token punctuation">(</span>
+    <span class="token class-name">EngineKey</span> key<span class="token punctuation">,</span> <span class="token keyword">boolean</span> isMemoryCacheable<span class="token punctuation">,</span> <span class="token keyword">long</span> startTime<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+  <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token operator">!</span>isMemoryCacheable<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+    <span class="token keyword">return</span> <span class="token keyword">null</span><span class="token punctuation">;</span>
+  <span class="token punctuation">&#125;</span>
+    <span class="token comment">// 从活动资源中加载指定资源</span>
+  <span class="token class-name">EngineResource</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token operator">?</span><span class="token punctuation">></span></span> active <span class="token operator">=</span> <span class="token function">loadFromActiveResources</span><span class="token punctuation">(</span>key<span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token keyword">if</span> <span class="token punctuation">(</span>active <span class="token operator">!=</span> <span class="token keyword">null</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span>VERBOSE_IS_LOGGABLE<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+      <span class="token function">logWithTimeAndKey</span><span class="token punctuation">(</span><span class="token string">"Loaded resource from active resources"</span><span class="token punctuation">,</span> startTime<span class="token punctuation">,</span> key<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+    <span class="token keyword">return</span> active<span class="token punctuation">;</span>
+  <span class="token punctuation">&#125;</span>
+    <span class="token comment">// 从缓存中加载指定资源</span>
+  <span class="token class-name">EngineResource</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token operator">?</span><span class="token punctuation">></span></span> cached <span class="token operator">=</span> <span class="token function">loadFromCache</span><span class="token punctuation">(</span>key<span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token keyword">if</span> <span class="token punctuation">(</span>cached <span class="token operator">!=</span> <span class="token keyword">null</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span>VERBOSE_IS_LOGGABLE<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+      <span class="token function">logWithTimeAndKey</span><span class="token punctuation">(</span><span class="token string">"Loaded resource from cache"</span><span class="token punctuation">,</span> startTime<span class="token punctuation">,</span> key<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+    <span class="token keyword">return</span> cached<span class="token punctuation">;</span>
+  <span class="token punctuation">&#125;</span>
+
+  <span class="token keyword">return</span> <span class="token keyword">null</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p><code>loadFromMemory()</code>方法先尝试从活动资源ActiveResources中加载指定的资源，如果没有查找到，则会继续尝试从内存缓存中加载。继续看下<code>loadFromActiveResources()</code>和<code>loadFromCache()</code>的源码：</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token comment">// Engine.java</span>
+<span class="token keyword">private</span> <span class="token class-name">EngineResource</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token operator">?</span><span class="token punctuation">></span></span> <span class="token function">loadFromActiveResources</span><span class="token punctuation">(</span><span class="token class-name">Key</span> key<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+  <span class="token class-name">EngineResource</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token operator">?</span><span class="token punctuation">></span></span> active <span class="token operator">=</span> activeResources<span class="token punctuation">.</span><span class="token function">get</span><span class="token punctuation">(</span>key<span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token keyword">if</span> <span class="token punctuation">(</span>active <span class="token operator">!=</span> <span class="token keyword">null</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+    active<span class="token punctuation">.</span><span class="token function">acquire</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token punctuation">&#125;</span>
+  <span class="token keyword">return</span> active<span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span>
+
+<span class="token keyword">private</span> <span class="token class-name">EngineResource</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token operator">?</span><span class="token punctuation">></span></span> <span class="token function">loadFromCache</span><span class="token punctuation">(</span><span class="token class-name">Key</span> key<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+  <span class="token class-name">EngineResource</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token operator">?</span><span class="token punctuation">></span></span> cached <span class="token operator">=</span> <span class="token function">getEngineResourceFromCache</span><span class="token punctuation">(</span>key<span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token keyword">if</span> <span class="token punctuation">(</span>cached <span class="token operator">!=</span> <span class="token keyword">null</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+    cached<span class="token punctuation">.</span><span class="token function">acquire</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    activeResources<span class="token punctuation">.</span><span class="token function">activate</span><span class="token punctuation">(</span>key<span class="token punctuation">,</span> cached<span class="token punctuation">)</span><span class="token punctuation">;</span><span class="token comment">// 将从缓存中读取的资源加入到ActiveResources中</span>
+  <span class="token punctuation">&#125;</span>
+  <span class="token keyword">return</span> cached<span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span>
+<span class="token keyword">private</span> <span class="token class-name">EngineResource</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token operator">?</span><span class="token punctuation">></span></span> <span class="token function">getEngineResourceFromCache</span><span class="token punctuation">(</span><span class="token class-name">Key</span> key<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+  <span class="token class-name">Resource</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token operator">?</span><span class="token punctuation">></span></span> cached <span class="token operator">=</span> cache<span class="token punctuation">.</span><span class="token function">remove</span><span class="token punctuation">(</span>key<span class="token punctuation">)</span><span class="token punctuation">;</span><span class="token comment">// 读取缓存中资源并从内存缓存中将其删除</span>
+
+  <span class="token keyword">final</span> <span class="token class-name">EngineResource</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token operator">?</span><span class="token punctuation">></span></span> result<span class="token punctuation">;</span>
+  <span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">.</span>
+  <span class="token keyword">return</span> result<span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p><code>loadFromActiveResources()</code>方法通过ActiveResources获取活动资源缓存，<code>loadFromCache()</code>方法在获取到缓存资源后，先将缓存资源从内存缓存中删除，然后将资源加入到了ActiveResources中。这里ActiveResources的作用就是作为内存缓存的补充，因为内存缓存是有固定大小的，使用ActiveResources可以使内存缓存中存放更多之前使用过的图片。同时因ActiveResources是基于弱引用实现的，并不会造成内存上的过多占用。<br>再回看<code>load()</code>方法中内存缓存加载失败后调用的<code>waitForExistingOrStartNewJob()</code>方法：</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token comment">// Engine.java</span>
+<span class="token keyword">private</span> <span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">R</span><span class="token punctuation">></span></span> <span class="token class-name">LoadStatus</span> <span class="token function">waitForExistingOrStartNewJob</span><span class="token punctuation">(</span>
+    省略参数<span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+    <span class="token comment">// 先从磁盘缓存中获取资源</span>
+  <span class="token class-name">EngineJob</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token operator">?</span><span class="token punctuation">></span></span> current <span class="token operator">=</span> jobs<span class="token punctuation">.</span><span class="token function">get</span><span class="token punctuation">(</span>key<span class="token punctuation">,</span> onlyRetrieveFromCache<span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token keyword">if</span> <span class="token punctuation">(</span>current <span class="token operator">!=</span> <span class="token keyword">null</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+    current<span class="token punctuation">.</span><span class="token function">addCallback</span><span class="token punctuation">(</span>cb<span class="token punctuation">,</span> callbackExecutor<span class="token punctuation">)</span><span class="token punctuation">;</span><span class="token comment">// 获取成功后需要进一步转码</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span>VERBOSE_IS_LOGGABLE<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+      <span class="token function">logWithTimeAndKey</span><span class="token punctuation">(</span><span class="token string">"Added to existing load"</span><span class="token punctuation">,</span> startTime<span class="token punctuation">,</span> key<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+    <span class="token keyword">return</span> <span class="token keyword">new</span> <span class="token class-name">LoadStatus</span><span class="token punctuation">(</span>cb<span class="token punctuation">,</span> current<span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token punctuation">&#125;</span>
+    <span class="token comment">// 磁盘缓存中未获取到资源：重新创建Job解码原始资源并处理</span>
+  <span class="token class-name">EngineJob</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">R</span><span class="token punctuation">></span></span> engineJob <span class="token operator">=</span> <span class="token comment">// 创建EngineJob：处理DecodeJob的解码结果</span>
+      engineJobFactory<span class="token punctuation">.</span><span class="token function">build</span><span class="token punctuation">(</span>
+          key<span class="token punctuation">,</span>
+          isMemoryCacheable<span class="token punctuation">,</span>
+          useUnlimitedSourceExecutorPool<span class="token punctuation">,</span>
+          useAnimationPool<span class="token punctuation">,</span>
+          onlyRetrieveFromCache<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+  <span class="token class-name">DecodeJob</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">R</span><span class="token punctuation">></span></span> decodeJob <span class="token operator">=</span> <span class="token comment">// 创建DecodeJob：解码原始资源</span>
+      decodeJobFactory<span class="token punctuation">.</span><span class="token function">build</span><span class="token punctuation">(</span>
+          glideContext<span class="token punctuation">,</span>
+          model<span class="token punctuation">,</span>
+          key<span class="token punctuation">,</span>
+          signature<span class="token punctuation">,</span>
+          width<span class="token punctuation">,</span>
+          height<span class="token punctuation">,</span>
+          resourceClass<span class="token punctuation">,</span>
+          transcodeClass<span class="token punctuation">,</span>
+          priority<span class="token punctuation">,</span>
+          diskCacheStrategy<span class="token punctuation">,</span>
+          transformations<span class="token punctuation">,</span>
+          isTransformationRequired<span class="token punctuation">,</span>
+          isScaleOnlyOrNoTransform<span class="token punctuation">,</span>
+          onlyRetrieveFromCache<span class="token punctuation">,</span>
+          options<span class="token punctuation">,</span>
+          engineJob<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+  jobs<span class="token punctuation">.</span><span class="token function">put</span><span class="token punctuation">(</span>key<span class="token punctuation">,</span> engineJob<span class="token punctuation">)</span><span class="token punctuation">;</span><span class="token comment">// EngineJob加入Jobs缓存管理</span>
+
+  engineJob<span class="token punctuation">.</span><span class="token function">addCallback</span><span class="token punctuation">(</span>cb<span class="token punctuation">,</span> callbackExecutor<span class="token punctuation">)</span><span class="token punctuation">;</span>
+  engineJob<span class="token punctuation">.</span><span class="token function">start</span><span class="token punctuation">(</span>decodeJob<span class="token punctuation">)</span><span class="token punctuation">;</span><span class="token comment">// 开始执行DecodeJob</span>
+
+  <span class="token keyword">if</span> <span class="token punctuation">(</span>VERBOSE_IS_LOGGABLE<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+    <span class="token function">logWithTimeAndKey</span><span class="token punctuation">(</span><span class="token string">"Started new load"</span><span class="token punctuation">,</span> startTime<span class="token punctuation">,</span> key<span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token punctuation">&#125;</span>
+  <span class="token keyword">return</span> <span class="token keyword">new</span> <span class="token class-name">LoadStatus</span><span class="token punctuation">(</span>cb<span class="token punctuation">,</span> engineJob<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p><code>waitForExistingOrStartNewJob()</code>方法做了两件事：从磁盘缓存中读取资源；创建Job重新加载原始数据。读取磁盘缓存资源是通过缓存的EngineJob实现的，重新加载图片的原始数据也需要EngineJob去启动DecodeJob解码处理原始数据。看下<code>engineJob.start(decodeJob)</code>方法：</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token comment">// EngineJob.java</span>
+<span class="token keyword">public</span> <span class="token keyword">synchronized</span> <span class="token keyword">void</span> <span class="token function">start</span><span class="token punctuation">(</span><span class="token class-name">DecodeJob</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">R</span><span class="token punctuation">></span></span> decodeJob<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+  <span class="token keyword">this</span><span class="token punctuation">.</span>decodeJob <span class="token operator">=</span> decodeJob<span class="token punctuation">;</span>
+  <span class="token comment">// 根据是否从磁盘缓存加载资源选择不同的线程池去管理DecodeJob</span>
+  <span class="token comment">// 磁盘缓存加载资源：选择DiskCacheExecutor；</span>
+  <span class="token comment">// 原始数据加载资源：选择活动资源的GlideExecutor线程池</span>
+  <span class="token class-name">GlideExecutor</span> executor <span class="token operator">=</span> 
+      decodeJob<span class="token punctuation">.</span><span class="token function">willDecodeFromCache</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">?</span> diskCacheExecutor <span class="token operator">:</span> <span class="token function">getActiveSourceExecutor</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  executor<span class="token punctuation">.</span><span class="token function">execute</span><span class="token punctuation">(</span>decodeJob<span class="token punctuation">)</span><span class="token punctuation">;</span><span class="token comment">// 将DecodeJob放入线程池中准备执行</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>继续看下DecodeJob是如何执行的:</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token comment">// DecodeJob.java</span>
+<span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">run</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+  <span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">.</span>
+    <span class="token function">runWrapped</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">.</span>
+<span class="token punctuation">&#125;</span>
+
+<span class="token keyword">private</span> <span class="token keyword">void</span> <span class="token function">runWrapped</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+  <span class="token keyword">switch</span> <span class="token punctuation">(</span>runReason<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+    <span class="token keyword">case</span> INITIALIZE<span class="token operator">:</span><span class="token operator">/</span><span class="token operator">/</span> 首次获取资源处理
+        <span class="token comment">// 根据当前Stage及磁盘缓存的策略,获取下一阶段的Stage，Stage表示加载数据的数据源</span>
+      stage <span class="token operator">=</span> <span class="token function">getNextStage</span><span class="token punctuation">(</span><span class="token class-name">Stage</span><span class="token punctuation">.</span>INITIALIZE<span class="token punctuation">)</span><span class="token punctuation">;</span>
+      currentGenerator <span class="token operator">=</span> <span class="token function">getNextGenerator</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span><span class="token comment">// 根据Stage创建对应的资源生成器</span>
+      <span class="token function">runGenerators</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+      <span class="token keyword">break</span><span class="token punctuation">;</span>
+    <span class="token keyword">case</span> SWITCH_TO_SOURCE_SERVICE<span class="token operator">:</span><span class="token operator">/</span><span class="token operator">/</span> 磁盘缓存获取失败后，转而获取原始数据
+      <span class="token function">runGenerators</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+      <span class="token keyword">break</span><span class="token punctuation">;</span>
+    <span class="token keyword">case</span> DECODE_DATA<span class="token operator">:</span><span class="token operator">/</span><span class="token operator">/</span> 获取资源成功，进行资源加载
+      <span class="token function">decodeFromRetrievedData</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+      <span class="token keyword">break</span><span class="token punctuation">;</span>
+    <span class="token keyword">default</span><span class="token operator">:</span>
+      <span class="token keyword">throw</span> <span class="token keyword">new</span> <span class="token class-name">IllegalStateException</span><span class="token punctuation">(</span><span class="token string">"Unrecognized run reason: "</span> <span class="token operator">+</span> runReason<span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span>
+
+<span class="token keyword">private</span> <span class="token class-name">Stage</span> <span class="token function">getNextStage</span><span class="token punctuation">(</span><span class="token class-name">Stage</span> current<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+  <span class="token keyword">switch</span> <span class="token punctuation">(</span>current<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+    <span class="token keyword">case</span> INITIALIZE<span class="token operator">:</span>
+      <span class="token keyword">return</span> diskCacheStrategy<span class="token punctuation">.</span><span class="token function">decodeCachedResource</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token comment">// 数据源为缓存的解码资源</span>
+          <span class="token operator">?</span> <span class="token class-name">Stage</span><span class="token punctuation">.</span>RESOURCE_CACHE
+          <span class="token operator">:</span> <span class="token function">getNextStage</span><span class="token punctuation">(</span><span class="token class-name">Stage</span><span class="token punctuation">.</span>RESOURCE_CACHE<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">case</span> RESOURCE_CACHE<span class="token operator">:</span>
+      <span class="token keyword">return</span> diskCacheStrategy<span class="token punctuation">.</span><span class="token function">decodeCachedData</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token comment">// 数据源为缓存的原始数据</span>
+          <span class="token operator">?</span> <span class="token class-name">Stage</span><span class="token punctuation">.</span>DATA_CACHE
+          <span class="token operator">:</span> <span class="token function">getNextStage</span><span class="token punctuation">(</span><span class="token class-name">Stage</span><span class="token punctuation">.</span>DATA_CACHE<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">case</span> DATA_CACHE<span class="token operator">:</span>
+      <span class="token comment">// Skip loading from source if the user opted to only retrieve the resource from cache.</span>
+      <span class="token keyword">return</span> onlyRetrieveFromCache <span class="token operator">?</span> <span class="token class-name">Stage</span><span class="token punctuation">.</span>FINISHED <span class="token operator">:</span> <span class="token class-name">Stage</span><span class="token punctuation">.</span>SOURCE<span class="token punctuation">;</span>
+    <span class="token keyword">case</span> SOURCE<span class="token operator">:</span>
+    <span class="token keyword">case</span> FINISHED<span class="token operator">:</span>
+      <span class="token keyword">return</span> <span class="token class-name">Stage</span><span class="token punctuation">.</span>FINISHED<span class="token punctuation">;</span>
+    <span class="token keyword">default</span><span class="token operator">:</span>
+      <span class="token keyword">throw</span> <span class="token keyword">new</span> <span class="token class-name">IllegalArgumentException</span><span class="token punctuation">(</span><span class="token string">"Unrecognized stage: "</span> <span class="token operator">+</span> current<span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>继续看下获取资源生成器的方法<code>getNextGenerator()</code>：</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token comment">// DecodeJob.java</span>
+<span class="token keyword">private</span> <span class="token class-name">DataFetcherGenerator</span> <span class="token function">getNextGenerator</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+  <span class="token keyword">switch</span> <span class="token punctuation">(</span>stage<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span> 
+    <span class="token keyword">case</span> RESOURCE_CACHE<span class="token operator">:</span><span class="token operator">/</span><span class="token operator">/</span> 数据源为经过处理的图片的缓存数据
+      <span class="token keyword">return</span> <span class="token keyword">new</span> <span class="token class-name">ResourceCacheGenerator</span><span class="token punctuation">(</span>decodeHelper<span class="token punctuation">,</span> <span class="token keyword">this</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">case</span> DATA_CACHE<span class="token operator">:</span><span class="token operator">/</span><span class="token operator">/</span> 数据源为原始图片的缓存数据
+      <span class="token keyword">return</span> <span class="token keyword">new</span> <span class="token class-name">DataCacheGenerator</span><span class="token punctuation">(</span>decodeHelper<span class="token punctuation">,</span> <span class="token keyword">this</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">case</span> SOURCE<span class="token operator">:</span><span class="token operator">/</span><span class="token operator">/</span> 数据源为原始数据，如URL、<span class="token class-name">File</span>、<span class="token class-name">Uri</span>等
+      <span class="token keyword">return</span> <span class="token keyword">new</span> <span class="token class-name">SourceGenerator</span><span class="token punctuation">(</span>decodeHelper<span class="token punctuation">,</span> <span class="token keyword">this</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">case</span> FINISHED<span class="token operator">:</span><span class="token operator">/</span><span class="token operator">/</span> 资源已加载完成
+      <span class="token keyword">return</span> <span class="token keyword">null</span><span class="token punctuation">;</span>
+    <span class="token keyword">default</span><span class="token operator">:</span>
+      <span class="token keyword">throw</span> <span class="token keyword">new</span> <span class="token class-name">IllegalStateException</span><span class="token punctuation">(</span><span class="token string">"Unrecognized stage: "</span> <span class="token operator">+</span> stage<span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p> <code>getNextGenerator()</code>方法根据要加载数据源的类型RESOURCE_CACHE、DATA_CACHE、SOURCE，对应生成了各自的数据类型的处理器ResourceCacheGenerator、DataCacheGenerator、SourceGenerator。假设首次加载数据，则<code>getNextGenerator()</code>生成的就是SourceGenerator。接着下面的<code>runGenerators()</code>方法会调用SourceGenerator的<code>startNext()</code>方法：<br> <pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token comment">// SourceGenerator.java</span>
+<span class="token keyword">public</span> <span class="token keyword">boolean</span> <span class="token function">startNext</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+  <span class="token keyword">if</span> <span class="token punctuation">(</span>dataToCache <span class="token operator">!=</span> <span class="token keyword">null</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span><span class="token comment">// dataToCache表示已经获取到的待缓存原始数据</span>
+    <span class="token class-name">Object</span> data <span class="token operator">=</span> dataToCache<span class="token punctuation">;</span>
+    dataToCache <span class="token operator">=</span> <span class="token keyword">null</span><span class="token punctuation">;</span>
+    <span class="token function">cacheData</span><span class="token punctuation">(</span>data<span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// 缓存数据到磁盘  </span>
+  <span class="token punctuation">&#125;</span>
+    <span class="token comment">// 上一步cacheData()会生成一个DataCacheGenerator，并赋值给sourceCacheGenerator</span>
+    <span class="token comment">// 这里就可以执行DataCacheGenerator.startNext()加载磁盘缓存数据。</span>
+  <span class="token keyword">if</span> <span class="token punctuation">(</span>sourceCacheGenerator <span class="token operator">!=</span> <span class="token keyword">null</span> <span class="token operator">&amp;&amp;</span> sourceCacheGenerator<span class="token punctuation">.</span><span class="token function">startNext</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+    <span class="token keyword">return</span> <span class="token boolean">true</span><span class="token punctuation">;</span><span class="token comment">// 到这里说明已经获取到原始数据并进行缓存处理，不再需要去获取原始数据</span>
+  <span class="token punctuation">&#125;</span>
+  sourceCacheGenerator <span class="token operator">=</span> <span class="token keyword">null</span><span class="token punctuation">;</span>
+
+  loadData <span class="token operator">=</span> <span class="token keyword">null</span><span class="token punctuation">;</span>
+  <span class="token keyword">boolean</span> started <span class="token operator">=</span> <span class="token boolean">false</span><span class="token punctuation">;</span>
+  <span class="token comment">// 下面会根据缓存策略和各个ModelLoader去加载对应的原始数据</span>
+  <span class="token keyword">while</span> <span class="token punctuation">(</span><span class="token operator">!</span>started <span class="token operator">&amp;&amp;</span> <span class="token function">hasNextModelLoader</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+    loadData <span class="token operator">=</span> helper<span class="token punctuation">.</span><span class="token function">getLoadData</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">get</span><span class="token punctuation">(</span>loadDataListIndex<span class="token operator">++</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span>loadData <span class="token operator">!=</span> <span class="token keyword">null</span>
+        <span class="token operator">&amp;&amp;</span> <span class="token punctuation">(</span>helper<span class="token punctuation">.</span><span class="token function">getDiskCacheStrategy</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">isDataCacheable</span><span class="token punctuation">(</span>loadData<span class="token punctuation">.</span>fetcher<span class="token punctuation">.</span><span class="token function">getDataSource</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+            <span class="token operator">||</span> helper<span class="token punctuation">.</span><span class="token function">hasLoadPath</span><span class="token punctuation">(</span>loadData<span class="token punctuation">.</span>fetcher<span class="token punctuation">.</span><span class="token function">getDataClass</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+      started <span class="token operator">=</span> <span class="token boolean">true</span><span class="token punctuation">;</span>
+      <span class="token function">startNextLoad</span><span class="token punctuation">(</span>loadData<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+  <span class="token punctuation">&#125;</span>
+  <span class="token keyword">return</span> started<span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre><br>上述方法中，相关类、接口说明：  </p>
+<ul>
+<li><strong>ModelLoader</strong>：ModelLoader是一个工厂接口，用于将任意复杂的数据模型转换为具体数据类型，从而使DataFetcher能够获取由该模型表示的数据。  </li>
+<li><strong>LoadData</strong>：由一系列资源的key和一个DataFetcher组成的数据结构</li>
+<li><strong>DataFetcher</strong>：检索数据以用于加载资源，如检索未缓存的原始数据并用于后续加载处理</li>
+<li><strong>HttpGlideUrlLoader</strong>：ModelLoader的实现类，其内部会构建一个HttpUrlFetcher对象，用于将GlideUrl（即URL）对应的资源转换为输入流。</li>
+<li><strong>FileLoader</strong>：ModelLoader的实现类，内部会创建一个FileFetcher对象，用于从文件中加载数据。  </li>
+</ul>
+<p>其中的HttpGlideUrlLoader、FileLoader是在Glide初始化时统一注册的：</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token comment">// Glide.java</span>
+<span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">.</span>
+<span class="token punctuation">.</span><span class="token function">append</span><span class="token punctuation">(</span><span class="token class-name">File</span><span class="token punctuation">.</span><span class="token keyword">class</span><span class="token punctuation">,</span> <span class="token class-name">InputStream</span><span class="token punctuation">.</span><span class="token keyword">class</span><span class="token punctuation">,</span> <span class="token keyword">new</span> <span class="token class-name">FileLoader</span><span class="token punctuation">.</span><span class="token class-name">StreamFactory</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+<span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">.</span>
+<span class="token punctuation">.</span><span class="token function">append</span><span class="token punctuation">(</span><span class="token class-name">GlideUrl</span><span class="token punctuation">.</span><span class="token keyword">class</span><span class="token punctuation">,</span> <span class="token class-name">InputStream</span><span class="token punctuation">.</span><span class="token keyword">class</span><span class="token punctuation">,</span> <span class="token keyword">new</span> <span class="token class-name">HttpGlideUrlLoader</span><span class="token punctuation">.</span><span class="token class-name">Factory</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+<span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>HttpGlideUrlLoader通过内部的HttpUrlFetcher的loadData()方法加载网络数据：</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token comment">// HttpUrlFetcher.java</span>
+<span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">loadData</span><span class="token punctuation">(</span>
+    <span class="token annotation punctuation">@NonNull</span> <span class="token class-name">Priority</span> priority<span class="token punctuation">,</span> <span class="token annotation punctuation">@NonNull</span> <span class="token class-name">DataCallback</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token operator">?</span> <span class="token keyword">super</span> <span class="token class-name">InputStream</span><span class="token punctuation">></span></span> callback<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+  <span class="token keyword">long</span> startTime <span class="token operator">=</span> <span class="token class-name">LogTime</span><span class="token punctuation">.</span><span class="token function">getLogTime</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token keyword">try</span> <span class="token punctuation">&#123;</span>
+    <span class="token class-name">InputStream</span> result <span class="token operator">=</span> <span class="token function">loadDataWithRedirects</span><span class="token punctuation">(</span>glideUrl<span class="token punctuation">.</span><span class="token function">toURL</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">,</span> <span class="token keyword">null</span><span class="token punctuation">,</span> glideUrl<span class="token punctuation">.</span><span class="token function">getHeaders</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    callback<span class="token punctuation">.</span><span class="token function">onDataReady</span><span class="token punctuation">(</span>result<span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token punctuation">&#125;</span> <span class="token keyword">catch</span> <span class="token punctuation">(</span><span class="token class-name">IOException</span> e<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+    <span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">.</span>
+    callback<span class="token punctuation">.</span><span class="token function">onLoadFailed</span><span class="token punctuation">(</span>e<span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token punctuation">&#125;</span> <span class="token keyword">finally</span> <span class="token punctuation">&#123;</span>
+    <span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">.</span>
+  <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span>
+
+<span class="token keyword">private</span> <span class="token class-name">InputStream</span> <span class="token function">loadDataWithRedirects</span><span class="token punctuation">(</span>
+    <span class="token class-name">URL</span> url<span class="token punctuation">,</span> <span class="token keyword">int</span> redirects<span class="token punctuation">,</span> <span class="token class-name">URL</span> lastUrl<span class="token punctuation">,</span> <span class="token class-name">Map</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">String</span><span class="token punctuation">,</span> <span class="token class-name">String</span><span class="token punctuation">></span></span> headers<span class="token punctuation">)</span> <span class="token keyword">throws</span> <span class="token class-name">HttpException</span> <span class="token punctuation">&#123;</span>
+  <span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">.</span>
+  <span class="token comment">// 构建并配置HttpUrlConnection</span>
+  urlConnection <span class="token operator">=</span> <span class="token function">buildAndConfigureConnection</span><span class="token punctuation">(</span>url<span class="token punctuation">,</span> headers<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+  <span class="token keyword">try</span> <span class="token punctuation">&#123;</span>
+    <span class="token comment">// Connect explicitly to avoid errors in decoders if connection fails.</span>
+    urlConnection<span class="token punctuation">.</span><span class="token function">connect</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token comment">// Set the stream so that it's closed in cleanup to avoid resource leaks. See #2352.</span>
+    stream <span class="token operator">=</span> urlConnection<span class="token punctuation">.</span><span class="token function">getInputStream</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token punctuation">&#125;</span> <span class="token keyword">catch</span> <span class="token punctuation">(</span><span class="token class-name">IOException</span> e<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+    <span class="token keyword">throw</span> <span class="token keyword">new</span> <span class="token class-name">HttpException</span><span class="token punctuation">(</span>
+        <span class="token string">"Failed to connect or obtain data"</span><span class="token punctuation">,</span> <span class="token function">getHttpStatusCodeOrInvalid</span><span class="token punctuation">(</span>urlConnection<span class="token punctuation">)</span><span class="token punctuation">,</span> e<span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token punctuation">&#125;</span>
+
+  <span class="token keyword">if</span> <span class="token punctuation">(</span>isCancelled<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span><span class="token comment">// 请求被取消</span>
+    <span class="token keyword">return</span> <span class="token keyword">null</span><span class="token punctuation">;</span>
+  <span class="token punctuation">&#125;</span>
+    <span class="token comment">// 请求结果处理</span>
+  <span class="token keyword">final</span> <span class="token keyword">int</span> statusCode <span class="token operator">=</span> <span class="token function">getHttpStatusCodeOrInvalid</span><span class="token punctuation">(</span>urlConnection<span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token function">isHttpOk</span><span class="token punctuation">(</span>statusCode<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span> <span class="token comment">// 请求成功</span>
+    <span class="token keyword">return</span> <span class="token function">getStreamForSuccessfulRequest</span><span class="token punctuation">(</span>urlConnection<span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token punctuation">&#125;</span> <span class="token keyword">else</span> <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token function">isHttpRedirect</span><span class="token punctuation">(</span>statusCode<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span><span class="token comment">// 请求重定向：构建重定向后的资源URL，再次通过loadDataWithRedirects()请求网络数据</span>
+    <span class="token class-name">String</span> redirectUrlString <span class="token operator">=</span> urlConnection<span class="token punctuation">.</span><span class="token function">getHeaderField</span><span class="token punctuation">(</span>REDIRECT_HEADER_FIELD<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token class-name">TextUtils</span><span class="token punctuation">.</span><span class="token function">isEmpty</span><span class="token punctuation">(</span>redirectUrlString<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+      <span class="token keyword">throw</span> <span class="token keyword">new</span> <span class="token class-name">HttpException</span><span class="token punctuation">(</span><span class="token string">"Received empty or null redirect url"</span><span class="token punctuation">,</span> statusCode<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+    <span class="token class-name">URL</span> redirectUrl<span class="token punctuation">;</span>
+    <span class="token keyword">try</span> <span class="token punctuation">&#123;</span>
+      redirectUrl <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token function">URL</span><span class="token punctuation">(</span>url<span class="token punctuation">,</span> redirectUrlString<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span> <span class="token keyword">catch</span> <span class="token punctuation">(</span><span class="token class-name">MalformedURLException</span> e<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+      <span class="token keyword">throw</span> <span class="token keyword">new</span> <span class="token class-name">HttpException</span><span class="token punctuation">(</span><span class="token string">"Bad redirect url: "</span> <span class="token operator">+</span> redirectUrlString<span class="token punctuation">,</span> statusCode<span class="token punctuation">,</span> e<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+    <span class="token comment">// Closing the stream specifically is required to avoid leaking ResponseBodys in addition</span>
+    <span class="token comment">// to disconnecting the url connection below. See #2352.</span>
+    <span class="token function">cleanup</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">return</span> <span class="token function">loadDataWithRedirects</span><span class="token punctuation">(</span>redirectUrl<span class="token punctuation">,</span> redirects <span class="token operator">+</span> <span class="token number">1</span><span class="token punctuation">,</span> url<span class="token punctuation">,</span> headers<span class="token punctuation">)</span><span class="token punctuation">;</span><span class="token comment">// 递归调用自己的方法</span>
+  <span class="token punctuation">&#125;</span> <span class="token keyword">else</span> <span class="token keyword">if</span> <span class="token punctuation">(</span>statusCode <span class="token operator">==</span> INVALID_STATUS_CODE<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+    <span class="token keyword">throw</span> <span class="token keyword">new</span> <span class="token class-name">HttpException</span><span class="token punctuation">(</span>statusCode<span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token punctuation">&#125;</span> <span class="token keyword">else</span> <span class="token punctuation">&#123;</span>
+    <span class="token comment">// 抛出异常</span>
+  <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>可以看到，Glide底层是通过HttpUrlConnection加载网络数据。<br>加载完网络数据，我们再看下SourceGenerator中对加载结果的回调处理：</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token comment">// SourceGenerator.java</span>
+<span class="token keyword">private</span> <span class="token keyword">void</span> <span class="token function">startNextLoad</span><span class="token punctuation">(</span><span class="token keyword">final</span> <span class="token class-name">LoadData</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token operator">?</span><span class="token punctuation">></span></span> toStart<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+  loadData<span class="token punctuation">.</span>fetcher<span class="token punctuation">.</span><span class="token function">loadData</span><span class="token punctuation">(</span><span class="token comment">// 开始加载数据并处理数据加载结果回调</span>
+      helper<span class="token punctuation">.</span><span class="token function">getPriority</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+      <span class="token keyword">new</span> <span class="token class-name">DataCallback</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">Object</span><span class="token punctuation">></span></span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token annotation punctuation">@Override</span>
+        <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">onDataReady</span><span class="token punctuation">(</span><span class="token annotation punctuation">@Nullable</span> <span class="token class-name">Object</span> data<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+          <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token function">isCurrentRequest</span><span class="token punctuation">(</span>toStart<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            <span class="token function">onDataReadyInternal</span><span class="token punctuation">(</span>toStart<span class="token punctuation">,</span> data<span class="token punctuation">)</span><span class="token punctuation">;</span>
+          <span class="token punctuation">&#125;</span>
+        <span class="token punctuation">&#125;</span>
+
+        <span class="token annotation punctuation">@Override</span>
+        <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">onLoadFailed</span><span class="token punctuation">(</span><span class="token annotation punctuation">@NonNull</span> <span class="token class-name">Exception</span> e<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+          <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token function">isCurrentRequest</span><span class="token punctuation">(</span>toStart<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            <span class="token function">onLoadFailedInternal</span><span class="token punctuation">(</span>toStart<span class="token punctuation">,</span> e<span class="token punctuation">)</span><span class="token punctuation">;</span>
+          <span class="token punctuation">&#125;</span>
+        <span class="token punctuation">&#125;</span>
+      <span class="token punctuation">&#125;</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span>
+
+<span class="token keyword">void</span> <span class="token function">onDataReadyInternal</span><span class="token punctuation">(</span><span class="token class-name">LoadData</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token operator">?</span><span class="token punctuation">></span></span> loadData<span class="token punctuation">,</span> <span class="token class-name">Object</span> data<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+  <span class="token class-name">DiskCacheStrategy</span> diskCacheStrategy <span class="token operator">=</span> helper<span class="token punctuation">.</span><span class="token function">getDiskCacheStrategy</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token keyword">if</span> <span class="token punctuation">(</span>data <span class="token operator">!=</span> <span class="token keyword">null</span> <span class="token operator">&amp;&amp;</span> diskCacheStrategy<span class="token punctuation">.</span><span class="token function">isDataCacheable</span><span class="token punctuation">(</span>loadData<span class="token punctuation">.</span>fetcher<span class="token punctuation">.</span><span class="token function">getDataSource</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+    dataToCache <span class="token operator">=</span> data<span class="token punctuation">;</span><span class="token comment">// 将加载的网络数据缓存起来</span>
+    <span class="token comment">// 此处的cb就是DecodeJob(DecodeJob实现了DataFetcherGenerator.FetcherReadyCallback接口)</span>
+    <span class="token comment">// 即调用DecodeJob.reschedule()方法，DecodeJob会再次执行</span>
+    cb<span class="token punctuation">.</span><span class="token function">reschedule</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token punctuation">&#125;</span> <span class="token keyword">else</span> <span class="token punctuation">&#123;</span>
+    cb<span class="token punctuation">.</span><span class="token function">onDataFetcherReady</span><span class="token punctuation">(</span>
+        loadData<span class="token punctuation">.</span>sourceKey<span class="token punctuation">,</span>
+        data<span class="token punctuation">,</span>
+        loadData<span class="token punctuation">.</span>fetcher<span class="token punctuation">,</span>
+        loadData<span class="token punctuation">.</span>fetcher<span class="token punctuation">.</span><span class="token function">getDataSource</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+        originalKey<span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>由于DecodeJob再次执行，会触发<code>SourceGenerator.startNext()</code>再次执行，此时SourceGenerator.dataToCache中已有数据，会继续执行<code>SourceGenerator.cacheData()</code>方法并生成DataCacheGenerator对象，然后会执行<code>DataCacheGenerator.startNext()</code>方法。DataCacheGenerator中通过FileLoader.FileFetcher加载被缓存在磁盘中的原始数据。DataCacheGenerator内部通过DataFetcher.DataCallback接收FileFetcher加载的数据，再通过<code>DataCallback.onDataReady()</code>中调用<code>FetcherReadyCallback.onDataFetcherReady()</code>将数据传递给FetcherReadyCallback，即传递给SourceGenerator（原因查看<code>SourceGenerator.cacheData()</code>）。SourceGenerator使用相同的方式将数据回传给DecodeJob，DecodeJob通过DecodeJob.Callback接口将数据回传给EngineJob，EngineJob通过ResourceCallback接口经过Engine将数据回传给SingleRequest。SingleRequest再通过事件回调将数据传递给与其绑定的ViewTarget，ViewTarget就可以为ImageView加载图片数据。    </p>
+<p>加载完网络数据后，整个数据的回传流程大概如下：    </p>
+<p>磁盘缓存——FileLoader.FileFetcher——DataCacheGenerator——SourceGenerator——DecodeJob——EngineJob——Engine——SingleRequest——ViewTarget——ImageView  </p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="followme">
+  <span>欢迎关注我的其它发布渠道</span>
+
+  <div class="social-list">
+
+      <div class="social-item">
+        <a target="_blank" class="social-link" href="https://github.com/CharlieJiang">
+          <span class="icon">
+            <i class="fab fa-github"></i>
+          </span>
+
+          <span class="label">GitHub</span>
+        </a>
+      </div>
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/Glide/" rel="tag"># Glide</a>
+              <a href="/tags/Android%E5%9B%BE%E7%89%87%E5%8A%A0%E8%BD%BD/" rel="tag"># Android图片加载</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2021/05/31/Glide%E5%8E%9F%E7%90%86%E8%A7%A3%E6%9E%90%E4%B8%80%EF%BC%9AGlide%E5%9B%BE%E7%89%87%E5%8A%A0%E8%BD%BD%E6%B5%81%E7%A8%8B%E5%88%86%E6%9E%90/" rel="prev" title="Glide原理解析一：Glide图片加载流程分析">
+                  <i class="fa fa-chevron-left"></i> Glide原理解析一：Glide图片加载流程分析
+                </a>
+            </div>
+            <div class="post-nav-item">
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+      
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+
+<div class="copyright">
+  
+  &copy; 2020 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-at"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">cocoas的博客</span>
+</div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+</div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
