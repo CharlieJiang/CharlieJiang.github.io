@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.1/css/all.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"8.0.1","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12},"copycode":true,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}};
+  </script>
+
+  <meta name="description" content="缓存机制多级缓存 Glide的缓存大致可以分为两个级别：内存缓存和磁盘缓存。如果要细分的话，又可以分为四个级别：活动资源缓存、内存缓存、资源缓存、原始数据缓存。其中前两者属于内存缓存，后两者属于磁盘缓存。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Glide原理解析三：Glide缓存机制">
+<meta property="og:url" content="http://example.com/2021/06/02/Glide%E5%8E%9F%E7%90%86%E8%A7%A3%E6%9E%90%E4%B8%89%EF%BC%9AGlide%E7%BC%93%E5%AD%98%E6%9C%BA%E5%88%B6/index.html">
+<meta property="og:site_name" content="Cocoas">
+<meta property="og:description" content="缓存机制多级缓存 Glide的缓存大致可以分为两个级别：内存缓存和磁盘缓存。如果要细分的话，又可以分为四个级别：活动资源缓存、内存缓存、资源缓存、原始数据缓存。其中前两者属于内存缓存，后两者属于磁盘缓存。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2021-06-02T20:36:13.000Z">
+<meta property="article:modified_time" content="2021-06-03T13:39:25.601Z">
+<meta property="article:author" content="Cocoas">
+<meta property="article:tag" content="Glide">
+<meta property="article:tag" content="Android图片加载">
+<meta property="article:tag" content="缓存机制">
+<meta property="article:tag" content="多级缓存机制">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="http://example.com/2021/06/02/Glide%E5%8E%9F%E7%90%86%E8%A7%A3%E6%9E%90%E4%B8%89%EF%BC%9AGlide%E7%BC%93%E5%AD%98%E6%9C%BA%E5%88%B6/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Glide原理解析三：Glide缓存机制 | Cocoas</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">Cocoas</h1>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">欢迎光临</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+		<li>
+          第三标题
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <section class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BC%93%E5%AD%98%E6%9C%BA%E5%88%B6"><span class="nav-text">缓存机制</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A4%9A%E7%BA%A7%E7%BC%93%E5%AD%98"><span class="nav-text">多级缓存</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BC%93%E5%AD%98key"><span class="nav-text">缓存key</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B4%BB%E5%8A%A8%E8%B5%84%E6%BA%90%E7%BC%93%E5%AD%98"><span class="nav-text">活动资源缓存</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%86%85%E5%AD%98%E7%BC%93%E5%AD%98"><span class="nav-text">内存缓存</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%A3%81%E7%9B%98%E7%BC%93%E5%AD%98"><span class="nav-text">磁盘缓存</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Bitmap%E5%A4%8D%E7%94%A8%E6%B1%A0BitmapPool"><span class="nav-text">Bitmap复用池BitmapPool</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Glide%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F%E7%AE%A1%E7%90%86"><span class="nav-text">Glide生命周期管理</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Glide%E4%B8%8EActivity%E7%9A%84%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F%E7%BB%91%E5%AE%9A"><span class="nav-text">Glide与Activity的生命周期绑定</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E5%AE%9E%E7%8E%B0%E8%87%AA%E5%B7%B1%E7%9A%84%E5%9B%BE%E7%89%87%E5%8A%A0%E8%BD%BD%E6%A1%86%E6%9E%B6"><span class="nav-text">如何实现自己的图片加载框架</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%97%AE%E9%A2%98"><span class="nav-text">问题</span></a></li></ol></div>
+        </section>
+        <!--/noindex-->
+
+        <section class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Cocoas</p>
+  <div class="site-description" itemprop="description">Android,Java,Android SDK,Kotlin,</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">43</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">25</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">125</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/CharlieJiang" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;CharlieJiang" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:cocoasjiang@foxmail.com" title="E-Mail → mailto:cocoasjiang@foxmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+        </section>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/06/02/Glide%E5%8E%9F%E7%90%86%E8%A7%A3%E6%9E%90%E4%B8%89%EF%BC%9AGlide%E7%BC%93%E5%AD%98%E6%9C%BA%E5%88%B6/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Cocoas">
+      <meta itemprop="description" content="Android,Java,Android SDK,Kotlin,">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Cocoas">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Glide原理解析三：Glide缓存机制
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+      
+
+      <time title="创建时间：2021-06-03 04:36:13 / 修改时间：21:39:25" itemprop="dateCreated datePublished" datetime="2021-06-03T04:36:13+08:00">2021-06-03</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Glide/" itemprop="url" rel="index"><span itemprop="name">Glide</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Glide/Android/" itemprop="url" rel="index"><span itemprop="name">Android</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Glide/Android/%E7%AC%AC%E4%B8%89%E6%96%B9%E6%A1%86%E6%9E%B6%E5%8E%9F%E7%90%86%E8%A7%A3%E6%9E%90/" itemprop="url" rel="index"><span itemprop="name">第三方框架原理解析</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h2 id="缓存机制"><a href="#缓存机制" class="headerlink" title="缓存机制"></a><strong>缓存机制</strong></h2><h3 id="多级缓存"><a href="#多级缓存" class="headerlink" title="多级缓存"></a><strong>多级缓存</strong></h3><blockquote>
+<p>Glide的缓存大致可以分为两个级别：内存缓存和磁盘缓存。如果要细分的话，又可以分为四个级别：活动资源缓存、内存缓存、资源缓存、原始数据缓存。其中前两者属于内存缓存，后两者属于磁盘缓存。</p>
+</blockquote>
+<a id="more"></a>
+
+<ul>
+<li><strong>活动资源缓存ActiveResources</strong>：弱引用缓存当前正在使用的资源对象</li>
+<li><strong>内存缓存 LruResourcesCache</strong>：缓存最近使用过的资源对象</li>
+<li><strong>资源缓存 Resource Cache</strong>：缓存经解码等加工操作原始数据后产生的资源</li>
+<li><strong>原始数据缓存Data Cache</strong>：缓存从网络下载的，或是本地文件、Uri读取的原始数据</li>
+</ul>
+<h3 id="缓存key"><a href="#缓存key" class="headerlink" title="缓存key"></a><strong>缓存key</strong></h3><p>缓存key是Glide中缓存资源的唯一性标识。以EngineKey为例：</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token comment">// EngineKey.java</span>
+<span class="token keyword">class</span> <span class="token class-name">EngineKey</span> <span class="token keyword">implements</span> <span class="token class-name">Key</span> <span class="token punctuation">&#123;</span>
+  <span class="token comment">// 定义多个缓存Key的标识字段</span>
+  <span class="token keyword">private</span> <span class="token keyword">final</span> <span class="token class-name">Object</span> model<span class="token punctuation">;</span><span class="token comment">// 图片资源类型</span>
+  <span class="token keyword">private</span> <span class="token keyword">final</span> <span class="token keyword">int</span> width<span class="token punctuation">;</span><span class="token comment">// 图片宽度</span>
+  <span class="token keyword">private</span> <span class="token keyword">final</span> <span class="token keyword">int</span> height<span class="token punctuation">;</span><span class="token comment">// 图片高度</span>
+  <span class="token keyword">private</span> <span class="token keyword">final</span> <span class="token class-name">Class</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token operator">?</span><span class="token punctuation">></span></span> resourceClass<span class="token punctuation">;</span>
+  <span class="token keyword">private</span> <span class="token keyword">final</span> <span class="token class-name">Class</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token operator">?</span><span class="token punctuation">></span></span> transcodeClass<span class="token punctuation">;</span>
+  <span class="token keyword">private</span> <span class="token keyword">final</span> <span class="token class-name">Key</span> signature<span class="token punctuation">;</span><span class="token comment">// 签名</span>
+  <span class="token keyword">private</span> <span class="token keyword">final</span> <span class="token class-name">Map</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">Class</span><span class="token punctuation">&lt;</span><span class="token operator">?</span><span class="token punctuation">></span><span class="token punctuation">,</span> <span class="token class-name">Transformation</span><span class="token punctuation">&lt;</span><span class="token operator">?</span><span class="token punctuation">></span><span class="token punctuation">></span></span> transformations<span class="token punctuation">;</span>
+  <span class="token keyword">private</span> <span class="token keyword">final</span> <span class="token class-name">Options</span> options<span class="token punctuation">;</span>
+  <span class="token keyword">private</span> <span class="token keyword">int</span> hashCode<span class="token punctuation">;</span>
+  <span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">.</span>
+
+  <span class="token annotation punctuation">@Override</span>
+  <span class="token keyword">public</span> <span class="token keyword">boolean</span> <span class="token function">equals</span><span class="token punctuation">(</span><span class="token class-name">Object</span> o<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span><span class="token comment">// 重写equal()方法，进行全字段比较</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span>o <span class="token keyword">instanceof</span> <span class="token class-name">EngineKey</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+      <span class="token class-name">EngineKey</span> other <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token class-name">EngineKey</span><span class="token punctuation">)</span> o<span class="token punctuation">;</span>
+      <span class="token keyword">return</span> model<span class="token punctuation">.</span><span class="token function">equals</span><span class="token punctuation">(</span>other<span class="token punctuation">.</span>model<span class="token punctuation">)</span>
+          <span class="token operator">&amp;&amp;</span> signature<span class="token punctuation">.</span><span class="token function">equals</span><span class="token punctuation">(</span>other<span class="token punctuation">.</span>signature<span class="token punctuation">)</span>
+          <span class="token operator">&amp;&amp;</span> height <span class="token operator">==</span> other<span class="token punctuation">.</span>height
+          <span class="token operator">&amp;&amp;</span> width <span class="token operator">==</span> other<span class="token punctuation">.</span>width
+          <span class="token operator">&amp;&amp;</span> transformations<span class="token punctuation">.</span><span class="token function">equals</span><span class="token punctuation">(</span>other<span class="token punctuation">.</span>transformations<span class="token punctuation">)</span>
+          <span class="token operator">&amp;&amp;</span> resourceClass<span class="token punctuation">.</span><span class="token function">equals</span><span class="token punctuation">(</span>other<span class="token punctuation">.</span>resourceClass<span class="token punctuation">)</span>
+          <span class="token operator">&amp;&amp;</span> transcodeClass<span class="token punctuation">.</span><span class="token function">equals</span><span class="token punctuation">(</span>other<span class="token punctuation">.</span>transcodeClass<span class="token punctuation">)</span>
+          <span class="token operator">&amp;&amp;</span> options<span class="token punctuation">.</span><span class="token function">equals</span><span class="token punctuation">(</span>other<span class="token punctuation">.</span>options<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+    <span class="token keyword">return</span> <span class="token boolean">false</span><span class="token punctuation">;</span>
+  <span class="token punctuation">&#125;</span>
+
+  <span class="token annotation punctuation">@Override</span>
+  <span class="token keyword">public</span> <span class="token keyword">int</span> <span class="token function">hashCode</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span><span class="token comment">// 重写hashCode()方法，定义自己的hashCode计算方式</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span>hashCode <span class="token operator">==</span> <span class="token number">0</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+      hashCode <span class="token operator">=</span> model<span class="token punctuation">.</span><span class="token function">hashCode</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+      hashCode <span class="token operator">=</span> <span class="token number">31</span> <span class="token operator">*</span> hashCode <span class="token operator">+</span> signature<span class="token punctuation">.</span><span class="token function">hashCode</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+      hashCode <span class="token operator">=</span> <span class="token number">31</span> <span class="token operator">*</span> hashCode <span class="token operator">+</span> width<span class="token punctuation">;</span>
+      hashCode <span class="token operator">=</span> <span class="token number">31</span> <span class="token operator">*</span> hashCode <span class="token operator">+</span> height<span class="token punctuation">;</span>
+      hashCode <span class="token operator">=</span> <span class="token number">31</span> <span class="token operator">*</span> hashCode <span class="token operator">+</span> transformations<span class="token punctuation">.</span><span class="token function">hashCode</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+      hashCode <span class="token operator">=</span> <span class="token number">31</span> <span class="token operator">*</span> hashCode <span class="token operator">+</span> resourceClass<span class="token punctuation">.</span><span class="token function">hashCode</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+      hashCode <span class="token operator">=</span> <span class="token number">31</span> <span class="token operator">*</span> hashCode <span class="token operator">+</span> transcodeClass<span class="token punctuation">.</span><span class="token function">hashCode</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+      hashCode <span class="token operator">=</span> <span class="token number">31</span> <span class="token operator">*</span> hashCode <span class="token operator">+</span> options<span class="token punctuation">.</span><span class="token function">hashCode</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+    <span class="token keyword">return</span> hashCode<span class="token punctuation">;</span>
+  <span class="token punctuation">&#125;</span>
+<span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">.</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>EngineKey中定义了图片资源类型model（如File、Uri、URL等）、图片宽高（显示图片的view的宽高）、签名等多个参数，来作为缓存Key的标识，并通过重写<code>equal()</code>和<code>hashCode()</code>方法保证key的唯一性。  </p>
+<p>虽然缓存key设计的初衷是为了保证缓存资源的唯一性，避免重复缓存。但也因此会带来一些问题：    </p>
+<ol>
+<li><strong>静态URL无法刷新问题</strong>：如果URL对应的图片资源发生变换而URL不变，则Glide不会下载网络图片，而是加载缓存中图片。这就会导致不会显示新的图片。  </li>
+<li><strong>动态URL重复缓存问题</strong>：如果一张图片的URL是动态变化的，那么Glide每次加载图片时都会重新缓存这张图片。这就会导致资源的浪费。  </li>
+</ol>
+<p>解决方案：</p>
+<ul>
+<li>①、上述两种问题都是资源本身的问题，服务端应确保不出现单一图片URL会发生变化、多张图片公用相同URL等问题，应该确保图片URL与图片资源匹配的唯一性。这也是最好的解决方式。</li>
+<li>②、关闭Glide的缓存功能。关闭Glide的缓存功能将使Glide的重要功能无法使用，将影响图片加载的体验、产生潜在的内存泄露等问题。</li>
+<li>③、修改签名signature：signature是Glide生成缓存key的参数之一，默认情况下signature是通过<code>EmptySignature.obtain()</code>生成的一个空Key，加载图片时，通过修改signature，就相当于变相修改了缓存key。但这样其实跟直接关闭Glide缓存功能类似，只是可能影响的范围会小点。  </li>
+</ul>
+<h3 id="活动资源缓存"><a href="#活动资源缓存" class="headerlink" title="活动资源缓存"></a><strong>活动资源缓存</strong></h3><p>当一张图片资源正在被使用时，Glide首先会会将其放入ActiveResources中进行管理。ActiveResources部分源码如下：</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token comment">// ActiveResources.java</span>
+<span class="token keyword">final</span> <span class="token keyword">class</span> <span class="token class-name">ActiveResources</span> <span class="token punctuation">&#123;</span>
+  <span class="token keyword">private</span> <span class="token keyword">final</span> <span class="token keyword">boolean</span> isActiveResourceRetentionAllowed<span class="token punctuation">;</span>
+  <span class="token keyword">private</span> <span class="token keyword">final</span> <span class="token class-name">Executor</span> monitorClearedResourcesExecutor<span class="token punctuation">;</span>
+  <span class="token annotation punctuation">@VisibleForTesting</span> <span class="token keyword">final</span> <span class="token class-name">Map</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">Key</span><span class="token punctuation">,</span> <span class="token class-name">ResourceWeakReference</span><span class="token punctuation">></span></span> activeEngineResources <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">HashMap</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token punctuation">></span></span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span><span class="token comment">// 保存弱引用对象的键值对</span>
+  <span class="token keyword">private</span> <span class="token keyword">final</span> <span class="token class-name">ReferenceQueue</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">EngineResource</span><span class="token punctuation">&lt;</span><span class="token operator">?</span><span class="token punctuation">></span><span class="token punctuation">></span></span> resourceReferenceQueue <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">ReferenceQueue</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token punctuation">></span></span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span><span class="token comment">// 弱引用对象的引用队列</span>
+
+  <span class="token keyword">private</span> <span class="token class-name">ResourceListener</span> listener<span class="token punctuation">;</span>
+
+  <span class="token keyword">private</span> <span class="token keyword">volatile</span> <span class="token keyword">boolean</span> isShutdown<span class="token punctuation">;</span>
+  <span class="token annotation punctuation">@Nullable</span> <span class="token keyword">private</span> <span class="token keyword">volatile</span> <span class="token class-name">DequeuedResourceCallback</span> cb<span class="token punctuation">;</span>
+  <span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>ActiveResources是一个支持引用计数的图片资源的弱引用集合。通过EngineKey对弱引用对象进行唯一性标识。ActiveResources中通过Map&lt;Key,WeakReference&lt;EngineResource&lt;?&gt;&gt;&gt;来存储管理图片资源的弱引用，并通过引用队列ReferenceQueue绑定弱引用对象，观察其gc事件，当弱引用对象被gc回收后，Glide也会从ActiveResourcces中将其移除。当弱引用对象的引用计数归零后，Glide会将其从ActiveResources中移除，同时将其放入内存缓存中。<br>使用活动资源缓存能有效避免正在使用的图片资源被从内存缓存中回收，因为内存缓存是基于LRU算法的，而且一般内存缓存都会有一定的大小限制，当内存缓存满了以后，就可能会回收仍然在使用的图片。  </p>
+<h3 id="内存缓存"><a href="#内存缓存" class="headerlink" title="内存缓存"></a><strong>内存缓存</strong></h3><p>如果图片资源最近被加载过，但当前没有被使用，则会将其放入内存缓存中。内存缓存部分源码如下：</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token comment">// LruResourceCache.java</span>
+<span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">LruResourceCache</span> <span class="token keyword">extends</span> <span class="token class-name">LruCache</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">Key</span><span class="token punctuation">,</span> <span class="token class-name">Resource</span><span class="token punctuation">&lt;</span><span class="token operator">?</span><span class="token punctuation">></span><span class="token punctuation">></span></span> <span class="token keyword">implements</span> <span class="token class-name">MemoryCache</span>
+
+<span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">LruCache</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">T</span><span class="token punctuation">,</span> <span class="token class-name">Y</span><span class="token punctuation">></span></span> <span class="token punctuation">&#123;</span>
+  <span class="token keyword">private</span> <span class="token keyword">final</span> <span class="token class-name">Map</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">T</span><span class="token punctuation">,</span> <span class="token class-name">Entry</span><span class="token punctuation">&lt;</span><span class="token class-name">Y</span><span class="token punctuation">></span><span class="token punctuation">></span></span> cache <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">LinkedHashMap</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token punctuation">></span></span><span class="token punctuation">(</span><span class="token number">100</span><span class="token punctuation">,</span> <span class="token number">0.75f</span><span class="token punctuation">,</span> <span class="token boolean">true</span><span class="token punctuation">)</span><span class="token punctuation">;</span><span class="token comment">// 双向链表存储图片缓存对象</span>
+  <span class="token keyword">private</span> <span class="token keyword">final</span> <span class="token keyword">long</span> initialMaxSize<span class="token punctuation">;</span>
+  <span class="token keyword">private</span> <span class="token keyword">long</span> maxSize<span class="token punctuation">;</span>
+  <span class="token keyword">private</span> <span class="token keyword">long</span> currentSize<span class="token punctuation">;</span> 
+  <span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>内存缓存是基于Glide自己实现的LruCache算法对图片资源进行管理，LruCache内部采用LinkedHashMap存储缓存对象的强引用，LinkedHashMap的双向链表结构，使得缓存的资源可以按加入顺序进行排序，可以应用LRU算法进行增删管理。通过EngineKey对内存缓存对象进行唯一性标识。当图片资源被从活动资源中移除时，会被放入到内存缓存中；当从内存缓存中加载图片资源时，会先将图片资源从内存缓存中移除，然后再放入活动资源中，防止图片资源因内存缓存已满而被从内存中回收。  </p>
+<p>内存缓存主要是为了防止重复读取相同图片到内存中。</p>
+<h3 id="磁盘缓存"><a href="#磁盘缓存" class="headerlink" title="磁盘缓存"></a><strong>磁盘缓存</strong></h3><p>直接从网络、文件、Uri等获取的原始图片数据及原始图片数据经过初步解码（如裁剪、压缩等操作）的图片资源会被缓存到磁盘中。磁盘缓存的部分源码如下：</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token comment">// DiskLruCacheWrapper.java</span>
+<span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">DiskLruCacheWrapper</span> <span class="token keyword">implements</span> <span class="token class-name">DiskCache</span> <span class="token punctuation">&#123;</span>
+  <span class="token keyword">private</span> <span class="token keyword">static</span> <span class="token keyword">final</span> <span class="token class-name">String</span> TAG <span class="token operator">=</span> <span class="token string">"DiskLruCacheWrapper"</span><span class="token punctuation">;</span>
+
+  <span class="token keyword">private</span> <span class="token keyword">static</span> <span class="token keyword">final</span> <span class="token keyword">int</span> APP_VERSION <span class="token operator">=</span> <span class="token number">1</span><span class="token punctuation">;</span>
+  <span class="token keyword">private</span> <span class="token keyword">static</span> <span class="token keyword">final</span> <span class="token keyword">int</span> VALUE_COUNT <span class="token operator">=</span> <span class="token number">1</span><span class="token punctuation">;</span>
+  <span class="token keyword">private</span> <span class="token keyword">static</span> <span class="token class-name">DiskLruCacheWrapper</span> wrapper<span class="token punctuation">;</span>
+
+  <span class="token keyword">private</span> <span class="token keyword">final</span> <span class="token class-name">SafeKeyGenerator</span> safeKeyGenerator<span class="token punctuation">;</span>
+  <span class="token keyword">private</span> <span class="token keyword">final</span> <span class="token class-name">File</span> directory<span class="token punctuation">;</span><span class="token comment">// 磁盘缓存目录</span>
+  <span class="token keyword">private</span> <span class="token keyword">final</span> <span class="token keyword">long</span> maxSize<span class="token punctuation">;</span><span class="token comment">// 磁盘缓存大小上限</span>
+  <span class="token keyword">private</span> <span class="token keyword">final</span> <span class="token class-name">DiskCacheWriteLocker</span> writeLocker <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">DiskCacheWriteLocker</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token keyword">private</span> <span class="token class-name">DiskLruCache</span> diskLruCache<span class="token punctuation">;</span><span class="token comment">// 磁盘缓存算法</span>
+  <span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>磁盘缓存同样采用DiskLruCache算法管理缓存资源。通过DataCacheKey对磁盘缓存对象进行唯一性标识。同时，磁盘缓存还分为多个缓存策略：  </p>
+<ul>
+<li><strong>DiskCacheStrategy.RESOURCE</strong>：只缓存解码过的图片</li>
+<li><strong>DiskCacheStrategy.DATA</strong>：只缓存原始图片</li>
+<li><strong>DiskCacheStrategy.ALL</strong>： 既缓存原始图片，也缓存解码过的图片, 对于远程图片，缓存DATA和RESOURCE；对于本地图片，只缓存 RESOURCE。</li>
+<li><strong>DiskCacheStrategy.NONE</strong>：不使用磁盘缓存</li>
+<li><strong>DiskCacheStrategy.AUTOMATIC</strong>：默认策略，会对本地和远程图片使用最佳的策略；对下载网络图片，使用DATA；对于本地图片，使用RESOURCE  </li>
+</ul>
+<p>磁盘缓存主要是防止重复从网络下载同一张图片。</p>
+<h3 id="Bitmap复用池BitmapPool"><a href="#Bitmap复用池BitmapPool" class="headerlink" title="Bitmap复用池BitmapPool"></a><strong>Bitmap复用池BitmapPool</strong></h3><blockquote>
+<p>当不使用Glide的缓存功能时，从源地址加载图片并解析成Bitmap时，就需要用到BitmapPool。  </p>
+</blockquote>
+<p>BitmapPool同样采用LRU算法管理复用的Bitmap。当一张图片要被解析成Bitmap时，会先从BitmapPool中查找可以被复用的Bitmap进行解析。<br>当一个Bitmap因内存不足或复用池大小限制等原因被动地被从内存中移除时，其并不会被直接回收，而是会被加入BitmapPool中。只有从BitmapPool中被动地被移除的Bitmap，才会被真正地回收释放。<br>BitmapPool并不会减少程序当前正在使用的内存大小，但BitmapPool可以减少频繁申请内存带来的内存抖动、碎片化等性能问题。</p>
+<h2 id="Glide生命周期管理"><a href="#Glide生命周期管理" class="headerlink" title="Glide生命周期管理"></a><strong>Glide生命周期管理</strong></h2><p>Glide在<code>Glide.with(context)</code>中就实现了生命周期管理，with根据传入的参数有不同的实现：</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token comment">// Glide.java</span>
+  <span class="token comment">//传入一个Context</span>
+  <span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token class-name">RequestManager</span> <span class="token keyword">with</span><span class="token punctuation">(</span><span class="token annotation punctuation">@NonNull</span> <span class="token class-name">Context</span> context<span class="token punctuation">)</span>
+  <span class="token comment">//传入一个activity</span>
+  <span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token class-name">RequestManager</span> <span class="token keyword">with</span><span class="token punctuation">(</span><span class="token annotation punctuation">@NonNull</span> <span class="token class-name">Activity</span> activity<span class="token punctuation">)</span>
+  <span class="token comment">//传入一个FragmentActivity</span>
+  <span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token class-name">RequestManager</span> <span class="token keyword">with</span><span class="token punctuation">(</span><span class="token annotation punctuation">@NonNull</span> <span class="token class-name">FragmentActivity</span> activity<span class="token punctuation">)</span>
+  <span class="token comment">//传入一个Fragment</span>
+  <span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token class-name">RequestManager</span> <span class="token keyword">with</span><span class="token punctuation">(</span><span class="token annotation punctuation">@NonNull</span> <span class="token class-name">Fragment</span> fragment<span class="token punctuation">)</span>
+  <span class="token comment">//传入一个View</span>
+  <span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token class-name">RequestManager</span> <span class="token keyword">with</span><span class="token punctuation">(</span><span class="token annotation punctuation">@NonNull</span> <span class="token class-name">View</span> view<span class="token punctuation">)</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>上述生命周期管理可以分为两类：  </p>
+<ol>
+<li>传入一个ApplicationContext：Glide的生命周期就相当于绑定了整个应用，只要应用不退出，任何时候都能够加载，也可以理解为不对Glide生命周期进行管理。  </li>
+<li>传入activity、FragmentActivity 、Fragment 及View：这样就会创建一个看不见的fragment，Glide的生命周期就随着该Fragment的变化而变化。  </li>
+</ol>
+<h4 id="Glide与Activity的生命周期绑定"><a href="#Glide与Activity的生命周期绑定" class="headerlink" title="Glide与Activity的生命周期绑定"></a><strong>Glide与Activity的生命周期绑定</strong></h4><ul>
+<li>创建RequestManagerFragment绑定到Activity上，RequestManagerFragment便可获知Activity的生命周期。</li>
+<li>RequestManagerFragment内部持有ActivityFragmentLifecycle对象，用于转发RequestManagerFragment的生命周期事件：ActivityFragmentLifecycle内部持有一个生命周期监听者列表，在转发生命周期事件时，会遍历监听者列表依次进行转发。    </li>
+<li>创建一个RequestManager，并将其注册到RequestManagerFragment.ActivityFragmentLifecycle上，以监听ActivityFragmentLifecycle的生命周期事件。因为RequestManager实现了LifecycleListener接口。这样就实现了RequestManager关联Activity的生命周期事件。  </li>
+</ul>
+<h2 id="如何实现自己的图片加载框架"><a href="#如何实现自己的图片加载框架" class="headerlink" title="如何实现自己的图片加载框架"></a><strong>如何实现自己的图片加载框架</strong></h2><p>异步加载数据：可以参考Handler、AsyncTask等</p>
+<ul>
+<li>线程池：复用子线程  </li>
+<li>线程切换：子线程加载数据，加载完成切换主线程显示。  </li>
+</ul>
+<p>数据加载优化：  </p>
+<ul>
+<li>缓存机制：LruCache、DiskLruCache  </li>
+<li>复用机制：Bitmap复用  </li>
+</ul>
+<p>防止OOM：  </p>
+<ul>
+<li>图片压缩裁剪  </li>
+<li>Bitmap内存复用  </li>
+<li>弱引用  </li>
+</ul>
+<p>防止内存泄露：  </p>
+<ul>
+<li>注意ImageView的正确使用和生命周期管理 </li>
+</ul>
+<p>应用占用内存的监听与管理：</p>
+<ul>
+<li>实现ComponentCallbacks2接口，对Activity、Application等组件的内存使用进行监听与管理。  </li>
+</ul>
+<h2 id="问题"><a href="#问题" class="headerlink" title="问题"></a><strong>问题</strong></h2><ol>
+<li><p><strong>为什么使用了内存缓存，还要使用弱引用缓存？</strong><br>内存缓存使用LruCache算法实现，由于内存缓存大小会有限制，这种最近最少使用算法就可能会导致正在使用的图片被从内存缓存中回收。如果使用弱引用缓存正在使用的活动图片资源，就能避免此类问题。  </p>
+</li>
+<li><p><strong>弱引用缓存有大小限制吗？</strong><br>弱引用使用HashMap键值对缓存资源对象，缓存的大小取决于HashMap的容量大小。由于HashMap容量是会自增，所以弱引用缓存大小便没了限制。  </p>
+</li>
+<li><p><strong>磁盘缓存和内存缓存的Key一样吗？</strong><br>磁盘缓存是DataCacheKey:用于缓存原始数据。<br>内存缓存是EngineKey：用于各种Loader（如HttpGlideUrlLoader、FileLoader等）从内存中加载资源。      </p>
+</li>
+<li><p><strong>内存缓存与磁盘缓存的缓存大小上限</strong><br>磁盘缓存：默认大小250M<br>内存缓存：由MemorySizeCalculator根据屏幕尺寸与应用可用内存大小等综合进行计算所得。    </p>
+</li>
+</ol>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="followme">
+  <span>欢迎关注我的其它发布渠道</span>
+
+  <div class="social-list">
+
+      <div class="social-item">
+        <a target="_blank" class="social-link" href="https://github.com/CharlieJiang">
+          <span class="icon">
+            <i class="fab fa-github"></i>
+          </span>
+
+          <span class="label">GitHub</span>
+        </a>
+      </div>
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/Glide/" rel="tag"># Glide</a>
+              <a href="/tags/Android%E5%9B%BE%E7%89%87%E5%8A%A0%E8%BD%BD/" rel="tag"># Android图片加载</a>
+              <a href="/tags/%E7%BC%93%E5%AD%98%E6%9C%BA%E5%88%B6/" rel="tag"># 缓存机制</a>
+              <a href="/tags/%E5%A4%9A%E7%BA%A7%E7%BC%93%E5%AD%98%E6%9C%BA%E5%88%B6/" rel="tag"># 多级缓存机制</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2021/06/01/Glide%E5%8E%9F%E7%90%86%E8%A7%A3%E6%9E%90%E4%BA%8C%EF%BC%9AGlide%E5%8A%A0%E8%BD%BD%E5%BC%95%E6%93%8EEngine%E7%9A%84%E5%8A%A0%E8%BD%BD%E6%B5%81%E7%A8%8B/" rel="prev" title="Glide原理解析二：Glide加载引擎Engine的加载流程">
+                  <i class="fa fa-chevron-left"></i> Glide原理解析二：Glide加载引擎Engine的加载流程
+                </a>
+            </div>
+            <div class="post-nav-item">
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+      
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+
+<div class="copyright">
+  
+  &copy; 2020 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-at"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">cocoas的博客</span>
+</div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+</div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
