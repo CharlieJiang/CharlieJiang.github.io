@@ -193,20 +193,20 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">47</span>
+          <span class="site-state-item-count">48</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">28</span>
+        <span class="site-state-item-count">30</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">137</span>
+        <span class="site-state-item-count">138</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -246,6 +246,483 @@
       
 
       
+    
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/07/31/EventBus%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Cocoas">
+      <meta itemprop="description" content="Android,Java,Android SDK,Kotlin,">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Cocoas">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/07/31/EventBus%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/" class="post-title-link" itemprop="url">EventBus源码解析</a>
+        </h2>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2021-07-31 22:30:45" itemprop="dateCreated datePublished" datetime="2021-07-31T22:30:45+08:00">2021-07-31</time>
+    </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">更新于</span>
+        <time title="修改时间：2021-08-01 14:36:04" itemprop="dateModified" datetime="2021-08-01T14:36:04+08:00">2021-08-01</time>
+      </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/EventBus/" itemprop="url" rel="index"><span itemprop="name">EventBus</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/EventBus/%E7%AC%AC%E4%B8%89%E6%96%B9%E6%A1%86%E6%9E%B6%E5%8E%9F%E7%90%86%E8%A7%A3%E6%9E%90/" itemprop="url" rel="index"><span itemprop="name">第三方框架原理解析</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+          <h2 id="说明"><a href="#说明" class="headerlink" title="说明"></a><strong>说明</strong></h2><p>本文基于EventBus的V3.2.0。  </p>
+<h2 id="EventBus是什么"><a href="#EventBus是什么" class="headerlink" title="EventBus是什么"></a><strong>EventBus是什么</strong></h2><blockquote>
+<p>EventBus是一个Android事件发布/订阅框架，通过解耦发布者和订阅者简化事件传递。基于EventBus的事件传递既可用于Android四大组件间的通信，也能用于主线程与异步线程间的通信。</p>
+</blockquote>
+<h2 id="EventBus相关知识点"><a href="#EventBus相关知识点" class="headerlink" title="EventBus相关知识点"></a><strong>EventBus相关知识点</strong></h2><h3 id="角色分配"><a href="#角色分配" class="headerlink" title="角色分配"></a><strong>角色分配</strong></h3><ul>
+<li><strong>Event</strong>：事件，也可称为消息，其实际表现形式就是一个Java Bean，其中携带事件相关的信息。EventBus会根据事件的类型进行全局发送。  </li>
+<li><strong>Publisher</strong>：事件的发布者，它可以在任意线程中发布事件。  </li>
+<li><strong>Subscriber</strong>：事件的订阅者，或者叫做接收者。订阅者通过<code>register()</code>方法订阅指定类型事件，通过<code>unRegister()</code>取消订阅。订阅者的一般表现形式就是类，如Activity、Fragment等，然后类中会包含一个或多个通过@Subscribe注解声明的事件处理方法。  </li>
+</ul>
+<h3 id="事件类型"><a href="#事件类型" class="headerlink" title="事件类型"></a><strong>事件类型</strong></h3><blockquote>
+<p>事件类型对应于@Subscribe注解中的sticky属性，表示订阅的是粘性事件还是普通事件。默认值是false，即普通事件。</p>
+</blockquote>
+<ul>
+<li><strong>普通事件</strong>：<br>普通事件是指，当发送普通事件时，已有的事件订阅者能够接收到事件，但是之后才订阅该事件的订阅者则无法收到之前发出的事件。普通事件通过<code>EventBus.getDefault().post()</code>发送。  </li>
+<li><strong>粘性事件</strong><br>粘性事件是指，当发送粘性事件时，不仅当前已订阅此事件的订阅者可以收到事件，之后订阅的订阅者也能收到该事件。<br>粘性事件订阅时需要显式地指定@Subscribe注解中的sticky属性为true，粘性事件的发送方式为<code>EventBuss.getDefault().postSticky()</code>。  </li>
+</ul>
+<h3 id="线程模型"><a href="#线程模型" class="headerlink" title="线程模型"></a><strong>线程模型</strong></h3><blockquote>
+<p>线程模型对应于@Subscribe注解中的threadModel属性，它决定了EventBus在哪个线程调用订阅者的事件响应方法。  </p>
+</blockquote>
+<ul>
+<li><strong>POSTING</strong>：<br>默认线程模型，表示在发送事件的线程直接调用订阅者的事件响应方法，不论当前线程是否是主线程。<br>此线程模型存在的问题是，如果当前事件响应方法中存在耗时操作，可能会导致主线程阻塞。  </li>
+<li><strong>MAIN</strong>：<br>在主线程中调用订阅者的事件响应方法。如果当前线程不是主线程，则会通过主线程的Handler发送消息，等待主线程处理。此线程模型也可能会存在主线程阻塞问题。  </li>
+<li><strong>MAIN_ORDERED</strong>：<br>V3.1.1新增的属性，也是在主线程中执行事件响应方法。不过它是直接通过Handler发送消息通知主线程执行，而不分当前线程类型。这也确保了事件响应方法的调用是非阻塞的。  </li>
+<li><strong>BACKGROUND</strong>：<br>在后台线程中执行事件响应方法。如果当前线程不是主线程，则直接调用订阅者的事件响应方法。否则，启动唯一的后台线程去处理。由于后台线程的唯一性，多个事件会进入队列中等待执行。  </li>
+<li><strong>ASYNC</strong>：<br>使用一个空闲线程来调用事件响应方法，不管当前线程是否是主线程。此模式下，事件响应方法的调用线程与事件发布线程和主线程是相对独立的，不会存在阻塞问题，可以执行耗时操作，如网络访问。  </li>
+</ul>
+<h2 id="EventBus使用方式"><a href="#EventBus使用方式" class="headerlink" title="EventBus使用方式"></a><strong>EventBus使用方式</strong></h2><h3 id="1、定义事件"><a href="#1、定义事件" class="headerlink" title="1、定义事件"></a><strong>1、定义事件</strong></h3><pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token keyword">class</span> <span class="token class-name">MessageEvent</span> <span class="token punctuation">&#123;</span> <span class="token comment">/* Additional fields if needed */</span> <span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<h3 id="2、准备订阅者"><a href="#2、准备订阅者" class="headerlink" title="2、准备订阅者"></a><strong>2、准备订阅者</strong></h3><p>定义一个方法，并通过@Subscribe注解声明为订阅方法。  </p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token annotation punctuation">@Subscribe</span><span class="token punctuation">(</span>threadMode <span class="token operator">=</span> <span class="token class-name">ThreadMode</span><span class="token punctuation">.</span>MAIN<span class="token punctuation">)</span>  
+<span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">onMessageEvent</span><span class="token punctuation">(</span><span class="token class-name">MessageEvent</span> event<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span><span class="token comment">/* Do something */</span><span class="token punctuation">&#125;</span><span class="token punctuation">;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+<p>注册/取消注册订阅者处理：  </p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token annotation punctuation">@Override</span>
+ <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">onStart</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+     <span class="token keyword">super</span><span class="token punctuation">.</span><span class="token function">onStart</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+     <span class="token class-name">EventBus</span><span class="token punctuation">.</span><span class="token function">getDefault</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">register</span><span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+ <span class="token punctuation">&#125;</span>
+
+ <span class="token annotation punctuation">@Override</span>
+ <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">onStop</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+     <span class="token keyword">super</span><span class="token punctuation">.</span><span class="token function">onStop</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+     <span class="token class-name">EventBus</span><span class="token punctuation">.</span><span class="token function">getDefault</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">unregister</span><span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+ <span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h3 id="3、发送事件"><a href="#3、发送事件" class="headerlink" title="3、发送事件"></a><strong>3、发送事件</strong></h3><pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token class-name">EventBus</span><span class="token punctuation">.</span><span class="token function">getDefault</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">post</span><span class="token punctuation">(</span><span class="token keyword">new</span> <span class="token class-name">MessageEvent</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span><span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+
+<h2 id="EventBus执行流程分析"><a href="#EventBus执行流程分析" class="headerlink" title="EventBus执行流程分析"></a><strong>EventBus执行流程分析</strong></h2><h3 id="1、初始化EventBus：EventBus-getDefault"><a href="#1、初始化EventBus：EventBus-getDefault" class="headerlink" title="1、初始化EventBus：EventBus.getDefault()"></a><strong>1、初始化EventBus</strong>：<code>EventBus.getDefault()</code></h3><p><code>getDefault()</code>方法中使用了双重检查的单例模式来创建EventBus单例，以保证线程安全。  </p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token comment">// EventBus.java</span>
+<span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token class-name">EventBus</span> <span class="token function">getDefault</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span> <span class="token comment">// 进程单例</span>
+    <span class="token class-name">EventBus</span> instance <span class="token operator">=</span> defaultInstance<span class="token punctuation">;</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span>instance <span class="token operator">==</span> <span class="token keyword">null</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">synchronized</span> <span class="token punctuation">(</span><span class="token class-name">EventBus</span><span class="token punctuation">.</span><span class="token keyword">class</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span><span class="token comment">// 线程安全处理：代码块加锁</span>
+            instance <span class="token operator">=</span> <span class="token class-name">EventBus</span><span class="token punctuation">.</span>defaultInstance<span class="token punctuation">;</span>
+            <span class="token keyword">if</span> <span class="token punctuation">(</span>instance <span class="token operator">==</span> <span class="token keyword">null</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+                instance <span class="token operator">=</span> <span class="token class-name">EventBus</span><span class="token punctuation">.</span>defaultInstance <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">EventBus</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token punctuation">&#125;</span>
+        <span class="token punctuation">&#125;</span>
+    <span class="token punctuation">&#125;</span>
+    <span class="token keyword">return</span> instance<span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span>
+<span class="token keyword">public</span> <span class="token class-name">EventBus</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span><span class="token comment">// 构造器</span>
+    <span class="token keyword">this</span><span class="token punctuation">(</span>DEFAULT_BUILDER<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span>
+<span class="token class-name">EventBus</span><span class="token punctuation">(</span><span class="token class-name">EventBusBuilder</span> builder<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span><span class="token comment">// 实际构造器：基于建造者模式实现的构造器</span>
+    logger <span class="token operator">=</span> builder<span class="token punctuation">.</span><span class="token function">getLogger</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span><span class="token comment">// 日志</span>
+    subscriptionsByEventType <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">HashMap</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token punctuation">></span></span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span><span class="token comment">// "事件类型"对应"该事件订阅者列表"的HashMap</span>
+    typesBySubscriber <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">HashMap</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token punctuation">></span></span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span><span class="token comment">// "事件订阅者"对应"订阅的事件类型列表"的HashMap</span>
+    stickyEvents <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">ConcurrentHashMap</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token punctuation">></span></span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span><span class="token comment">// 粘性事件：&lt;事件对象所属Class，事件对象></span>
+    mainThreadSupport <span class="token operator">=</span> builder<span class="token punctuation">.</span><span class="token function">getMainThreadSupport</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token comment">// 主线程事件发送器</span>
+    mainThreadPoster <span class="token operator">=</span> mainThreadSupport <span class="token operator">!=</span> <span class="token keyword">null</span> <span class="token operator">?</span> mainThreadSupport<span class="token punctuation">.</span><span class="token function">createPoster</span><span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">)</span> <span class="token operator">:</span> <span class="token keyword">null</span><span class="token punctuation">;</span>
+    backgroundPoster <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">BackgroundPoster</span><span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">)</span><span class="token punctuation">;</span><span class="token comment">// 后台线程事件发送器</span>
+    asyncPoster <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">AsyncPoster</span><span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">)</span><span class="token punctuation">;</span><span class="token comment">// 异步线程事件发送器</span>
+    indexCount <span class="token operator">=</span> builder<span class="token punctuation">.</span>subscriberInfoIndexes <span class="token operator">!=</span> <span class="token keyword">null</span> <span class="token operator">?</span> builder<span class="token punctuation">.</span>subscriberInfoIndexes<span class="token punctuation">.</span><span class="token function">size</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">:</span> <span class="token number">0</span><span class="token punctuation">;</span>
+    <span class="token comment">// 订阅者响应函数的查找器</span>
+    subscriberMethodFinder <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">SubscriberMethodFinder</span><span class="token punctuation">(</span>builder<span class="token punctuation">.</span>subscriberInfoIndexes<span class="token punctuation">,</span>
+            builder<span class="token punctuation">.</span>strictMethodVerification<span class="token punctuation">,</span> builder<span class="token punctuation">.</span>ignoreGeneratedIndex<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    logSubscriberExceptions <span class="token operator">=</span> builder<span class="token punctuation">.</span>logSubscriberExceptions<span class="token punctuation">;</span>
+    logNoSubscriberMessages <span class="token operator">=</span> builder<span class="token punctuation">.</span>logNoSubscriberMessages<span class="token punctuation">;</span>
+    sendSubscriberExceptionEvent <span class="token operator">=</span> builder<span class="token punctuation">.</span>sendSubscriberExceptionEvent<span class="token punctuation">;</span>
+    sendNoSubscriberEvent <span class="token operator">=</span> builder<span class="token punctuation">.</span>sendNoSubscriberEvent<span class="token punctuation">;</span>
+    throwSubscriberException <span class="token operator">=</span> builder<span class="token punctuation">.</span>throwSubscriberException<span class="token punctuation">;</span>
+    eventInheritance <span class="token operator">=</span> builder<span class="token punctuation">.</span>eventInheritance<span class="token punctuation">;</span><span class="token comment">// 事件继承</span>
+    executorService <span class="token operator">=</span> builder<span class="token punctuation">.</span>executorService<span class="token punctuation">;</span><span class="token comment">// 线程池</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>总结：EventBus通过双重检查的单例模式和建造者模式完成自身的初始化工作。  </p>
+<h3 id="2、注册订阅者：register-Subscriber"><a href="#2、注册订阅者：register-Subscriber" class="headerlink" title="2、注册订阅者：register(Subscriber)"></a><strong>2、注册订阅者</strong>：register(Subscriber)</h3><p>创建完EventBus对象后，就可以将订阅者注册到EventBus。</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token comment">// EventBus.java</span>
+<span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">register</span><span class="token punctuation">(</span><span class="token class-name">Object</span> subscriber<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+    <span class="token class-name">Class</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token operator">?</span><span class="token punctuation">></span></span> subscriberClass <span class="token operator">=</span> subscriber<span class="token punctuation">.</span><span class="token function">getClass</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span><span class="token comment">// 获取订阅者所属Class</span>
+    <span class="token comment">// 反射查找订阅者中所有订阅的事件（即通过@Subscribe注解的方法）</span>
+    <span class="token class-name">List</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">SubscriberMethod</span><span class="token punctuation">></span></span> subscriberMethods <span class="token operator">=</span> subscriberMethodFinder<span class="token punctuation">.</span><span class="token function">findSubscriberMethods</span><span class="token punctuation">(</span>subscriberClass<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token comment">// 遍历集合进行订阅</span>
+    <span class="token keyword">synchronized</span> <span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span> <span class="token comment">// 同步锁保证不会重复订阅</span>
+        <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token class-name">SubscriberMethod</span> subscriberMethod <span class="token operator">:</span> subscriberMethods<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            <span class="token function">subscribe</span><span class="token punctuation">(</span>subscriber<span class="token punctuation">,</span> subscriberMethod<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span>
+    <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p><code>register()</code>方法中先是查找当前订阅者中所有的订阅事件SubscriberMethod，然后通过遍历订阅事件列表并调用subscribe()方法进行订阅。SubscriberMethod类与@Subscribe注解相对应，存放着订阅事件的相关信息。</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token comment">// SubscriberMethod.java</span>
+<span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">SubscriberMethod</span> <span class="token punctuation">&#123;</span>
+    <span class="token keyword">final</span> <span class="token class-name">Method</span> method<span class="token punctuation">;</span><span class="token comment">// 订阅事件的响应方法</span>
+    <span class="token keyword">final</span> <span class="token class-name">ThreadMode</span> threadMode<span class="token punctuation">;</span><span class="token comment">// 线程模型：决定了EventBus会在哪个线程中调用该订阅事件的响应方法</span>
+    <span class="token keyword">final</span> <span class="token class-name">Class</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token operator">?</span><span class="token punctuation">></span></span> eventType<span class="token punctuation">;</span><span class="token comment">// 事件类型：也就是一般的Java类 </span>
+    <span class="token keyword">final</span> <span class="token keyword">int</span> priority<span class="token punctuation">;</span><span class="token comment">// method的优先级：决定此订阅方法被调用的优先顺序</span>
+    <span class="token keyword">final</span> <span class="token keyword">boolean</span> sticky<span class="token punctuation">;</span><span class="token comment">// 是否是粘性事件</span>
+    <span class="token comment">/** Used for efficient comparison */</span>
+    <span class="token class-name">String</span> methodString<span class="token punctuation">;</span>
+    <span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">.</span>
+<span class="token punctuation">&#125;</span>    <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>继续看<code>subscribe()</code>方法。</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token comment">// EventBus.java</span>
+<span class="token keyword">private</span> <span class="token keyword">void</span> <span class="token function">subscribe</span><span class="token punctuation">(</span><span class="token class-name">Object</span> subscriber<span class="token punctuation">,</span> <span class="token class-name">SubscriberMethod</span> subscriberMethod<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+    <span class="token class-name">Class</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token operator">?</span><span class="token punctuation">></span></span> eventType <span class="token operator">=</span> subscriberMethod<span class="token punctuation">.</span>eventType<span class="token punctuation">;</span><span class="token comment">// 获取订阅事件的类型</span>
+    <span class="token comment">//##### 1、订阅信息封装</span>
+    <span class="token comment">// 订阅者+订阅方法 封装成Subscription对象</span>
+    <span class="token class-name">Subscription</span> newSubscription <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Subscription</span><span class="token punctuation">(</span>subscriber<span class="token punctuation">,</span> subscriberMethod<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token comment">//##### 2、订阅者按事件类型进行管理</span>
+    <span class="token comment">// 读取当前事件类型已有的订阅者集合</span>
+    <span class="token class-name">CopyOnWriteArrayList</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">Subscription</span><span class="token punctuation">></span></span> subscriptions <span class="token operator">=</span> subscriptionsByEventType<span class="token punctuation">.</span><span class="token function">get</span><span class="token punctuation">(</span>eventType<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span>subscriptions <span class="token operator">==</span> <span class="token keyword">null</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token comment">// 还没有该类型事件的订阅者：创建订阅者列表subscriptions并将其插入subscriptionsByEventType中</span>
+        subscriptions <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">CopyOnWriteArrayList</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token punctuation">></span></span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        subscriptionsByEventType<span class="token punctuation">.</span><span class="token function">put</span><span class="token punctuation">(</span>eventType<span class="token punctuation">,</span> subscriptions<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span> <span class="token keyword">else</span> <span class="token punctuation">&#123;</span>
+        <span class="token comment">// 已有该类型事件的订阅者：重复订阅判断</span>
+         <span class="token keyword">if</span> <span class="token punctuation">(</span>subscriptions<span class="token punctuation">.</span><span class="token function">contains</span><span class="token punctuation">(</span>newSubscription<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            <span class="token keyword">throw</span> <span class="token keyword">new</span> <span class="token class-name">EventBusException</span><span class="token punctuation">(</span><span class="token string">"Subscriber "</span> <span class="token operator">+</span> subscriber<span class="token punctuation">.</span><span class="token function">getClass</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">+</span> <span class="token string">" already registered to event "</span>
+                    <span class="token operator">+</span> eventType<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span>
+    <span class="token punctuation">&#125;</span>
+    <span class="token comment">// 将新的订阅者newSubscription插入到已有订阅者列表中</span>
+    <span class="token keyword">int</span> size <span class="token operator">=</span> subscriptions<span class="token punctuation">.</span><span class="token function">size</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">int</span> i <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span> i <span class="token operator">&lt;=</span> size<span class="token punctuation">;</span> i<span class="token operator">++</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token comment">// 插入方式：根据优先级高低进行插入，或插入列表末尾</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>i <span class="token operator">==</span> size <span class="token operator">||</span> subscriberMethod<span class="token punctuation">.</span>priority <span class="token operator">></span> subscriptions<span class="token punctuation">.</span><span class="token function">get</span><span class="token punctuation">(</span>i<span class="token punctuation">)</span><span class="token punctuation">.</span>subscriberMethod<span class="token punctuation">.</span>priority<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            subscriptions<span class="token punctuation">.</span><span class="token function">add</span><span class="token punctuation">(</span>i<span class="token punctuation">,</span> newSubscription<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token keyword">break</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span>
+    <span class="token punctuation">&#125;</span>
+    <span class="token comment">//##### 3、订阅事件入队管理</span>
+    <span class="token comment">// 获取订阅者订阅的所有事件类型列表</span>
+    <span class="token class-name">List</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">Class</span><span class="token punctuation">&lt;</span><span class="token operator">?</span><span class="token punctuation">></span><span class="token punctuation">></span></span> subscribedEvents <span class="token operator">=</span> typesBySubscriber<span class="token punctuation">.</span><span class="token function">get</span><span class="token punctuation">(</span>subscriber<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token comment">// 如果还没订阅，则创建空的列表插入typesBySubscriber中</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span>subscribedEvents <span class="token operator">==</span> <span class="token keyword">null</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        subscribedEvents <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">ArrayList</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token punctuation">></span></span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        typesBySubscriber<span class="token punctuation">.</span><span class="token function">put</span><span class="token punctuation">(</span>subscriber<span class="token punctuation">,</span> subscribedEvents<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+    <span class="token comment">// 将当前事件类型插入到已订阅事件类型列表中</span>
+    subscribedEvents<span class="token punctuation">.</span><span class="token function">add</span><span class="token punctuation">(</span>eventType<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token comment">//##### 4、发送粘性订阅事件</span>
+    <span class="token comment">// 判断是否是粘性事件，是的话立即发送事件</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span>subscriberMethod<span class="token punctuation">.</span>sticky<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token comment">// 判断事件的继承性，如果可继承，则遍历查找当前粘性事件列表中属于当前粘性事件的子类，</span>
+        <span class="token comment">// 或是相同的粘性事件，并立即发送</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>eventInheritance<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            <span class="token class-name">Set</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">Map</span><span class="token punctuation">.</span><span class="token class-name">Entry</span><span class="token punctuation">&lt;</span><span class="token class-name">Class</span><span class="token punctuation">&lt;</span><span class="token operator">?</span><span class="token punctuation">></span><span class="token punctuation">,</span> <span class="token class-name">Object</span><span class="token punctuation">></span><span class="token punctuation">></span></span> entries <span class="token operator">=</span> stickyEvents<span class="token punctuation">.</span><span class="token function">entrySet</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token class-name">Map</span><span class="token punctuation">.</span><span class="token class-name">Entry</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">Class</span><span class="token punctuation">&lt;</span><span class="token operator">?</span><span class="token punctuation">></span><span class="token punctuation">,</span> <span class="token class-name">Object</span><span class="token punctuation">></span></span> entry <span class="token operator">:</span> entries<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+                <span class="token class-name">Class</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token operator">?</span><span class="token punctuation">></span></span> candidateEventType <span class="token operator">=</span> entry<span class="token punctuation">.</span><span class="token function">getKey</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                <span class="token comment">// 当前粘性事件类型与已有粘性事件类型的关系判断</span>
+                <span class="token keyword">if</span> <span class="token punctuation">(</span>eventType<span class="token punctuation">.</span><span class="token function">isAssignableFrom</span><span class="token punctuation">(</span>candidateEventType<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+                    <span class="token class-name">Object</span> stickyEvent <span class="token operator">=</span> entry<span class="token punctuation">.</span><span class="token function">getValue</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                    <span class="token function">checkPostStickyEventToSubscription</span><span class="token punctuation">(</span>newSubscription<span class="token punctuation">,</span> stickyEvent<span class="token punctuation">)</span><span class="token punctuation">;</span>
+                <span class="token punctuation">&#125;</span>
+            <span class="token punctuation">&#125;</span>
+        <span class="token punctuation">&#125;</span> <span class="token keyword">else</span> <span class="token punctuation">&#123;</span><span class="token comment">// 不存在事件继承，立即发送当前粘性事件</span>
+            <span class="token class-name">Object</span> stickyEvent <span class="token operator">=</span> stickyEvents<span class="token punctuation">.</span><span class="token function">get</span><span class="token punctuation">(</span>eventType<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token function">checkPostStickyEventToSubscription</span><span class="token punctuation">(</span>newSubscription<span class="token punctuation">,</span> stickyEvent<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span>
+    <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p><code>subscribe()</code>方法中，先是将订阅者和响应方法封装成Subscription对象，并按事件类型对订阅信息进行管理。然后将订阅者中的所有订阅事件入队管理，最后通过<code>checkPostStickyEventToSubscription()</code>方法发送粘性事件。</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token comment">// EventBus.java</span>
+<span class="token keyword">private</span> <span class="token keyword">void</span> <span class="token function">checkPostStickyEventToSubscription</span><span class="token punctuation">(</span><span class="token class-name">Subscription</span> newSubscription<span class="token punctuation">,</span> <span class="token class-name">Object</span> stickyEvent<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span>stickyEvent <span class="token operator">!=</span> <span class="token keyword">null</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span><span class="token comment">// 粘性事件的空判断</span>
+        <span class="token function">postToSubscription</span><span class="token punctuation">(</span>newSubscription<span class="token punctuation">,</span> stickyEvent<span class="token punctuation">,</span> <span class="token function">isMainThread</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span>
+<span class="token keyword">private</span> <span class="token keyword">void</span> <span class="token function">postToSubscription</span><span class="token punctuation">(</span><span class="token class-name">Subscription</span> subscription<span class="token punctuation">,</span> <span class="token class-name">Object</span> event<span class="token punctuation">,</span> <span class="token keyword">boolean</span> isMainThread<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+    <span class="token comment">// 根据订阅者响应方法所属的线程模型，决定事件的发送方式</span>
+    <span class="token keyword">switch</span> <span class="token punctuation">(</span>subscription<span class="token punctuation">.</span>subscriberMethod<span class="token punctuation">.</span>threadMode<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">case</span> POSTING<span class="token operator">:</span><span class="token operator">/</span><span class="token operator">/</span> 当前线程发送
+            <span class="token function">invokeSubscriber</span><span class="token punctuation">(</span>subscription<span class="token punctuation">,</span> event<span class="token punctuation">)</span><span class="token punctuation">;</span><span class="token comment">// 反射调用订阅者的事件响应方法</span>
+            <span class="token keyword">break</span><span class="token punctuation">;</span>
+        <span class="token keyword">case</span> MAIN<span class="token operator">:</span><span class="token operator">/</span><span class="token operator">/</span> 主线程发送
+            <span class="token keyword">if</span> <span class="token punctuation">(</span>isMainThread<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+                <span class="token function">invokeSubscriber</span><span class="token punctuation">(</span>subscription<span class="token punctuation">,</span> event<span class="token punctuation">)</span><span class="token punctuation">;</span><span class="token comment">// 主线程直接反射调用响应方法</span>
+            <span class="token punctuation">&#125;</span> <span class="token keyword">else</span> <span class="token punctuation">&#123;</span>
+                mainThreadPoster<span class="token punctuation">.</span><span class="token function">enqueue</span><span class="token punctuation">(</span>subscription<span class="token punctuation">,</span> event<span class="token punctuation">)</span><span class="token punctuation">;</span><span class="token comment">// 入队后最终还是通过反射调用</span>
+            <span class="token punctuation">&#125;</span>
+            <span class="token keyword">break</span><span class="token punctuation">;</span>
+        <span class="token keyword">case</span> MAIN_ORDERED<span class="token operator">:</span><span class="token operator">/</span><span class="token operator">/</span> 主线程非阻塞发送
+            <span class="token keyword">if</span> <span class="token punctuation">(</span>mainThreadPoster <span class="token operator">!=</span> <span class="token keyword">null</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+                mainThreadPoster<span class="token punctuation">.</span><span class="token function">enqueue</span><span class="token punctuation">(</span>subscription<span class="token punctuation">,</span> event<span class="token punctuation">)</span><span class="token punctuation">;</span><span class="token comment">// 入队后最终还是通过反射调用</span>
+            <span class="token punctuation">&#125;</span> <span class="token keyword">else</span> <span class="token punctuation">&#123;</span>
+                <span class="token comment">// temporary: technically not correct as poster not decoupled from subscriber</span>
+                <span class="token function">invokeSubscriber</span><span class="token punctuation">(</span>subscription<span class="token punctuation">,</span> event<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token punctuation">&#125;</span>
+            <span class="token keyword">break</span><span class="token punctuation">;</span>
+        <span class="token keyword">case</span> BACKGROUND<span class="token operator">:</span><span class="token operator">/</span><span class="token operator">/</span> 后台线程发送
+            <span class="token keyword">if</span> <span class="token punctuation">(</span>isMainThread<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+                backgroundPoster<span class="token punctuation">.</span><span class="token function">enqueue</span><span class="token punctuation">(</span>subscription<span class="token punctuation">,</span> event<span class="token punctuation">)</span><span class="token punctuation">;</span><span class="token comment">// 入队后最终还是通过反射调用</span>
+            <span class="token punctuation">&#125;</span> <span class="token keyword">else</span> <span class="token punctuation">&#123;</span>
+                <span class="token function">invokeSubscriber</span><span class="token punctuation">(</span>subscription<span class="token punctuation">,</span> event<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token punctuation">&#125;</span>
+            <span class="token keyword">break</span><span class="token punctuation">;</span>
+        <span class="token keyword">case</span> ASYNC<span class="token operator">:</span><span class="token operator">/</span><span class="token operator">/</span> 独立线程中发送
+            asyncPoster<span class="token punctuation">.</span><span class="token function">enqueue</span><span class="token punctuation">(</span>subscription<span class="token punctuation">,</span> event<span class="token punctuation">)</span><span class="token punctuation">;</span><span class="token comment">// 入队后最终还是通过反射调用</span>
+            <span class="token keyword">break</span><span class="token punctuation">;</span>
+        <span class="token keyword">default</span><span class="token operator">:</span>
+            <span class="token keyword">throw</span> <span class="token keyword">new</span> <span class="token class-name">IllegalStateException</span><span class="token punctuation">(</span><span class="token string">"Unknown thread mode: "</span> <span class="token operator">+</span> subscription<span class="token punctuation">.</span>subscriberMethod<span class="token punctuation">.</span>threadMode<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p><code>postToSubscription()</code>方法中根据响应方法的线程模型来决定发送订阅事件所属的线程，即调用事件响应方法的线程。具体的发送方式分为两种：一种是直接通过<code>invokeSubscriber()</code>进行反射调用；另一种是将事件入队，但最终还是通过反射调用。  </p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token comment">// EventBus.java</span>
+<span class="token keyword">void</span> <span class="token function">invokeSubscriber</span><span class="token punctuation">(</span><span class="token class-name">Subscription</span> subscription<span class="token punctuation">,</span> <span class="token class-name">Object</span> event<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+    <span class="token keyword">try</span> <span class="token punctuation">&#123;</span><span class="token comment">// 反射调用事件响应方法</span>
+        subscription<span class="token punctuation">.</span>subscriberMethod<span class="token punctuation">.</span>method<span class="token punctuation">.</span><span class="token function">invoke</span><span class="token punctuation">(</span>subscription<span class="token punctuation">.</span>subscriber<span class="token punctuation">,</span> event<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span> <span class="token keyword">catch</span> <span class="token punctuation">(</span><span class="token class-name">InvocationTargetException</span> e<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token function">handleSubscriberException</span><span class="token punctuation">(</span>subscription<span class="token punctuation">,</span> event<span class="token punctuation">,</span> e<span class="token punctuation">.</span><span class="token function">getCause</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span> <span class="token keyword">catch</span> <span class="token punctuation">(</span><span class="token class-name">IllegalAccessException</span> e<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">throw</span> <span class="token keyword">new</span> <span class="token class-name">IllegalStateException</span><span class="token punctuation">(</span><span class="token string">"Unexpected exception"</span><span class="token punctuation">,</span> e<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>总结：SubscriberMethodFinder对象通过缓存或反射获取订阅者订阅的所有事件；遍历事件集合，将事件与订阅者进行绑定；绑定完成后直接发送粘性事件。 </p>
+<h3 id="3、发送事件：post-event"><a href="#3、发送事件：post-event" class="headerlink" title="3、发送事件：post(event)"></a><strong>3、发送事件：post(event)</strong></h3><p>Event有两种事件发送方式：一是通过<code>post()</code>发送普通事件；二是通过<code>postSticky()</code>发送粘性事件。不过<code>postSticky()</code>方法中实际还是通过调用<code>post()</code>方法实现事件发送。</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token comment">// EventBus.java</span>
+<span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">postSticky</span><span class="token punctuation">(</span><span class="token class-name">Object</span> event<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+    <span class="token keyword">synchronized</span> <span class="token punctuation">(</span>stickyEvents<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span><span class="token comment">// 统一管理粘性事件</span>
+        stickyEvents<span class="token punctuation">.</span><span class="token function">put</span><span class="token punctuation">(</span>event<span class="token punctuation">.</span><span class="token function">getClass</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> event<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+    <span class="token comment">// Should be posted after it is putted, in case the subscriber wants to remove immediately</span>
+    <span class="token function">post</span><span class="token punctuation">(</span>event<span class="token punctuation">)</span><span class="token punctuation">;</span><span class="token comment">// 实际通过post()完成事件发送</span>
+<span class="token punctuation">&#125;</span>
+
+<span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">post</span><span class="token punctuation">(</span><span class="token class-name">Object</span> event<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+    <span class="token comment">// 获取当前线程的事件发送状态</span>
+    <span class="token class-name">PostingThreadState</span> postingState <span class="token operator">=</span> currentPostingThreadState<span class="token punctuation">.</span><span class="token function">get</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token class-name">List</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">Object</span><span class="token punctuation">></span></span> eventQueue <span class="token operator">=</span> postingState<span class="token punctuation">.</span>eventQueue<span class="token punctuation">;</span><span class="token comment">// 获取当前线程的事件集合</span>
+    eventQueue<span class="token punctuation">.</span><span class="token function">add</span><span class="token punctuation">(</span>event<span class="token punctuation">)</span><span class="token punctuation">;</span><span class="token comment">// 将准备发送的事件加入事件集合</span>
+
+    <span class="token comment">// 判断当前线程是否正在发送事件：如果未发送，则进行发送</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token operator">!</span>postingState<span class="token punctuation">.</span>isPosting<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        postingState<span class="token punctuation">.</span>isMainThread <span class="token operator">=</span> <span class="token function">isMainThread</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        postingState<span class="token punctuation">.</span>isPosting <span class="token operator">=</span> <span class="token boolean">true</span><span class="token punctuation">;</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>postingState<span class="token punctuation">.</span>canceled<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            <span class="token keyword">throw</span> <span class="token keyword">new</span> <span class="token class-name">EventBusException</span><span class="token punctuation">(</span><span class="token string">"Internal error. Abort state was not reset"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span>
+        <span class="token keyword">try</span> <span class="token punctuation">&#123;</span><span class="token comment">// 循环事件列表，按序发送单个事件，同时将事件从事件列表中移除</span>
+            <span class="token keyword">while</span> <span class="token punctuation">(</span><span class="token operator">!</span>eventQueue<span class="token punctuation">.</span><span class="token function">isEmpty</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+                <span class="token function">postSingleEvent</span><span class="token punctuation">(</span>eventQueue<span class="token punctuation">.</span><span class="token function">remove</span><span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">)</span><span class="token punctuation">,</span> postingState<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token punctuation">&#125;</span>
+        <span class="token punctuation">&#125;</span> <span class="token keyword">finally</span> <span class="token punctuation">&#123;</span>
+            postingState<span class="token punctuation">.</span>isPosting <span class="token operator">=</span> <span class="token boolean">false</span><span class="token punctuation">;</span>
+            postingState<span class="token punctuation">.</span>isMainThread <span class="token operator">=</span> <span class="token boolean">false</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span>
+    <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p><code>post()</code>方法中，先是获取当前线程的事件发送状态信息，然后将要发送的事件加入事件列表中，最后通过while循环遍历事件列表，调用<code>postSingleEvent()</code>方法依次发送单个事件。</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token comment">// EventBus.java</span>
+<span class="token keyword">private</span> <span class="token keyword">void</span> <span class="token function">postSingleEvent</span><span class="token punctuation">(</span><span class="token class-name">Object</span> event<span class="token punctuation">,</span> <span class="token class-name">PostingThreadState</span> postingState<span class="token punctuation">)</span> <span class="token keyword">throws</span> <span class="token class-name">Error</span> <span class="token punctuation">&#123;</span>
+    <span class="token class-name">Class</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token operator">?</span><span class="token punctuation">></span></span> eventClass <span class="token operator">=</span> event<span class="token punctuation">.</span><span class="token function">getClass</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">boolean</span> subscriptionFound <span class="token operator">=</span> <span class="token boolean">false</span><span class="token punctuation">;</span>
+    <span class="token comment">// 根据继承关系，查询当前事件的所有父类、父接口的类对象，并遍历发送</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span>eventInheritance<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token class-name">List</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">Class</span><span class="token punctuation">&lt;</span><span class="token operator">?</span><span class="token punctuation">></span><span class="token punctuation">></span></span> eventTypes <span class="token operator">=</span> <span class="token function">lookupAllEventTypes</span><span class="token punctuation">(</span>eventClass<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">int</span> countTypes <span class="token operator">=</span> eventTypes<span class="token punctuation">.</span><span class="token function">size</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">int</span> h <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span> h <span class="token operator">&lt;</span> countTypes<span class="token punctuation">;</span> h<span class="token operator">++</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            <span class="token class-name">Class</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token operator">?</span><span class="token punctuation">></span></span> clazz <span class="token operator">=</span> eventTypes<span class="token punctuation">.</span><span class="token function">get</span><span class="token punctuation">(</span>h<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            subscriptionFound <span class="token operator">|=</span> <span class="token function">postSingleEventForEventType</span><span class="token punctuation">(</span>event<span class="token punctuation">,</span> postingState<span class="token punctuation">,</span> clazz<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span>
+    <span class="token punctuation">&#125;</span> <span class="token keyword">else</span> <span class="token punctuation">&#123;</span><span class="token comment">// 没有继承关系，就只发送当前事件</span>
+        subscriptionFound <span class="token operator">=</span> <span class="token function">postSingleEventForEventType</span><span class="token punctuation">(</span>event<span class="token punctuation">,</span> postingState<span class="token punctuation">,</span> eventClass<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+    <span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">.</span>
+<span class="token punctuation">&#125;</span>
+
+<span class="token keyword">private</span> <span class="token keyword">boolean</span> <span class="token function">postSingleEventForEventType</span><span class="token punctuation">(</span><span class="token class-name">Object</span> event<span class="token punctuation">,</span> <span class="token class-name">PostingThreadState</span> postingState<span class="token punctuation">,</span> <span class="token class-name">Class</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token operator">?</span><span class="token punctuation">></span></span> eventClass<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+    <span class="token class-name">CopyOnWriteArrayList</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">Subscription</span><span class="token punctuation">></span></span> subscriptions<span class="token punctuation">;</span>
+    <span class="token keyword">synchronized</span> <span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span><span class="token comment">// 获取eventClass事件类型的所有订阅者</span>
+        subscriptions <span class="token operator">=</span> subscriptionsByEventType<span class="token punctuation">.</span><span class="token function">get</span><span class="token punctuation">(</span>eventClass<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+    <span class="token comment">//遍历订阅者列表，发送订阅的事件</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span>subscriptions <span class="token operator">!=</span> <span class="token keyword">null</span> <span class="token operator">&amp;&amp;</span> <span class="token operator">!</span>subscriptions<span class="token punctuation">.</span><span class="token function">isEmpty</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token class-name">Subscription</span> subscription <span class="token operator">:</span> subscriptions<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            postingState<span class="token punctuation">.</span>event <span class="token operator">=</span> event<span class="token punctuation">;</span>
+            postingState<span class="token punctuation">.</span>subscription <span class="token operator">=</span> subscription<span class="token punctuation">;</span>
+            <span class="token keyword">boolean</span> aborted<span class="token punctuation">;</span>
+            <span class="token keyword">try</span> <span class="token punctuation">&#123;</span>
+                <span class="token function">postToSubscription</span><span class="token punctuation">(</span>subscription<span class="token punctuation">,</span> event<span class="token punctuation">,</span> postingState<span class="token punctuation">.</span>isMainThread<span class="token punctuation">)</span><span class="token punctuation">;</span>
+                aborted <span class="token operator">=</span> postingState<span class="token punctuation">.</span>canceled<span class="token punctuation">;</span>
+            <span class="token punctuation">&#125;</span> <span class="token keyword">finally</span> <span class="token punctuation">&#123;</span>
+                postingState<span class="token punctuation">.</span>event <span class="token operator">=</span> <span class="token keyword">null</span><span class="token punctuation">;</span>
+                postingState<span class="token punctuation">.</span>subscription <span class="token operator">=</span> <span class="token keyword">null</span><span class="token punctuation">;</span>
+                postingState<span class="token punctuation">.</span>canceled <span class="token operator">=</span> <span class="token boolean">false</span><span class="token punctuation">;</span>
+            <span class="token punctuation">&#125;</span>
+            <span class="token keyword">if</span> <span class="token punctuation">(</span>aborted<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+                <span class="token keyword">break</span><span class="token punctuation">;</span>
+            <span class="token punctuation">&#125;</span>
+        <span class="token punctuation">&#125;</span>
+        <span class="token keyword">return</span> <span class="token boolean">true</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+    <span class="token keyword">return</span> <span class="token boolean">false</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p><code>post()</code>方法通过层层调用，最后调用到<code>postToSubscription()</code>方法进行订阅事件的发送。这与注册订阅者时发送粘性事件的实现相同，即也是最终通过反射调用事件的响应方法。  </p>
+<p>EventBus中所谓的发送事件，实质上就是通过反射调用注册了该事件的响应方法，并将事件对象传递给该方法。  </p>
+<p>总结：<code>post()</code>方法先是获取当前线程的事件列表，并将要发送的事件加入事件列表；遍历事件列表，循环发送单个事件；在发送单个事件时，还要判断是否订阅了该事件的父类和实现的接口的事件，若订阅了，则也需要发送；最后也是通过调用postToSubscription()方法实现事件发送。</p>
+<h3 id="4、取消注册订阅者：unRegister"><a href="#4、取消注册订阅者：unRegister" class="headerlink" title="4、取消注册订阅者：unRegister()"></a><strong>4、取消注册订阅者：unRegister()</strong></h3><p>取消注册与注册时的逻辑基本是反着的，需要依次移除订阅者订阅的事件、事件的响应方法，最后移除订阅者。  </p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token comment">// EventBus.java</span>
+<span class="token keyword">public</span> <span class="token keyword">synchronized</span> <span class="token keyword">void</span> <span class="token function">unregister</span><span class="token punctuation">(</span><span class="token class-name">Object</span> subscriber<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+    <span class="token comment">// 获取当前订阅者订阅的事件列表</span>
+    <span class="token class-name">List</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">Class</span><span class="token punctuation">&lt;</span><span class="token operator">?</span><span class="token punctuation">></span><span class="token punctuation">></span></span> subscribedTypes <span class="token operator">=</span> typesBySubscriber<span class="token punctuation">.</span><span class="token function">get</span><span class="token punctuation">(</span>subscriber<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span>subscribedTypes <span class="token operator">!=</span> <span class="token keyword">null</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token comment">// 遍历取消当前订阅者所订阅的各个事件</span>
+        <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token class-name">Class</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token operator">?</span><span class="token punctuation">></span></span> eventType <span class="token operator">:</span> subscribedTypes<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            <span class="token function">unsubscribeByEventType</span><span class="token punctuation">(</span>subscriber<span class="token punctuation">,</span> eventType<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span>
+        <span class="token comment">// 移除订阅者</span>
+        typesBySubscriber<span class="token punctuation">.</span><span class="token function">remove</span><span class="token punctuation">(</span>subscriber<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span> <span class="token keyword">else</span> <span class="token punctuation">&#123;</span>
+        logger<span class="token punctuation">.</span><span class="token function">log</span><span class="token punctuation">(</span><span class="token class-name">Level</span><span class="token punctuation">.</span>WARNING<span class="token punctuation">,</span> <span class="token string">"Subscriber to unregister was not registered before: "</span> <span class="token operator">+</span> subscriber<span class="token punctuation">.</span><span class="token function">getClass</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span>
+<span class="token keyword">private</span> <span class="token keyword">void</span> <span class="token function">unsubscribeByEventType</span><span class="token punctuation">(</span><span class="token class-name">Object</span> subscriber<span class="token punctuation">,</span> <span class="token class-name">Class</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token operator">?</span><span class="token punctuation">></span></span> eventType<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+    <span class="token comment">// 获取事件对应的订阅者列表</span>
+    <span class="token class-name">List</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">Subscription</span><span class="token punctuation">></span></span> subscriptions <span class="token operator">=</span> subscriptionsByEventType<span class="token punctuation">.</span><span class="token function">get</span><span class="token punctuation">(</span>eventType<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span>subscriptions <span class="token operator">!=</span> <span class="token keyword">null</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">int</span> size <span class="token operator">=</span> subscriptions<span class="token punctuation">.</span><span class="token function">size</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token comment">// 遍历订阅者列表移除当前订阅者订阅的所有事件（因在订阅时，每个事件响应方法都会执行一次订阅，所以这里需要循环取消这些订阅）</span>
+        <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">int</span> i <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span> i <span class="token operator">&lt;</span> size<span class="token punctuation">;</span> i<span class="token operator">++</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            <span class="token class-name">Subscription</span> subscription <span class="token operator">=</span> subscriptions<span class="token punctuation">.</span><span class="token function">get</span><span class="token punctuation">(</span>i<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token keyword">if</span> <span class="token punctuation">(</span>subscription<span class="token punctuation">.</span>subscriber <span class="token operator">==</span> subscriber<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+                subscription<span class="token punctuation">.</span>active <span class="token operator">=</span> <span class="token boolean">false</span><span class="token punctuation">;</span>
+                subscriptions<span class="token punctuation">.</span><span class="token function">remove</span><span class="token punctuation">(</span>i<span class="token punctuation">)</span><span class="token punctuation">;</span>
+                i<span class="token operator">--</span><span class="token punctuation">;</span>
+                size<span class="token operator">--</span><span class="token punctuation">;</span>
+            <span class="token punctuation">&#125;</span>
+        <span class="token punctuation">&#125;</span>
+    <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p><code>unRegister()</code>方法中，先是获取当前订阅者所订阅的事件列表，通过遍历事件列表查找各事件的订阅者集合，依次从事件的订阅者集合中删除当前的订阅者，最后将订阅者从typesBySubscriber中移除，即完成了取消注册当前订阅者。  </p>
+<h2 id="EventBus与Otto的区别"><a href="#EventBus与Otto的区别" class="headerlink" title="EventBus与Otto的区别"></a><strong>EventBus与Otto的区别</strong></h2><ul>
+<li><p><strong>注册事项响应方法的方式不同</strong><br>EventBus3.0之前是通过反射遍历类中所有的方法完成事件响应方法的注册<br>Otto采用注解的方式完成注册  </p>
+</li>
+<li><p><strong>调用事件响应方法的执行线程不同</strong><br>EventBus可根据线程模型决定在何种线程调用事件响应方法<br>Otto一般只能在主线程调用事件响应方法，因为它内部没有异步线程。  </p>
+</li>
+<li><p>Otto允许通过Produce注解声明生产者方法</p>
+</li>
+</ul>
+<h2 id="思考"><a href="#思考" class="headerlink" title="思考"></a><strong>思考</strong></h2><h3 id="1、创建单例时为什么要使用Synchronized"><a href="#1、创建单例时为什么要使用Synchronized" class="headerlink" title="1、创建单例时为什么要使用Synchronized()"></a><strong>1、创建单例时为什么要使用Synchronized()</strong></h3><p>一句话来说，就是为了线程安全。<br>多线程场景下，<code>getDefault()</code>方法可能同时会被多个线程调用，EventBus就可能会被重复创建多次，这就违背了单例的初衷。为了保证同一时间点只有一个线程可以执行<code>getDefault()</code>方法，就使用Synchronized关键字对<code>getDefault()</code>方法加锁，使得其它线程无法在当前线程执行完<code>getDefault()</code>方法前访问<code>getDefault()</code>方法。  </p>
+<h2 id="基于RxJava实现事件总线"><a href="#基于RxJava实现事件总线" class="headerlink" title="基于RxJava实现事件总线"></a><strong>基于RxJava实现事件总线</strong></h2><pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">RxBus</span> <span class="token punctuation">&#123;</span>
+
+    <span class="token keyword">private</span> <span class="token keyword">final</span> <span class="token class-name">Subject</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">Object</span><span class="token punctuation">></span></span> bus <span class="token operator">=</span> <span class="token class-name">PublishSubject</span><span class="token punctuation">.</span><span class="token function">create</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">toSerialized</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+    <span class="token keyword">private</span> <span class="token keyword">static</span> <span class="token class-name">RxBus</span> rxBus<span class="token punctuation">;</span>
+
+    <span class="token keyword">private</span> <span class="token class-name">RxBus</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">&#123;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token comment">/**
+     * 单例
+     * @return
+     */</span>
+    <span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token class-name">RxBus</span> <span class="token function">getInstance</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">&#123;</span>
+        <span class="token keyword">if</span><span class="token punctuation">(</span>rxBus <span class="token operator">==</span> <span class="token keyword">null</span><span class="token punctuation">)</span><span class="token punctuation">&#123;</span>
+            <span class="token comment">//同步调用处理</span>
+            <span class="token keyword">synchronized</span> <span class="token punctuation">(</span><span class="token class-name">RxBus</span><span class="token punctuation">.</span><span class="token keyword">class</span><span class="token punctuation">)</span><span class="token punctuation">&#123;</span>
+                <span class="token keyword">if</span><span class="token punctuation">(</span>rxBus <span class="token operator">==</span> <span class="token keyword">null</span><span class="token punctuation">)</span><span class="token punctuation">&#123;</span>
+                    rxBus <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">RxBus</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                <span class="token punctuation">&#125;</span>
+            <span class="token punctuation">&#125;</span>
+        <span class="token punctuation">&#125;</span>
+        <span class="token keyword">return</span> rxBus<span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token comment">/**
+     * 发送事件
+     * @param obj
+     */</span>
+    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">send</span><span class="token punctuation">(</span><span class="token class-name">Object</span> obj<span class="token punctuation">)</span><span class="token punctuation">&#123;</span>
+        bus<span class="token punctuation">.</span><span class="token function">onNext</span><span class="token punctuation">(</span>obj<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token comment">/**
+     * 返回被观察者：用于需要订阅事件的观察者订阅此被观察者
+     * @return
+     */</span>
+    <span class="token keyword">public</span> <span class="token class-name">Observable</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">Object</span><span class="token punctuation">></span></span> <span class="token function">toObservable</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">&#123;</span>
+        <span class="token keyword">return</span> bus<span class="token punctuation">.</span><span class="token function">subscribeOn</span><span class="token punctuation">(</span><span class="token class-name">Schedulers</span><span class="token punctuation">.</span><span class="token function">io</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token comment">// 指定事件产生的线程</span>
+                <span class="token punctuation">.</span><span class="token function">observeOn</span><span class="token punctuation">(</span><span class="token class-name">AndroidSchedulers</span><span class="token punctuation">.</span><span class="token function">mainThread</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// 指定事件处理的线程</span>
+    <span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+      
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+</div>
+
+
+
+
     
 
 
@@ -1042,104 +1519,6 @@
           <!--noindex-->
             <div class="post-button">
               <a class="btn" href="/2021/05/30/Android-%E5%9F%BA%E4%BA%8Egradle%E5%AE%9E%E7%8E%B0%E5%A4%9A%E6%B8%A0%E9%81%93%E6%89%93%E5%8C%85/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2021/05/12/%E9%98%BF%E9%87%8CARouter%E8%B7%AF%E7%94%B1%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="Cocoas">
-      <meta itemprop="description" content="Android,Java,Android SDK,Kotlin,">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Cocoas">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2021/05/12/%E9%98%BF%E9%87%8CARouter%E8%B7%AF%E7%94%B1%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/" class="post-title-link" itemprop="url">阿里ARouter路由实现原理</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-
-      <time title="创建时间：2021-05-12 21:22:09" itemprop="dateCreated datePublished" datetime="2021-05-12T21:22:09+08:00">2021-05-12</time>
-    </span>
-      <span class="post-meta-item">
-        <span class="post-meta-item-icon">
-          <i class="far fa-calendar-check"></i>
-        </span>
-        <span class="post-meta-item-text">更新于</span>
-        <time title="修改时间：2021-05-13 22:41:27" itemprop="dateModified" datetime="2021-05-13T22:41:27+08:00">2021-05-13</time>
-      </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-folder"></i>
-      </span>
-      <span class="post-meta-item-text">分类于</span>
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/Android/" itemprop="url" rel="index"><span itemprop="name">Android</span></a>
-        </span>
-          ，
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/Android/ARouter/" itemprop="url" rel="index"><span itemprop="name">ARouter</span></a>
-        </span>
-          ，
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/Android/ARouter/%E7%AC%AC%E4%B8%89%E6%96%B9%E6%A1%86%E6%9E%B6%E5%8E%9F%E7%90%86/" itemprop="url" rel="index"><span itemprop="name">第三方框架原理</span></a>
-        </span>
-    </span>
-
-  
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <h2 id="原生多模块间的页面跳转实现方式：隐式Intent"><a href="#原生多模块间的页面跳转实现方式：隐式Intent" class="headerlink" title="原生多模块间的页面跳转实现方式：隐式Intent"></a><strong>原生多模块间的页面跳转实现方式：隐式Intent</strong></h2><blockquote>
-<p>隐式启动依赖于我们在AndroidManifest.xml中定义activity时通过intent-filter设置的匹配规则。在intent-filter中，我们可以设置三种匹配规则，分别是action、category、data。一个隐式Intent只有同时匹配了这三个规则，才能成功启动目标页面。  </p>
-</blockquote>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2021/05/12/%E9%98%BF%E9%87%8CARouter%E8%B7%AF%E7%94%B1%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/#more" rel="contents">
                 阅读全文 &raquo;
               </a>
             </div>
