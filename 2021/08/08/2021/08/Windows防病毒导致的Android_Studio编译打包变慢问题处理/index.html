@@ -23,12 +23,12 @@
     var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"8.0.1","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12},"copycode":true,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":false,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}};
   </script>
 
-  <meta name="description" content="Android Studio编译提示 原因： 某些防病毒软件会干扰 Android Studio 编译流程，从而导致编译版本运行速度明显变慢。当您在 Android Studio 中运行编译版本时，Gradle 会编译应用的资源和源代码，然后将编译后的资源打包在一个 APK 中。在此流程中，系统会在计算机上创建多个文件。如果您的防病毒软件启用了实时扫描功能，那么在每次创建一个文件后，防病毒软件都会">
+  <meta name="description" content="Android Studio编译提示">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Windows防病毒导致的Android Studio编译打包变慢问题处理">
 <meta property="og:url" content="http://example.com/2021/08/08/2021/08/Windows%E9%98%B2%E7%97%85%E6%AF%92%E5%AF%BC%E8%87%B4%E7%9A%84Android_Studio%E7%BC%96%E8%AF%91%E6%89%93%E5%8C%85%E5%8F%98%E6%85%A2%E9%97%AE%E9%A2%98%E5%A4%84%E7%90%86/index.html">
 <meta property="og:site_name" content="Cocoas">
-<meta property="og:description" content="Android Studio编译提示 原因： 某些防病毒软件会干扰 Android Studio 编译流程，从而导致编译版本运行速度明显变慢。当您在 Android Studio 中运行编译版本时，Gradle 会编译应用的资源和源代码，然后将编译后的资源打包在一个 APK 中。在此流程中，系统会在计算机上创建多个文件。如果您的防病毒软件启用了实时扫描功能，那么在每次创建一个文件后，防病毒软件都会">
+<meta property="og:description" content="Android Studio编译提示">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/pictures/anti-virus_program_impacting_build_performence.png">
 <meta property="article:published_time" content="2021-08-08T23:43:15.000Z">
@@ -198,7 +198,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">52</span>
+          <span class="site-state-item-count">53</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -211,7 +211,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">146</span>
+        <span class="site-state-item-count">147</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -318,6 +318,8 @@
     
     <div class="post-body" itemprop="articleBody">
         <p><strong>Android Studio编译提示</strong><br><img src="/pictures/anti-virus_program_impacting_build_performence.png"></p>
+<a id="more"></a>
+
 <p><strong>原因</strong>： 某些防病毒软件会干扰 Android Studio 编译流程，从而导致编译版本运行速度明显变慢。当您在 Android Studio 中运行编译版本时，Gradle 会编译应用的资源和源代码，然后将编译后的资源打包在一个 APK 中。在此流程中，系统会在计算机上创建多个文件。如果您的防病毒软件启用了实时扫描功能，那么在每次创建一个文件后，防病毒软件都会扫描该文件，并强制要求暂停编译流程。  </p>
 <p><strong>解决方式</strong>：在防病毒软件中排除对某些目录的实时扫描  </p>
 <p><strong>Windows自带防病毒实时扫描忽略目录设置</strong>：<br>Windows——设置——更新和安全——Windows安全中心——打开Windows安全中心——病毒和威胁防护——“病毒和威胁防护”设置下：管理设置——排除项下：添加或删除排除项</p>
@@ -372,6 +374,9 @@
                 </a>
             </div>
             <div class="post-nav-item">
+                <a href="/2021/08/08/2021/08/View%E9%80%9A%E7%94%A8%E5%9C%86%E8%A7%92%E8%AE%BE%E7%BD%AE%E6%96%B9%E6%B3%95/" rel="next" title="View通用圆角设置方法">
+                  View通用圆角设置方法 <i class="fa fa-chevron-right"></i>
+                </a>
             </div>
           </div>
     </footer>
